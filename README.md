@@ -1,5 +1,5 @@
-INTERPROGRAM - Australia's Own High-Level Programming Language
-==============================================================
+INTERPROGRAM - Australia's First High-Level Programming Language
+================================================================
 
 INTERPROGRAM was developed by Geoff Hill in 1960 for the
 [CSIRAC](https://en.wikipedia.org/wiki/CSIRAC), Australia's first
@@ -45,8 +45,8 @@ INTERPROGRAM was advertised as "Programming in English".  But what does
 that mean?  Clearly natural language processing was beyond the capabilities
 of the CSIRAC in 1960.
 
-Let's take a simple computation: `z = x^2 + y` and write out the steps of the
-computation in plain English:
+Let's take a simple computation, z = x<sup>2</sup> + y, and write out the
+primitive steps of the computation in plain English:
 
 1. Take the value of x.
 2. Multiply it by itself.
@@ -60,7 +60,7 @@ What does this look like in INTERPROGRAM?
     ADD Y
     REPLACE Z
 
-It looks almost the same as our English description!  This is the key to
+It looks almost the same as the English description!  This is the key to
 INTERPROGRAM's syntactic style - take the straight-forward set of steps in
 English and write them out as closely as possible in the program.
 
@@ -72,6 +72,20 @@ The "THIS" variable is special in that it refers to the result of the
 last computation; essentially an accumulator.  "TAKE" loads a value into
 "THIS" and "REPLACE" copies the contents of "THIS" to a destination.
 
+Here is a longer example that calculates the hypothenuse of a right-angled
+triangle, h = sqrt(a<sup>2</sup> + b<sup>2</sup>):
+
+    TAKE A
+    MULTIPLY BY THIS
+    REPLACE SUM
+    TAKE B
+    MULTIPLY BY THIS
+    ADD SUM
+    FORM SQUARE ROOT
+    REPLACE H
+
+A temporary variable <tt>SUM</tt> is needed for this computation.
+
 Say we want to multiply several variables A, B, C, and D.  We could do
 this:
 
@@ -79,20 +93,15 @@ this:
     MULTIPLY BY B
     MULTIPLY BY C
     MULTIPLY BY D
-    REPLACE Z
 
 But that is verbose.  English to the rescue again with an ampersand:
 
-    TAKE A, MULTIPLY BY B, & C, & D, REPLACE Z
+    TAKE A, MULTIPLY BY B, & C, & D
 
-"&" means "repeat the last operation with a new operand".  Commas are
-used as statement separators.
-
-Technically, the following would be even better English and still parsable:
-
-    TAKE A, MULTIPLY BY B AND C AND D, REPLACE Z
-
-But the original language went with "&" instead.  So that's what we will use.
+"&" means "repeat the last operation with a new operand".  In English,
+the above code reads natually as "take A, multiply by B, AND multiply by C,
+AND multiply by D".  Also note the use of comma as a statement separator,
+which is more natural in English.
 
 ## Character set
 
@@ -138,3 +147,40 @@ TBD
 ## Variables and types
 
 TBD
+
+## Mathematical operators
+
+In the statements below, <i>value</i> is a variable, constant,
+or a reference to an array element.  Some examples:
+
+    ADD X
+    SUBTRACT 1.5
+    MULTIPLY BY 2
+    DIVIDE BY A(6)
+
+<table border="1">
+<tr><td><b>Statement</b></td><td><b>Description</b></td><td><b>Extension?</b></td></tr>
+<tr><td><tt>ADD</tt> <i>value</i></td><td>Adds <i>value</i> to <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>SUBTRACT</tt> <i>value</i></td><td>Subtracts <i>value</i> from <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>SUBTRACT FROM</tt> <i>value</i></td><td>Subtracts <tt>THIS</tt> from <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>MULTIPLY BY</tt> <i>value</i></td><td>Multiplies the <i>value</i> with <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>DIVIDE BY</tt> <i>value</i></td><td>Divides <tt>THIS</tt> by <i>value</i>, leaving the quotient in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>DIVIDE INTO</tt> <i>value</i></td><td>Divides <i>value</i> by <tt>THIS</tt>, leaving the quotient in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>MODULO</tt> <i>value</i></td><td>Divides <tt>THIS</tt> by <i>value</i>, leaving the remainder in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>FORM SQUARE ROOT</tt></td><td>Forms the square root of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>FORM SINE</tt></td><td>Forms the sine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>FORM COSINE</tt></td><td>Forms the cosine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>FORM TANGENT</tt></td><td>Forms the tangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>FORM ARCTAN</tt></td><td>Forms the arctangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>FORM NATURAL LOG</tt></td><td>Forms the natural logorithm of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>FORM EXPONENTIAL</tt></td><td>Raises <tt>THIS</tt> to the power of <i>e</i>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>FORM ABSOLUTE</tt></td><td>Forms the absolute value of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>RAISE TO THE POWER OF</tt> <i>value</i></td><td>Raises <tt>THIS</tt> to the power of <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>BITWISE AND WITH</tt> <i>value</i></td><td>Performs a bitwise AND of integers <tt>THIS</tt> and <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>BITWISE AND WITH NOT</tt> <i>value</i></td><td>Performs a bitwise AND of integers <tt>THIS</tt> and NOT <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>BITWISE OR WITH</tt> <i>value</i></td><td>Performs a bitwise OR of integers <tt>THIS</tt> and <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>BITWISE XOR WITH</tt> <i>value</i></td><td>Performs a bitwise exclusive-OR of integers <tt>THIS</tt> and <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>BITWISE NOT</tt></td><td>Performs a bitwise NOT of integer <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>SHIFT LEFT BY</tt> <i>value</i></td><td>Performs an arithmetic left shift of the integer <tt>THIS</tt> by <i>value</i> bits, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>SHIFT RIGHT BY</tt> <i>value</i></td><td>Performs an arithmetic right shift of the integer <tt>THIS</tt> by <i>value</i> bits, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+</table>
