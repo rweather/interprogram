@@ -23,8 +23,7 @@
 #ifndef INTERPROGRAM_TOKEN_H
 #define INTERPROGRAM_TOKEN_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include "ip_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,12 +87,12 @@ extern "C" {
 #define ITOK_ABS                0xB4    /**< FORM ABSOLUTE */
 #define ITOK_EQUAL_TO           0xB5    /**< IS EQUAL TO */
 #define ITOK_NOT_EQUAL_TO       0xB6    /**< IS NOT EQUAL TO */
-#define ITOK_NOT_ZERO           0xB7    /**< IS NOT ZERO */
-#define ITOK_FINITE             0xB8    /**< IS FINITE */
-#define ITOK_INFINITE           0xB9    /**< IS INFINITE */
-#define ITOK_NAN                0xBA    /**< IS NOT A NUMBER */
-#define ITOK_SUBTRACT_FROM      0xBB    /**< SUBTRACT FROM */
-#define ITOK_DIVIDE_INTO        0xBC    /**< DIVIDE INTO */
+#define ITOK_GREATER_OR_EQUAL   0xB7    /**< IS GREATER THAN OR EQUAL TO */
+#define ITOK_SMALLER_OR_EQUAL   0xB8    /**< IS SMALLER THAN OR EQUAL TO */
+#define ITOK_NOT_ZERO           0xB9    /**< IS NOT ZERO */
+#define ITOK_FINITE             0xBA    /**< IS FINITE */
+#define ITOK_INFINITE           0xBB    /**< IS INFINITE */
+#define ITOK_NAN                0xBC    /**< IS NOT A NUMBER */
 #define ITOK_MODULO             0xBD    /**< MODULO */
 #define ITOK_BITWISE_AND_NOT    0xBE    /**< BITWISE AND WITH NOT */
 #define ITOK_BITWISE_AND        0xBF    /**< BITWISE AND WITH */
@@ -105,12 +104,14 @@ extern "C" {
 #define ITOK_MUL                0xC5    /**< Multiplication operator "*" */
 #define ITOK_DIV                0xC6    /**< Division operator "/" */
 #define ITOK_RAISE              0xC7    /**< RAISE TO THE POWER OF */
+#define ITOK_CALL               0xC8    /**< CALL */
+#define ITOK_RETURN             0xC9    /**< RETURN */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA
 
 /** Last keyword token */
-#define ITOK_LAST_KEYWORD       ITOK_RAISE
+#define ITOK_LAST_KEYWORD       ITOK_RETURN
 
 /* Meta-tokens for non-keyword elements */
 #define ITOK_VAR_NAME           0xF0    /**< Variable name */
@@ -123,6 +124,9 @@ extern "C" {
 #define ITOK_TO_INT             0xF7    /**< Convert to an integer */
 #define ITOK_TO_FLOAT           0xF8    /**< Convert to floating-point */
 #define ITOK_TO_DYNAMIC         0xF9    /**< Convert to dynamic */
+#define ITOK_INDEX_INT          0xFA    /**< Index into an array of integers */
+#define ITOK_INDEX_FLOAT        0xFB    /**< Index into an array of floats */
+#define ITOK_OUTPUT_NO_EOL      0xFC    /**< Output with no end of line */
 
 /* Token type flags */
 /** Token can start a section of the preliminary statements */
@@ -217,10 +221,10 @@ typedef struct
     ip_loc_t loc;
 
     /** Integer value if the token is ITOK_INT_VALUE */
-    uint64_t ivalue;
+    ip_uint_t ivalue;
 
     /** Floating-point value if the token is ITOK_FLOAT_VALUE */
-    double fvalue;
+    ip_float_t fvalue;
 
     /** Number of bits of integer precision between 8 and 64 */
     int integer_precision;
@@ -321,6 +325,34 @@ const ip_token_info_t *ip_tokeniser_get_keyword(int token);
  */
 const ip_token_info_t *ip_tokeniser_lookup_keyword
     (const char *name, size_t len, unsigned context, int *prefix);
+
+/**
+ * @brief Reads the contents of a "PUNCH THE FOLLOWING CHARACTERS" statement.
+ *
+ * @param[in,out] tokeniser The tokeniser to read the punch text from.
+ *
+ * @return A string containing all of the characters of the punch text.
+ *
+ * All characters up to the next sequence of 5 "~" symbols are read,
+ * including end of line markers.
+ */
+char *ip_tokeniser_read_punch(ip_tokeniser_t *tokeniser);
+
+/**
+ * @brief Reads the contents of a "TITLE" statement up to the next end of line.
+ *
+ * @param[in,out] tokeniser The tokeniser to read the title from.
+ *
+ * @return A string containing all of the characters of the title.
+ */
+char *ip_tokeniser_read_title(ip_tokeniser_t *tokeniser);
+
+/**
+ * @brief Skip the rest of the current line for error recovery purposes.
+ *
+ * @param[in,out] tokeniser The tokeniser.
+ */
+void ip_tokeniser_skip_line(ip_tokeniser_t *tokeniser);
 
 #ifdef __cplusplus
 }

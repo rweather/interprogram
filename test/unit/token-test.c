@@ -133,12 +133,12 @@ static int check_identifiers(void)
     KEYWORD("FORM ABSOLUTE",                        ITOK_ABS);
     KEYWORD("IS EQUAL TO",                          ITOK_EQUAL_TO);
     KEYWORD("IS NOT EQUAL TO",                      ITOK_NOT_EQUAL_TO);
+    KEYWORD("IS GREATER THAN OR EQUAL TO",          ITOK_GREATER_OR_EQUAL);
+    KEYWORD("IS SMALLER THAN OR EQUAL TO",          ITOK_SMALLER_OR_EQUAL);
     KEYWORD("IS NOT ZERO",                          ITOK_NOT_ZERO);
     KEYWORD("IS FINITE",                            ITOK_FINITE);
     KEYWORD("IS INFINITE",                          ITOK_INFINITE);
     KEYWORD("IS NOT A NUMBER",                      ITOK_NAN);
-    KEYWORD("SUBTRACT FROM",                        ITOK_SUBTRACT_FROM);
-    KEYWORD("DIVIDE INTO",                          ITOK_DIVIDE_INTO);
     KEYWORD("MODULO",                               ITOK_MODULO);
     KEYWORD("BITWISE AND WITH NOT",                 ITOK_BITWISE_AND_NOT);
     KEYWORD("BITWISE AND WITH",                     ITOK_BITWISE_AND);
@@ -150,6 +150,8 @@ static int check_identifiers(void)
     KEYWORD("*",                                    ITOK_MUL);
     KEYWORD("/",                                    ITOK_DIV);
     KEYWORD("RAISE TO THE POWER OF",                ITOK_RAISE);
+    KEYWORD("CALL",                                 ITOK_CALL);
+    KEYWORD("RETURN",                               ITOK_RETURN);
 
     /* Check that we have tested all of the keywords */
     for (index = ITOK_FIRST_KEYWORD; index <= ITOK_LAST_KEYWORD; ++index) {

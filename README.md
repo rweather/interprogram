@@ -86,22 +86,26 @@ triangle, h = sqrt(a<sup>2</sup> + b<sup>2</sup>):
 
 A temporary variable <tt>SUM</tt> is needed for this computation.
 
-Say we want to multiply several variables A, B, C, and D.  We could do
+Say we want to multiply X by several variables A, B, C, and D.  We could do
 this:
 
-    TAKE A
+    TAKE X
+    MULTIPLY BY A
     MULTIPLY BY B
     MULTIPLY BY C
     MULTIPLY BY D
 
 But that is verbose.  English to the rescue again with an ampersand:
 
-    TAKE A, MULTIPLY BY B, & C, & D
+    TAKE X, MULTIPLY BY A, & B, & C, & D
 
 "&" means "repeat the last operation with a new operand".  In English,
-the above code reads natually as "take A, multiply by B, AND multiply by C,
-AND multiply by D".  Also note the use of comma as a statement separator,
-which is more natural in English.
+the above code reads natually as "take X, multiply by A and B and C and D".
+Also note the use of comma as a statement separator, which is more
+natural in English than a semi-colon.
+
+"&" can only be used on the same line as the statement that is being
+repeated.  A new line starts fresh with a new statement.
 
 ## Character set
 
@@ -162,10 +166,8 @@ or a reference to an array element.  Some examples:
 <tr><td><b>Statement</b></td><td><b>Description</b></td><td><b>Extension?</b></td></tr>
 <tr><td><tt>ADD</tt> <i>value</i></td><td>Adds <i>value</i> to <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>SUBTRACT</tt> <i>value</i></td><td>Subtracts <i>value</i> from <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
-<tr><td><tt>SUBTRACT FROM</tt> <i>value</i></td><td>Subtracts <tt>THIS</tt> from <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>MULTIPLY BY</tt> <i>value</i></td><td>Multiplies the <i>value</i> with <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>DIVIDE BY</tt> <i>value</i></td><td>Divides <tt>THIS</tt> by <i>value</i>, leaving the quotient in <tt>THIS</tt></td><td> </td></tr>
-<tr><td><tt>DIVIDE INTO</tt> <i>value</i></td><td>Divides <i>value</i> by <tt>THIS</tt>, leaving the quotient in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>MODULO</tt> <i>value</i></td><td>Divides <tt>THIS</tt> by <i>value</i>, leaving the remainder in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>FORM SQUARE ROOT</tt></td><td>Forms the square root of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>FORM SINE</tt></td><td>Forms the sine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>

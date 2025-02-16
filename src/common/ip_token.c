@@ -81,12 +81,12 @@ static ip_token_info_t const tokens[] = {
     {"FORM ABSOLUTE",                       ITOK_ABS,               ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"IS EQUAL TO",                         ITOK_EQUAL_TO,          ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
     {"IS NOT EQUAL TO",                     ITOK_NOT_EQUAL_TO,      ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"IS GREATER THAN OR EQUAL TO",         ITOK_GREATER_OR_EQUAL,  ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"IS SMALLER THAN OR EQUAL TO",         ITOK_SMALLER_OR_EQUAL,  ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
     {"IS NOT ZERO",                         ITOK_NOT_ZERO,          ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
     {"IS FINITE",                           ITOK_FINITE,            ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
     {"IS INFINITE",                         ITOK_INFINITE,          ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
     {"IS NOT A NUMBER",                     ITOK_NAN,               ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
-    {"SUBTRACT FROM",                       ITOK_SUBTRACT_FROM,     ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
-    {"DIVIDE INTO",                         ITOK_DIVIDE_INTO,       ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"MODULO",                              ITOK_MODULO,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"BITWISE AND WITH NOT",                ITOK_BITWISE_AND_NOT,   ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"BITWISE AND WITH",                    ITOK_BITWISE_AND,       ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
@@ -98,6 +98,8 @@ static ip_token_info_t const tokens[] = {
     {"*",                                   ITOK_MUL,               ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"/",                                   ITOK_DIV,               ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"RAISE TO THE POWER OF",               ITOK_RAISE,             ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"CALL",                                ITOK_CALL,              ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"RETURN",                              ITOK_RETURN,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
 
@@ -113,8 +115,7 @@ static void ip_tokeniser_add_line(ip_tokeniser_t *tokeniser, int ch)
         tokeniser->buffer_max = tokeniser->buffer_len + 1024;
         tokeniser->buffer = realloc(tokeniser->buffer, tokeniser->buffer_max);
         if (!(tokeniser->buffer)) {
-            fputs("out of memory\n", stderr);
-            exit(2);
+            ip_out_of_memory();
         }
     }
     tokeniser->buffer[(tokeniser->buffer_len)++] = (char)ch;
@@ -132,8 +133,7 @@ static void ip_tokeniser_add_name(ip_tokeniser_t *tokeniser, int ch)
         tokeniser->name_max = tokeniser->name_len + 1024;
         tokeniser->name = realloc(tokeniser->name, tokeniser->name_max);
         if (!(tokeniser->name)) {
-            fputs("out of memory\n", stderr);
-            exit(2);
+            ip_out_of_memory();
         }
     }
     tokeniser->name[(tokeniser->name_len)++] = (char)ch;
@@ -210,9 +210,8 @@ void ip_tokeniser_init(ip_tokeniser_t *tokeniser)
 {
     memset(tokeniser, 0, sizeof(ip_tokeniser_t));
     tokeniser->read_char = ip_tokeniser_read_default;
-    tokeniser->filename = "<none>";
     tokeniser->unget_char = -1;
-    tokeniser->integer_precision = 64;
+    tokeniser->integer_precision = sizeof(ip_uint_t) * 8;
     ip_tokeniser_set_token(tokeniser, ITOK_ERROR);
 }
 
@@ -275,6 +274,7 @@ static void ip_tokeniser_get_number(ip_tokeniser_t *tokeniser, unsigned context)
     int have_digit;
     int exp_is_e;
     size_t posn;
+    uint64_t ivalue;
     uint64_t limit;
     int ch;
 
@@ -371,7 +371,7 @@ static void ip_tokeniser_get_number(ip_tokeniser_t *tokeniser, unsigned context)
     }
 
     /* Determine the limit of integer values */
-    limit = 1ULL << (tokeniser->integer_precision - 1);
+    limit = ((ip_uint_t)1) << (tokeniser->integer_precision - 1);
     if ((context & ITOK_TYPE_NEGATIVE) == 0) {
         --limit;
     }
@@ -380,15 +380,16 @@ static void ip_tokeniser_get_number(ip_tokeniser_t *tokeniser, unsigned context)
      * It is possible that integer values may be out of range for the
      * integer precision.  In that case we switch to floating-point. */
     if (!is_float && tokeniser->name_len <= 19) {
-        tokeniser->ivalue = 0;
+        ivalue = 0;
         for (posn = 0; posn < tokeniser->name_len; ++posn) {
-            if (tokeniser->ivalue >= 10000000000000000000ULL) {
+            if (ivalue >= 10000000000000000000ULL) {
                 break;
             }
-            tokeniser->ivalue *= 10;
-            tokeniser->ivalue += (unsigned)(tokeniser->name[posn] - '0');
+            ivalue *= 10;
+            ivalue += (unsigned)(tokeniser->name[posn] - '0');
         }
-        if (posn >= tokeniser->name_len && tokeniser->ivalue <= limit) {
+        tokeniser->ivalue = (ip_uint_t)ivalue;
+        if (posn >= tokeniser->name_len && ivalue <= limit) {
             ip_tokeniser_set_token(tokeniser, ITOK_INT_VALUE);
             return;
         }
@@ -491,6 +492,65 @@ static void ip_tokeniser_get_identifier
     }
 }
 
+/**
+ * @brief Gets the next line of input.
+ *
+ * @param[in,out] tokeniser The tokeniser to read from.
+ *
+ * @return Non-zero if the line was read, zero at EOF.
+ */
+static int ip_tokeniser_get_line(ip_tokeniser_t *tokeniser)
+{
+    int ch;
+    if (tokeniser->saw_eof) {
+        /* We already saw EOF last time, so we are done */
+        ip_tokeniser_set_token(tokeniser, ITOK_EOF);
+        return 0;
+    }
+    ++(tokeniser->line);
+    tokeniser->buffer_posn = 0;
+    tokeniser->buffer_len = 0;
+    for (;;) {
+        if (tokeniser->unget_char == -1) {
+            ch = (*(tokeniser->read_char))(tokeniser->user_data);
+        } else {
+            ch = tokeniser->unget_char;
+            tokeniser->unget_char = -1;
+        }
+        if (ch == '\n') {
+            /* LF on its own marks the end of the line */
+            ip_tokeniser_add_line(tokeniser, '\n');
+            break;
+        } else if (ch == '\r') {
+            /* CR or CRLF also marks the end of the line */
+            ip_tokeniser_add_line(tokeniser, '\n');
+            ch = (*(tokeniser->read_char))(tokeniser->user_data);
+            if (ch == -1) {
+                /* CR followed by EOF - remember the EOF */
+                tokeniser->saw_eof = 1;
+                break;
+            } else if (ch != '\n') {
+                /* CR not followed by LF - save ch for next time */
+                tokeniser->unget_char = ch;
+            }
+            break;
+        } else if (ch == -1) {
+            tokeniser->saw_eof = 1;
+            if (tokeniser->buffer_len == 0) {
+                /* EOF right at the start of the line */
+                ip_tokeniser_set_token(tokeniser, ITOK_EOF);
+                return 0;
+            }
+
+            /* Last line before EOF is missing EOL, so add it */
+            ip_tokeniser_add_line(tokeniser, '\n');
+        } else if (ch != '\0') {
+            ip_tokeniser_add_line(tokeniser, ch);
+        }
+    }
+    return 1;
+}
+
 int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
 {
     int ch;
@@ -502,51 +562,8 @@ int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
 
     /* Do we need a new line of input? */
     if (tokeniser->buffer_posn >= tokeniser->buffer_len) {
-        if (tokeniser->saw_eof) {
-            /* We already saw EOF last time, so we are done */
-            ip_tokeniser_set_token(tokeniser, ITOK_EOF);
+        if (!ip_tokeniser_get_line(tokeniser)) {
             return ITOK_EOF;
-        }
-        ++(tokeniser->line);
-        tokeniser->buffer_posn = 0;
-        tokeniser->buffer_len = 0;
-        for (;;) {
-            if (tokeniser->unget_char == -1) {
-                ch = (*(tokeniser->read_char))(tokeniser->user_data);
-            } else {
-                ch = tokeniser->unget_char;
-                tokeniser->unget_char = -1;
-            }
-            if (ch == '\n') {
-                /* LF on its own marks the end of the line */
-                ip_tokeniser_add_line(tokeniser, '\n');
-                break;
-            } else if (ch == '\r') {
-                /* CR or CRLF also marks the end of the line */
-                ip_tokeniser_add_line(tokeniser, '\n');
-                ch = (*(tokeniser->read_char))(tokeniser->user_data);
-                if (ch == -1) {
-                    /* CR followed by EOF - remember the EOF */
-                    tokeniser->saw_eof = 1;
-                    break;
-                } else if (ch != '\n') {
-                    /* CR not followed by LF - save ch for next time */
-                    tokeniser->unget_char = ch;
-                }
-                break;
-            } else if (ch == -1) {
-                tokeniser->saw_eof = 1;
-                if (tokeniser->buffer_len == 0) {
-                    /* EOF right at the start of the line */
-                    ip_tokeniser_set_token(tokeniser, ITOK_EOF);
-                    return ITOK_EOF;
-                }
-
-                /* Last line before EOF is missing EOL, so add it */
-                ip_tokeniser_add_line(tokeniser, '\n');
-            } else {
-                ip_tokeniser_add_line(tokeniser, ch);
-            }
         }
     }
 
@@ -763,4 +780,117 @@ const ip_token_info_t *ip_tokeniser_lookup_keyword
         }
     }
     return 0;
+}
+
+char *ip_tokeniser_read_punch(ip_tokeniser_t *tokeniser)
+{
+    size_t posn;
+    int ch;
+
+    /* Set the token details for the punch text */
+    tokeniser->token = ITOK_PUNCH;
+    tokeniser->name_len = 0;
+    tokeniser->ivalue = 0;
+    tokeniser->fvalue = 0;
+    tokeniser->token_info = &(tokeniser->token_space);
+    tokeniser->token_space.name = 0;
+    tokeniser->token_space.code = ITOK_PUNCH;
+    tokeniser->token_space.flags = 0;
+    tokeniser->loc.filename = tokeniser->filename;
+    tokeniser->loc.line = tokeniser->line;
+
+    /* Discard the rest of the current line and read the following lines */
+    while (ip_tokeniser_get_line(tokeniser)) {
+        /* Search for "~~~~~" to indicate the end of the punch text.
+         * Any other characters are added to the punch text. */
+        posn = 0;
+        while (posn < tokeniser->buffer_len) {
+            ch = tokeniser->buffer[posn];
+            if (ch == '~' && (tokeniser->buffer_len - posn) >= 5) {
+                /* We have a single '~'.  Do we have four more? */
+                if (tokeniser->buffer[posn + 1] == '~' &&
+                        tokeniser->buffer[posn + 2] == '~' &&
+                        tokeniser->buffer[posn + 3] == '~' &&
+                        tokeniser->buffer[posn + 4] == '~') {
+                    /* We have found the end of the punch text.  Skip any
+                     * additional '~' characters after the first five. */
+                    posn += 5;
+                    while (posn < tokeniser->buffer_len) {
+                        ch = tokeniser->buffer[posn];
+                        if (ch != '~') {
+                            break;
+                        }
+                        ++posn;
+                    }
+
+                    /* Return the finished punch text to the caller */
+                    ip_tokeniser_add_name(tokeniser, '\0');
+                    tokeniser->token_space.name = tokeniser->name;
+                    return tokeniser->name;
+                } else {
+                    ip_tokeniser_add_name(tokeniser, ch);
+                }
+            } else if (ch != '\0') {
+                ip_tokeniser_add_name(tokeniser, ch);
+            }
+            ++posn;
+        }
+    }
+
+    /* If we get here then we have reached EOF */
+    ip_tokeniser_add_name(tokeniser, '\0');
+    tokeniser->token_space.name = tokeniser->name;
+    return tokeniser->name;
+}
+
+char *ip_tokeniser_read_title(ip_tokeniser_t *tokeniser)
+{
+    size_t end;
+    int ch;
+
+    /* Set the token details for the title text */
+    tokeniser->token = ITOK_TITLE;
+    tokeniser->name_len = 0;
+    tokeniser->ivalue = 0;
+    tokeniser->fvalue = 0;
+    tokeniser->token_info = &(tokeniser->token_space);
+    tokeniser->token_space.name = 0;
+    tokeniser->token_space.code = ITOK_TITLE;
+    tokeniser->token_space.flags = 0;
+    tokeniser->loc.filename = tokeniser->filename;
+    tokeniser->loc.line = tokeniser->line;
+
+    /* Skip whitespace after "TITLE" but before the actual title */
+    while (tokeniser->buffer_posn < tokeniser->buffer_len) {
+        ch = tokeniser->buffer[tokeniser->buffer_posn];
+        if (ip_tokeniser_is_space(ch) || ch == '\n') {
+            ++(tokeniser->buffer_posn);
+        } else {
+            break;
+        }
+    }
+
+    /* Strip whitespace from the end of the line */
+    end = tokeniser->buffer_len;
+    while (end > tokeniser->buffer_posn) {
+        ch = tokeniser->buffer[end - 1];
+        if (!ip_tokeniser_is_space(ch) && ch != '\n') {
+            break;
+        }
+        --end;
+    }
+
+    /* Return the title to the caller */
+    ip_tokeniser_add_name_chars
+        (tokeniser, tokeniser->buffer + tokeniser->buffer_posn,
+         end - tokeniser->buffer_posn);
+    tokeniser->buffer_posn = tokeniser->buffer_len; /* Done with this line */
+    ip_tokeniser_add_name(tokeniser, '\0');
+    tokeniser->token_space.name = tokeniser->name;
+    return tokeniser->name;
+}
+
+void ip_tokeniser_skip_line(ip_tokeniser_t *tokeniser)
+{
+    tokeniser->buffer_posn = tokeniser->buffer_len;
 }
