@@ -2,6 +2,8 @@ list(APPEND COMMON_SOURCES
     ip_ast.c
     ip_ast.h
     ip_errors.c
+    ip_labels.c
+    ip_labels.h
     ip_parser.c
     ip_parser.h
     ip_program.c
@@ -12,4 +14,4 @@ list(APPEND COMMON_SOURCES
     ip_vars.c
     ip_vars.h
 )
-add_library(interprogram STATIC ${COMMON_SOURCES})
+add_library(interprogram-common STATIC ${COMMON_SOURCES})

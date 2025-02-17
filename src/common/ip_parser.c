@@ -483,6 +483,54 @@ static ip_ast_node_t *ip_parse_if_statement(ip_parser_t *parser)
 }
 
 /*
+ * LabelName ::=
+ *      "*" Expression
+ *    | VAR-NAME                        # Extension
+ */
+static ip_ast_node_t *ip_parse_label_name(ip_parser_t *parser)
+{
+    ip_ast_node_t *node = 0;
+    ip_label_t *label = 0;
+    if (parser->tokeniser.token == ITOK_LABEL) {
+        /* Numeric or computed label */
+        node = ip_parse_next_expression(parser);
+        if (node && node->type == ITOK_INT_VALUE &&
+                node->ivalue >= IP_MIN_LABEL_NUMBER &&
+                node->ivalue <= IP_MAX_LABEL_NUMBER) {
+            /* We can replace this with a direct label reference.
+             * No need to compute the label number at runtime. */
+            ip_int_t num = node->ivalue;
+            ip_ast_node_free(node);
+            node = 0;
+            label = ip_label_lookup_by_number(&(parser->program->labels), num);
+            if (!label) {
+                label = ip_label_create_by_number
+                    (&(parser->program->labels), num);
+            }
+        }
+    } else if (parser->tokeniser.token == ITOK_VAR_NAME &&
+               (parser->flags & ITOK_TYPE_EXTENSION) != 0) {
+        /* Named label */
+        const char *name = parser->tokeniser.token_info->name;
+        label = ip_label_lookup_by_name(&(parser->program->labels), name);
+        if (!label) {
+            label = ip_label_create_by_name
+                (&(parser->program->labels), name);
+        }
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    } else if ((parser->flags & ITOK_TYPE_EXTENSION) != 0) {
+        ip_error_near(parser, "label number or name expected");
+    } else {
+        ip_error_near(parser, "label number expected");
+    }
+    if (label) {
+        node = ip_ast_make_standalone(ITOK_LABEL, &(parser->tokeniser.loc));
+        node->label = label;
+    }
+    return node;
+}
+
+/*
  * Statement ::=
  *      AssignmentStatement
  *    | ArithmeticStatement
@@ -526,13 +574,13 @@ static ip_ast_node_t *ip_parse_if_statement(ip_parser_t *parser)
  *    | "RAISE TO THE POWER OF" Expression
  *
  * ControlFlowStatement ::=
- *      "GO TO" "*" Expression
- *    | "EXECUTE PROCESS" "*" Expression
- *    | "REPEAT FROM" "*" Expression VAR-NAME "TIMES"
+ *      "GO TO" LabelName
+ *    | "EXECUTE PROCESS" LabelName
+ *    | "REPEAT FROM" LabelName VAR-NAME "TIMES"
  *    | "END OF PROCESS DEFINITION"
  *    | "END OF INTERPROGRAM"
  *    | "PAUSE"
- *    | "CALL" "*" Expression           # Extensions
+ *    | "CALL" LabelName                # Extensions
  *    | "RETURN"
  *    | "RETURN" Expression
  *
@@ -688,13 +736,9 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_EXECUTE_PROCESS:
     case ITOK_CALL:
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        if (parser->tokeniser.token == ITOK_LABEL) {
-            node = ip_parse_next_expression(parser);
-            node = ip_ast_make_unary_statement
-                (token, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
-        } else {
-            ip_error_near(parser, "label reference expected");
-        }
+        node = ip_parse_label_name(parser);
+        node = ip_ast_make_unary_statement
+            (token, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
         break;
 
     case ITOK_REPEAT_FROM:
@@ -834,9 +878,83 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
 }
 
 /*
+ * Label ::= ( "*" INTEGER | "*" VAR-NAME )
+ */
+static void ip_parse_statement_label(ip_parser_t *parser)
+{
+    ip_label_t *label = 0;
+    ip_ast_node_t *stmt;
+
+    /* Skip the "*" that marks the label */
+    ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+
+    /* Do we have a numeric label or a named label? */
+    if (parser->tokeniser.token == ITOK_INT_VALUE) {
+        /* Label that is referred to by number */
+        ip_int_t num = (ip_int_t)(parser->tokeniser.ivalue);
+        if (num < IP_MIN_LABEL_NUMBER || num > IP_MAX_LABEL_NUMBER) {
+            ip_error(parser, "label numbers must be between %u and %u",
+                     (unsigned)IP_MIN_LABEL_NUMBER,
+                     (unsigned)IP_MAX_LABEL_NUMBER);
+            ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+            return;
+        }
+        label = ip_label_lookup_by_number(&(parser->program->labels), num);
+        if (label) {
+            if (label->is_defined) {
+                ip_error(parser, "label %u is already defined", (unsigned)num);
+                ip_error_at(parser, &(label->node->loc),
+                            "previous definition here");
+                label = 0;
+            } else {
+                /* Forward reference to this label that is now defined */
+                label->is_defined = 1;
+            }
+        } else {
+            label = ip_label_create_by_number(&(parser->program->labels), num);
+            label->is_defined = 1;
+        }
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    } else if (parser->tokeniser.token == ITOK_VAR_NAME &&
+               (parser->flags & ITOK_TYPE_EXTENSION) != 0) {
+        /* Label that is referred to by name */
+        const char *name = parser->tokeniser.token_info->name;
+        label = ip_label_lookup_by_name(&(parser->program->labels), name);
+        if (label) {
+            if (label->is_defined) {
+                ip_error(parser, "label '%s' is already defined", name);
+                ip_error_at(parser, &(label->node->loc),
+                            "previous definition here");
+                label = 0;
+            } else {
+                /* Forward reference to this label that is now defined */
+                label->is_defined = 1;
+            }
+        } else {
+            label = ip_label_create_by_name(&(parser->program->labels), name);
+            label->is_defined = 1;
+        }
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    } else if ((parser->flags & ITOK_TYPE_EXTENSION) != 0) {
+        ip_error(parser, "label number or name expected");
+    } else {
+        ip_error(parser, "label number expected");
+    }
+
+    /* Construct a statement node and link it to the label */
+    if (label) {
+        stmt = ip_ast_make_standalone(ITOK_LABEL, &(parser->tokeniser.loc));
+        stmt->label = label;
+        stmt->this_type = IP_TYPE_DYNAMIC;
+        label->node = stmt;
+        ip_ast_list_add(&(parser->program->statements), stmt);
+    }
+}
+
+/*
  * Statements ::= { StatementLine } EOF
  * StatementLine ::= [ Labels Statement { "," Labels Statement } ] [ "," ] EOL
- * Labels ::= { "*" INTEGER }
+ * Labels ::= { Label }
  */
 void ip_parse_statements(ip_parser_t *parser)
 {
@@ -849,35 +967,13 @@ void ip_parse_statements(ip_parser_t *parser)
              * should only be allowed at the start of the line, but we
              * allow them before any statement for simplicity. */
             while (parser->tokeniser.token == ITOK_LABEL) {
-                ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-                if (parser->tokeniser.token == ITOK_INT_VALUE) {
-                    ip_uint_t label = parser->tokeniser.ivalue;
-                    if (label < IP_MIN_LABEL_NUMBER ||
-                            label > IP_MAX_LABEL_NUMBER) {
-                        ip_error(parser, "labels must be between %u and %u",
-                                 (unsigned)IP_MIN_LABEL_NUMBER,
-                                 (unsigned)IP_MAX_LABEL_NUMBER);
-                    } else if ((parser->labels_used[label / 8] &
-                                (1 << (label % 8))) != 0) {
-                        ip_error(parser, "label %u is already in use",
-                                 (unsigned)label);
-                    } else {
-                        /* Mark the label as in use and add it to the list */
-                        parser->labels_used[label / 8] |= (1 << (label % 8));
-                        stmt = ip_ast_make_int_constant
-                            (label, &(parser->tokeniser.loc));
-                        stmt->type = ITOK_LABEL;
-                        ip_ast_list_add(&(parser->program->statements), stmt);
+                /* Parse the label number or name */
+                ip_parse_statement_label(parser);
 
-                        /* We reset the type of "THIS" to DYNAMIC when we
-                         * reach a label because don't know what it might
-                         * be on entry to the label from a "GO TO". */
-                        parser->this_type = IP_TYPE_DYNAMIC;
-                    }
-                    ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-                } else {
-                    ip_error(parser, "label number expected");
-                }
+                /* We reset the type of "THIS" to DYNAMIC when we
+                 * reach a label because don't know what it might
+                 * be on entry to the label from a "GO TO". */
+                parser->this_type = IP_TYPE_DYNAMIC;
             }
 
             /* Parse the next statement and add it to the list */
@@ -1196,4 +1292,25 @@ void ip_parse_preliminary_statements(ip_parser_t *parser)
             ip_error(parser, "missing compilation statement (4)");
         }
     }
+}
+
+static void ip_parse_check_labels(ip_parser_t *parser, ip_label_t *label)
+{
+    /* Walk the tree in alphanumeric order and print the undefined labels */
+    if (label != &(parser->program->labels.nil)) {
+        ip_parse_check_labels(parser, label->left);
+        if (!(label->is_defined)) {
+            if (label->name) {
+                ip_error(parser, "undefined label '%s'", label->name);
+            } else {
+                ip_error(parser, "undefined label %u", (unsigned)(label->num));
+            }
+        }
+        ip_parse_check_labels(parser, label->right);
+    }
+}
+
+void ip_parse_check_undefined_labels(ip_parser_t *parser)
+{
+    ip_parse_check_labels(parser, parser->program->labels.root.right);
 }

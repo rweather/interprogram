@@ -31,6 +31,11 @@ extern "C" {
 #endif
 
 /**
+ * @brief Information about a label in the program.
+ */
+typedef struct ip_label_s ip_label_t;
+
+/**
  * @brief Node in the INTERPROGRAM language's abstract syntax tree.
  */
 typedef struct ip_ast_node_s ip_ast_node_t;
@@ -70,6 +75,9 @@ struct ip_ast_node_s
 
         /** Reference to a variable when "type" is ITOK_VAR_NAME */
         ip_var_t *var;
+
+        /** Reference to a label when "type" is ITOK_LABEL */
+        ip_label_t *label;
     };
 
     /** Location of the node in the original source file */

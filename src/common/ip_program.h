@@ -24,6 +24,7 @@
 #define INTERPROGRAM_PROGRAM_H
 
 #include "ip_ast.h"
+#include "ip_labels.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,6 +37,9 @@ typedef struct
 {
     /** Table containing all variables in the program */
     ip_var_table_t vars;
+
+    /** Table containing all labels in the program */
+    ip_label_table_t labels;
 
     /** List of all statements in the program */
     ip_ast_list_t statements;

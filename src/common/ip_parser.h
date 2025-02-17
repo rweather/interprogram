@@ -29,12 +29,6 @@
 extern "C" {
 #endif
 
-/** Minimum number that can be used for a label */
-#define IP_MIN_LABEL_NUMBER 1
-
-/** Maximum number that can be used for a label */
-#define IP_MAX_LABEL_NUMBER 9999 /* Classic INTERPROGRAM used 150 */
-
 /**
  * @brief Information about an in-progress parse of an INTERPROGRAM program.
  */
@@ -60,9 +54,6 @@ typedef struct
 
     /** Number of warnings that were reported during the parsing process */
     unsigned long num_warnings;
-
-    /** Flags that indicate which label numbers are in use */
-    unsigned char labels_used[(IP_MAX_LABEL_NUMBER + 8) / 8];
 
 } ip_parser_t;
 
@@ -113,6 +104,13 @@ void ip_parse_statements(ip_parser_t *parser);
  * end of the preliminary statements and the start of the main program code.
  */
 void ip_parse_preliminary_statements(ip_parser_t *parser);
+
+/**
+ * @brief Checks for undefined labels and prints error messages for them.
+ *
+ * @param[in,out] parser The parser state.
+ */
+void ip_parse_check_undefined_labels(ip_parser_t *parser);
 
 /**
  * @brief Prints an error message for the current line.
