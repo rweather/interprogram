@@ -44,14 +44,17 @@ typedef struct
     /** List of all statements in the program */
     ip_ast_list_t statements;
 
+    /** Name of the file that the program was loaded from */
+    char *filename;
+
 } ip_program_t;
 
 /**
- * @brief Initialises a program.
+ * @brief Creates a new program.
  *
- * @param[out] program The program state to initialise.
+ * @param[in] filename Name of the file the program was loaded from.
  */
-void ip_program_init(ip_program_t *program);
+ip_program_t *ip_program_new(const char *filename);
 
 /**
  * @brief Frees a program.

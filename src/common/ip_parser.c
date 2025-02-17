@@ -21,6 +21,8 @@
  */
 
 #include "ip_parser.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Forward declarations */
@@ -1313,4 +1315,55 @@ static void ip_parse_check_labels(ip_parser_t *parser, ip_label_t *label)
 void ip_parse_check_undefined_labels(ip_parser_t *parser)
 {
     ip_parse_check_labels(parser, parser->program->labels.root.right);
+}
+
+static int ip_parse_read_stdio(FILE *input)
+{
+    return getc(input);
+}
+
+unsigned long ip_parse_program_file
+    (ip_program_t **program, const char *filename, unsigned options)
+{
+    FILE *input;
+    ip_parser_t parser;
+    unsigned long num_errors;
+
+    /* Construct the program image */
+    *program = ip_program_new(filename ? filename : "-");
+
+    /* Open the input file */
+    if (filename) {
+        input = fopen(filename, "r");
+        if (!input) {
+            perror(filename);
+            return 1; /* One error occurred */
+        }
+    } else {
+        input = stdin;
+    }
+
+    /* Initialise the parser and tokeniser */
+    ip_parse_init(&parser);
+    parser.flags = options;
+    parser.tokeniser.read_char = (ip_token_read_char)ip_parse_read_stdio;
+    parser.tokeniser.user_data = input;
+    if (filename) {
+        /* Use the permanent version of the filename for setting the
+         * locations of nodes in the abstract syntax tree. */
+        parser.tokeniser.filename = (*program)->filename;
+    }
+
+    /* Parse the contents of the program file */
+    ip_parse_preliminary_statements(&parser);
+    ip_parse_statements(&parser);
+    ip_parse_check_undefined_labels(&parser);
+
+    /* Clean up and exit */
+    if (filename) {
+        fclose(input);
+    }
+    num_errors = parser.num_errors;
+    ip_parse_free(&parser);
+    return num_errors;
 }

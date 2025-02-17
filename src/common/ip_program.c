@@ -21,14 +21,24 @@
  */
 
 #include "ip_program.h"
+#include <stdlib.h>
 #include <string.h>
 
-void ip_program_init(ip_program_t *program)
+ip_program_t *ip_program_new(const char *filename)
 {
-    memset(program, 0, sizeof(ip_program_t));
+    ip_program_t *program = calloc(1, sizeof(ip_program_t));
+    if (!program) {
+        ip_out_of_memory();
+    }
     ip_var_table_init(&(program->vars));
     ip_label_table_init(&(program->labels));
     ip_ast_list_init(&(program->statements));
+    program->filename = strdup(filename);
+    if (!(program->filename)) {
+        ip_program_free(program);
+        ip_out_of_memory();
+    }
+    return program;
 }
 
 void ip_program_free(ip_program_t *program)
@@ -36,5 +46,6 @@ void ip_program_free(ip_program_t *program)
     ip_var_table_free(&(program->vars));
     ip_label_table_free(&(program->labels));
     ip_ast_list_free(&(program->statements));
-    memset(program, 0, sizeof(ip_program_t));
+    free(program->filename);
+    free(program);
 }

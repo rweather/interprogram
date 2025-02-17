@@ -113,6 +113,21 @@ void ip_parse_preliminary_statements(ip_parser_t *parser);
 void ip_parse_check_undefined_labels(ip_parser_t *parser);
 
 /**
+ * @brief Parse a program file and return the program image.
+ *
+ * @param[out] program Returns a reference to the program that was loaded,
+ * even if an error occurred in the program.  Must be freed by the caller
+ * using ip_program_free().
+ * @param[in] filename Name of the file to load the program from,
+ * or NULL for standard input.
+ * @param[in] options Flags for syntax options; e.g. ITOK_TYPE_EXTENSION.
+ *
+ * @return Zero on success or the number of errors that occured.
+ */
+unsigned long ip_parse_program_file
+    (ip_program_t **program, const char *filename, unsigned options);
+
+/**
  * @brief Prints an error message for the current line.
  *
  * @param[in,out] parser The parser state.
