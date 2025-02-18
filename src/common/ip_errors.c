@@ -80,7 +80,6 @@ void ip_error_near(ip_parser_t *parser, const char *format, ...)
     if (format) {
         va_start(va, format);
         vfprintf(stderr, format, va);
-        putc('\n', stderr);
         va_end(va);
     } else {
         fputs("syntax error", stderr);

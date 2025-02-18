@@ -28,7 +28,6 @@
 static int check_keyword(const char *name, int id)
 {
     const ip_token_info_t *info;
-    int prefix = -1;
     int exitval = 0;
     info = ip_tokeniser_get_keyword(id);
     if (!info || strcmp(name, info->name) != 0 || id != info->code) {
@@ -41,13 +40,10 @@ static int check_keyword(const char *name, int id)
         return exitval;
     } else {
         info = ip_tokeniser_lookup_keyword
-            (name, strlen(name), ITOK_TYPE_ANY | ITOK_TYPE_EXTENSION, &prefix);
+            (name, strlen(name), ITOK_TYPE_ANY | ITOK_TYPE_EXTENSION);
     }
     if (!info) {
         printf("0x%02X, \"%s\" could not be looked up\n", id, name);
-        exitval = 1;
-    } else if (prefix) {
-        printf("0x%02X, \"%s\" is a prefix when it should not be\n", id, name);
         exitval = 1;
     } else {
         if (strcmp(name, info->name) != 0 || id != info->code) {
@@ -251,7 +247,7 @@ int main(int argc, char **argv)
 
     RUN_LEXER_TEST("var", ITOK_VAR_NAME, ITOK_TYPE_EXPRESSION);
     RUN_LEXER_TEST("FORM SQUARE ROOT", ITOK_SQRT, ITOK_TYPE_STATEMENT);
-    RUN_LEXER_TEST("FORM", ITOK_ERROR, ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION);
+    RUN_LEXER_TEST("FORM", ITOK_VAR_NAME, ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION);
     RUN_LEXER_TEST("FORMY", ITOK_VAR_NAME, ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION);
     RUN_LEXER_TEST("THIS", ITOK_THIS, ITOK_TYPE_EXPRESSION);
     RUN_LEXER_TEST("NONE", ITOK_NONE, ITOK_TYPE_EXPRESSION);

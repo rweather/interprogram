@@ -196,7 +196,7 @@ static void ip_label_insert(ip_label_table_t *labels, ip_label_t *node)
         } else {
             x = x->right;
         }
-        if (!(x->left->red) && !(x->right->red)) {
+        if (x->left->red && x->right->red) {
             x->red = 1;
             x->left->red = 0;
             x->right->red = 0;
@@ -214,7 +214,8 @@ static void ip_label_insert(ip_label_table_t *labels, ip_label_t *node)
     }
 
     /* Insert the node into the tree */
-    cmp = ip_label_compare(node, x);
+    x = node;
+    cmp = ip_label_compare(x, p);
     if (cmp < 0) {
         p->left = x;
     } else {

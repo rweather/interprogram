@@ -25,6 +25,7 @@
 
 #include "ip_ast.h"
 #include "ip_labels.h"
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,9 +60,24 @@ ip_program_t *ip_program_new(const char *filename);
 /**
  * @brief Frees a program.
  *
- * @param[int] program The program state to free.
+ * @param[in] program The program state to free.
  */
 void ip_program_free(ip_program_t *program);
+
+/**
+ * @brief Resets all variables to zero and marks them as uninitialised.
+ *
+ * @param[in,out] program The program containing the variables to reset.
+ */
+void ip_program_reset_variables(ip_program_t *program);
+
+/**
+ * @brief List the contents of a program.
+ *
+ * @param[in] program The program to be listed.
+ * @param[in] file The file to write the listing to.
+ */
+void ip_program_list(const ip_program_t *program, FILE *file);
 
 #ifdef __cplusplus
 }

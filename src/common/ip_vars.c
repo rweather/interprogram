@@ -145,7 +145,7 @@ static void ip_var_insert(ip_var_table_t *vars, ip_var_t *node)
         } else {
             x = x->right;
         }
-        if (!(x->left->red) && !(x->right->red)) {
+        if (x->left->red && x->right->red) {
             x->red = 1;
             x->left->red = 0;
             x->right->red = 0;
@@ -163,7 +163,8 @@ static void ip_var_insert(ip_var_table_t *vars, ip_var_t *node)
     }
 
     /* Insert the node into the tree */
-    cmp = x->name ? strcmp(node->name, x->name) : 1;
+    x = node;
+    cmp = p->name ? strcmp(x->name, p->name) : 1;
     if (cmp < 0) {
         p->left = x;
     } else {

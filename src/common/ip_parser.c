@@ -464,6 +464,7 @@ static ip_ast_node_t *ip_parse_condition(ip_parser_t *parser)
             /* Conditions always have a boolean result */
             node->value_type = IP_TYPE_INT;
         }
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
         break;
 
     default:
@@ -1255,7 +1256,6 @@ void ip_parse_preliminary_statements(ip_parser_t *parser)
 
         case ITOK_PRELIM_4:
             /* End of the preliminary statements */
-            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_4);
             if (parser->tokeniser.token != ITOK_COMPILE_PROGRAM) {
                 ip_error
                     (parser, "'COMPILE THE FOLLOWING INTERPROGRAM' expected");
@@ -1348,6 +1348,7 @@ unsigned long ip_parse_program_file
     parser.flags = options;
     parser.tokeniser.read_char = (ip_token_read_char)ip_parse_read_stdio;
     parser.tokeniser.user_data = input;
+    parser.program = *program;
     if (filename) {
         /* Use the permanent version of the filename for setting the
          * locations of nodes in the abstract syntax tree. */

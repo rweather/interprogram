@@ -415,8 +415,6 @@ static void ip_tokeniser_get_identifier
     size_t posn = tokeniser->buffer_posn - 1;
     size_t end_var = posn;
     int ch;
-    int prefix = 0;
-    int prefix_next = 0;
     for (;;) {
         /* Skip forward to the next non-alphabetic character */
         while (tokeniser->buffer_posn < tokeniser->buffer_len) {
@@ -434,19 +432,12 @@ static void ip_tokeniser_get_identifier
 
         /* Do we have a full keyword? */
         info = ip_tokeniser_lookup_keyword
-            (tokeniser->buffer + posn, tokeniser->buffer_posn - posn,
-             context, &prefix_next);
+            (tokeniser->buffer + posn, tokeniser->buffer_posn - posn, context);
         if (info) {
             /* Full keyword found */
             ip_tokeniser_set_token_info(tokeniser, info);
             return;
         }
-
-        /* Keep track of whether we have a prefix on the leading words.
-         * This prevents the use of the first word as a variable.
-         * For example, "FORM" cannot be used as a variable because it is a
-         * prefix of "FORM SQUARE ROOT", "FORM SINE", etc. */
-        prefix |= prefix_next;
 
         /* If there is whitespace followed by another word, then try
          * adding another word to the in-progress keyword */
@@ -471,25 +462,21 @@ static void ip_tokeniser_get_identifier
         }
         break;
     }
+
+    /* We have a variable name */
     tokeniser->buffer_posn = end_var;
     tokeniser->name_len = 0;
     ip_tokeniser_add_name_chars
         (tokeniser, tokeniser->buffer + posn, tokeniser->buffer_posn - posn);
-    if (prefix) {
-        /* First word cannot be a variable name as it is a prefix */
-        ip_tokeniser_set_token(tokeniser, ITOK_ERROR);
-    } else {
-        /* First word is not a prefix, so it can be a variable name */
-        for (posn = 0; posn < tokeniser->name_len; ++posn) {
-            /* Convert the variable name to upper case */
-            ch = tokeniser->name[posn];
-            if (ch >= 'a' && ch <= 'z') {
-                ch = ch - 'a' + 'A';
-                tokeniser->name[posn] = (char)ch;
-            }
+    for (posn = 0; posn < tokeniser->name_len; ++posn) {
+        /* Convert the variable name to upper case */
+        ch = tokeniser->name[posn];
+        if (ch >= 'a' && ch <= 'z') {
+            ch = ch - 'a' + 'A';
+            tokeniser->name[posn] = (char)ch;
         }
-        ip_tokeniser_set_token(tokeniser, ITOK_VAR_NAME);
     }
+    ip_tokeniser_set_token(tokeniser, ITOK_VAR_NAME);
 }
 
 /**
@@ -615,6 +602,7 @@ int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
 
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
+    case '.':
         ip_tokeniser_get_number(tokeniser, context);
         break;
 
@@ -636,7 +624,7 @@ int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
     /* Simple single-character tokens made up of punctuation characters */
     IP_SIMPLE_TOKEN(',', ITOK_COMMA,        ITOK_TYPE_ANY)
     IP_SIMPLE_TOKEN(')', ITOK_RPAREN,       ITOK_TYPE_ANY)
-    IP_SIMPLE_TOKEN('=', ITOK_EQUAL,        ITOK_TYPE_SET)
+    IP_SIMPLE_TOKEN('=', ITOK_EQUAL,        ITOK_TYPE_ANY)
     IP_SIMPLE_TOKEN('&', ITOK_AMPERSAND,    ITOK_TYPE_STATEMENT)
     IP_SIMPLE_TOKEN('+', ITOK_PLUS,         ITOK_TYPE_EXPRESSION)
     IP_SIMPLE_TOKEN('-', ITOK_MINUS,        ITOK_TYPE_EXPRESSION)
@@ -694,15 +682,12 @@ const ip_token_info_t *ip_tokeniser_get_keyword(int token)
  * @param[in] name Points to the name to match.
  * @param[in] len Length of the name in characters.
  * @param[in] name2 Points to the normalised keyword name to match against.
- * @param[out] prefix Set to non-zero on output if @a name is not a
- * keyword but it is a prefix for a keyword so it cannot be an identifier.
  *
  * @return Non-zero if the keyword matches, zero if not.
  */
 static int ip_tokeniser_match_keyword
-    (const char *name, size_t len, const char *name2, int *prefix)
+    (const char *name, size_t len, const char *name2)
 {
-    size_t posn = 0;
     while (len > 0 && *name2 != '\0') {
         if (*name2 == ' ') {
             /* We expect one or more whitespace characters in this position */
@@ -712,11 +697,6 @@ static int ip_tokeniser_match_keyword
             while (len > 0 && ip_tokeniser_is_space(*name)) {
                 ++name;
                 --len;
-            }
-            if (posn != 0) {
-                /* We have already matched a keyword prefix, which means
-                 * that the preceding words cannot be a variable name */
-                *prefix = 1;
             }
         } else {
             /* Match the next alphabetic character in upper case */
@@ -730,31 +710,18 @@ static int ip_tokeniser_match_keyword
             --len;
         }
         ++name2;
-        ++posn;
     }
-    if (len == 0 && *name2 == '\0') {
-        /* We have matched a whole keyword, so it is not a prefix */
-        *prefix = 0;
-        return 1;
-    } else {
-        if (posn != 0) {
-            /* We have already matched a keyword prefix, which means
-             * that the preceding words cannot be a variable name */
-            *prefix = 1;
-        }
-        return 0;
-    }
+    return (len == 0 && *name2 == '\0');
 }
 
 const ip_token_info_t *ip_tokeniser_lookup_keyword
-    (const char *name, size_t len, unsigned context, int *prefix)
+    (const char *name, size_t len, unsigned context)
 {
     const ip_token_info_t *info;
     size_t tlen;
     if (!len) {
         return 0;
     }
-    *prefix = 0;
     for (info = tokens; info->name != 0; ++info) {
         /* Ignore the token if it is an extension but we are not
          * currently parsing the extended syntax. */
@@ -775,7 +742,7 @@ const ip_token_info_t *ip_tokeniser_lookup_keyword
         }
 
         /* Match against an alphabetic keyword */
-        if (ip_tokeniser_match_keyword(name, len, info->name, prefix)) {
+        if (ip_tokeniser_match_keyword(name, len, info->name)) {
             return info;
         }
     }
@@ -826,6 +793,7 @@ char *ip_tokeniser_read_punch(ip_tokeniser_t *tokeniser)
                     /* Return the finished punch text to the caller */
                     ip_tokeniser_add_name(tokeniser, '\0');
                     tokeniser->token_space.name = tokeniser->name;
+                    tokeniser->buffer_posn = posn;
                     return tokeniser->name;
                 } else {
                     ip_tokeniser_add_name(tokeniser, ch);

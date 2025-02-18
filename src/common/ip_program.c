@@ -49,3 +49,9 @@ void ip_program_free(ip_program_t *program)
     free(program->filename);
     free(program);
 }
+
+void ip_program_reset_variables(ip_program_t *program)
+{
+    // TODO
+    (void)program;
+}

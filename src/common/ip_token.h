@@ -315,8 +315,6 @@ const ip_token_info_t *ip_tokeniser_get_keyword(int token);
  * @param[in] len Length of the name in characters.
  * @param[in] context The context in which the token should be parsed;
  * ITOK_TYPE_PRELIM_START, ITOK_TYPE_STATEMENT, etc.
- * @param[out] prefix Set to non-zero on output if @a name is not a
- * keyword but it is a prefix for a keyword so it cannot be an identifier.
  *
  * @return The token information block, or NULL if @a name is not a keyword.
  *
@@ -324,7 +322,7 @@ const ip_token_info_t *ip_tokeniser_get_keyword(int token);
  * then extension keywords are not permitted.
  */
 const ip_token_info_t *ip_tokeniser_lookup_keyword
-    (const char *name, size_t len, unsigned context, int *prefix);
+    (const char *name, size_t len, unsigned context);
 
 /**
  * @brief Reads the contents of a "PUNCH THE FOLLOWING CHARACTERS" statement.
