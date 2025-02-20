@@ -62,6 +62,40 @@ void ip_var_table_free(ip_var_table_t *vars)
     memset(vars, 0, sizeof(ip_var_table_t));
 }
 
+static void ip_var_reset(ip_var_table_t *vars, ip_var_t *var)
+{
+    if (var != &(vars->nil)) {
+        switch (var->type) {
+        case IP_TYPE_INT:
+            var->initialised = 0;
+            var->ivalue = 0;
+            break;
+
+        case IP_TYPE_FLOAT:
+            var->initialised = 0;
+            var->fvalue = 0;
+            break;
+
+        case IP_TYPE_ARRAY_OF_INT:
+            memset(var->iarray, 0, sizeof(ip_int_t) * var->size);
+            break;
+
+        case IP_TYPE_ARRAY_OF_FLOAT:
+            memset(var->farray, 0, sizeof(ip_float_t) * var->size);
+            break;
+
+        default: break;
+        }
+        ip_var_reset(vars, var->left);
+        ip_var_reset(vars, var->right);
+    }
+}
+
+void ip_var_table_reset(ip_var_table_t *vars)
+{
+    ip_var_reset(vars, vars->root.right);
+}
+
 ip_var_t *ip_var_lookup(const ip_var_table_t *vars, const char *name)
 {
     ip_var_t *var = vars->root.right;

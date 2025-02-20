@@ -105,6 +105,14 @@ void ip_var_table_init(ip_var_table_t *vars);
 void ip_var_table_free(ip_var_table_t *vars);
 
 /**
+ * @brief Resets all variables in a variable table to their default values
+ * and mark them as uninitialised.
+ *
+ * @param[in,out] vars The variable table to reset.
+ */
+void ip_var_table_reset(ip_var_table_t *vars);
+
+/**
  * @brief Looks up a variable in a variable table.
  *
  * @param[in] vars The variable table.

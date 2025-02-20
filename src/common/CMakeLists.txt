@@ -2,6 +2,8 @@ list(APPEND COMMON_SOURCES
     ip_ast.c
     ip_ast.h
     ip_errors.c
+    ip_exec.c
+    ip_exec.h
     ip_labels.c
     ip_labels.h
     ip_listing.c
@@ -12,6 +14,8 @@ list(APPEND COMMON_SOURCES
     ip_token.c
     ip_token.h
     ip_types.h
+    ip_value.c
+    ip_value.h
     ip_vars.c
     ip_vars.h
 )

@@ -88,6 +88,12 @@ static ip_ast_node_t *ip_parse_variable_expression
     ip_ast_node_t *node = 0;
     ip_var_t *var;
 
+    /* Must have a variable name token at this position */
+    if (parser->tokeniser.token != ITOK_VAR_NAME) {
+        ip_error(parser, "variable name expected");
+        return 0;
+    }
+
     /* Look up the variable name */
     var = ip_var_lookup
         (&(parser->program->vars), parser->tokeniser.token_info->name);
@@ -110,7 +116,7 @@ static ip_ast_node_t *ip_parse_variable_expression
                 parser->tokeniser.token == ITOK_LPAREN) {
             /* We cannot use an index with this variable, but parse it anyway */
             ip_error(parser, "variable '%s' is not an array", var->name);
-            ip_ast_node_free(ip_parse_extended_expression(parser));
+            ip_ast_node_free(ip_parse_expression(parser));
         }
         break;
 
@@ -118,7 +124,7 @@ static ip_ast_node_t *ip_parse_variable_expression
     case IP_TYPE_ARRAY_OF_FLOAT:
         if (parser->tokeniser.token == ITOK_LPAREN) {
             /* Parse the array index expression */
-            node = ip_parse_extended_expression(parser);
+            node = ip_parse_expression(parser);
 
             /* Construct a lookup of the specific array index */
             node = ip_ast_make_array_access
@@ -294,6 +300,15 @@ static ip_ast_node_t *ip_parse_classic_expression(ip_parser_t *parser)
     int token;
 
     switch (parser->tokeniser.token) {
+    case ITOK_THIS:
+        /* Type "THIS" based on the last value it had.  Within a block,
+         * it is usually possible to guess the type of "THIS" from how the
+         * previous statements used it.  If this is the first reference to
+         * "THIS" in a block, the type will be "dynamic". */
+        node = ip_ast_make_this(parser->this_type, &(parser->tokeniser.loc));
+        ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+        break;
+
     case ITOK_INT_VALUE:
         /* Recognise a positive integer constant */
         node = ip_ast_make_int_constant
@@ -839,11 +854,11 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
         if (parser->tokeniser.token == ITOK_COMMA ||
                 parser->tokeniser.token == ITOK_EOL ||
                 parser->tokeniser.token == ITOK_EOF) {
-            /* Output "THIS" with default formatting */
+            /* Output "THIS" with aligned formatting */
             node = ip_ast_make_standalone
                 (ITOK_OUTPUT, &(parser->tokeniser.loc));
         } else {
-            /* Output the value of an expression with complex formatting */
+            /* Output the value of an expression with no formatting */
             node = ip_parse_expression(parser);
             if (node) {
                 node = ip_ast_make_unary_statement
@@ -854,12 +869,32 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
         break;
 
     case ITOK_PUNCH:
+        if (parser->tokeniser.buffer_posn < parser->tokeniser.buffer_len) {
+            /* If "PUNCH THE FOLLOWING CHARACTERS" is followed by a comma,
+             * then suppress the output of "~~~~~" blanks at runtime. */
+            if (parser->tokeniser.buffer[parser->tokeniser.buffer_posn] == ',') {
+                ++(parser->tokeniser.buffer_posn);
+                token = ITOK_PUNCH_NO_BLANKS;
+            }
+        }
         text = ip_tokeniser_read_punch(&(parser->tokeniser));
-        node = ip_ast_make_text(ITOK_PUNCH, text, &(parser->tokeniser.loc));
+        node = ip_ast_make_text(token, text, &(parser->tokeniser.loc));
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
         break;
 
     case ITOK_COPY_TAPE:
+        if (parser->tokeniser.buffer_posn < parser->tokeniser.buffer_len) {
+            /* If "COPY TAPE" is followed by a comma, then suppress the
+             * output of "~~~~~" blanks at runtime. */
+            if (parser->tokeniser.buffer[parser->tokeniser.buffer_posn] == ',') {
+                ++(parser->tokeniser.buffer_posn);
+                token = ITOK_COPY_NO_BLANKS;
+            }
+        }
+        node = ip_ast_make_standalone(token, &(parser->tokeniser.loc));
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+        break;
+
     case ITOK_IGNORE_TAPE:
         node = ip_ast_make_standalone(token, &(parser->tokeniser.loc));
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);

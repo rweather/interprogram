@@ -373,6 +373,11 @@ static void ip_program_list_node
         fprintf(file, "%s~~~~~", node->text);
         break;
 
+    case ITOK_PUNCH_NO_BLANKS:
+        fprintf(file, "PUNCH THE FOLLOWING CHARACTERS,\n");
+        fprintf(file, "%s~~~~~", node->text);
+        break;
+
     case ITOK_PAUSE:
     case ITOK_COPY_TAPE:
     case ITOK_IGNORE_TAPE:
@@ -385,6 +390,10 @@ static void ip_program_list_node
     case ITOK_EXP:
     case ITOK_ABS:
         ip_program_list_node_name(node, file);
+        break;
+
+    case ITOK_COPY_NO_BLANKS:
+        fprintf(file, "COPY TAPE,");
         break;
 
     case ITOK_MODULO:

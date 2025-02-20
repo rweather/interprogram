@@ -43,15 +43,16 @@ ip_program_t *ip_program_new(const char *filename)
 
 void ip_program_free(ip_program_t *program)
 {
-    ip_var_table_free(&(program->vars));
-    ip_label_table_free(&(program->labels));
-    ip_ast_list_free(&(program->statements));
-    free(program->filename);
-    free(program);
+    if (program) {
+        ip_var_table_free(&(program->vars));
+        ip_label_table_free(&(program->labels));
+        ip_ast_list_free(&(program->statements));
+        free(program->filename);
+        free(program);
+    }
 }
 
 void ip_program_reset_variables(ip_program_t *program)
 {
-    // TODO
-    (void)program;
+    ip_var_table_reset(&(program->vars));
 }

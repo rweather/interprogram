@@ -127,6 +127,8 @@ extern "C" {
 #define ITOK_INDEX_INT          0xFA    /**< Index into an array of integers */
 #define ITOK_INDEX_FLOAT        0xFB    /**< Index into an array of floats */
 #define ITOK_OUTPUT_NO_EOL      0xFC    /**< Output with no end of line */
+#define ITOK_PUNCH_NO_BLANKS    0xFD    /**< PUNCH without "~~~~~" */
+#define ITOK_COPY_NO_BLANKS     0xFE    /**< COPY TAPE without "~~~~~" */
 
 /* Token type flags */
 /** Token can start a section of the preliminary statements */
