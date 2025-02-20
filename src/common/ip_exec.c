@@ -516,53 +516,143 @@ static int ip_eval_int_sqrt(ip_value_t *result, ip_int_t x)
     return ip_eval_float_sqrt(result, x);
 }
 
-static int ip_eval_float_sin(ip_value_t *result, ip_float_t x)
+static int ip_eval_float_sin_radians(ip_value_t *result, ip_float_t x)
 {
     ip_value_set_float(result, sin(x));
     return IP_EXEC_OK;
 }
 
-static int ip_eval_int_sin(ip_value_t *result, ip_int_t x)
+static int ip_eval_int_sin_radians(ip_value_t *result, ip_int_t x)
 {
-    return ip_eval_float_sin(result, x);
+    return ip_eval_float_sin_radians(result, x);
 }
 
-static int ip_eval_float_cos(ip_value_t *result, ip_float_t x)
+static int ip_eval_float_sin_degrees(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, sin(x * M_PI / 180.0));
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_sin_degrees(ip_value_t *result, ip_int_t x)
+{
+    return ip_eval_float_sin_degrees(result, x);
+}
+
+static int ip_eval_float_sin_pis(ip_value_t *result, ip_float_t x)
+{
+    /* Classic INTERPROGRAM specifies angles in fractions of pi */
+    ip_value_set_float(result, sin(x * M_PI));
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_sin_pis(ip_value_t *result, ip_int_t x)
+{
+    return ip_eval_float_sin_pis(result, x);
+}
+
+static int ip_eval_float_cos_radians(ip_value_t *result, ip_float_t x)
 {
     ip_value_set_float(result, cos(x));
     return IP_EXEC_OK;
 }
 
-static int ip_eval_int_cos(ip_value_t *result, ip_int_t x)
+static int ip_eval_int_cos_radians(ip_value_t *result, ip_int_t x)
 {
-    return ip_eval_float_cos(result, x);
+    return ip_eval_float_cos_radians(result, x);
 }
 
-static int ip_eval_float_tan(ip_value_t *result, ip_float_t x)
+static int ip_eval_float_cos_degrees(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, cos(x * M_PI / 180.0));
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_cos_degrees(ip_value_t *result, ip_int_t x)
+{
+    return ip_eval_float_cos_degrees(result, x);
+}
+
+static int ip_eval_float_cos_pis(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, cos(x * M_PI));
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_cos_pis(ip_value_t *result, ip_int_t x)
+{
+    return ip_eval_float_cos_pis(result, x);
+}
+
+static int ip_eval_float_tan_radians(ip_value_t *result, ip_float_t x)
 {
     ip_value_set_float(result, tan(x));
     return IP_EXEC_OK;
 }
 
-static int ip_eval_int_tan(ip_value_t *result, ip_int_t x)
+static int ip_eval_int_tan_radians(ip_value_t *result, ip_int_t x)
 {
-    return ip_eval_float_tan(result, x);
+    return ip_eval_float_tan_radians(result, x);
 }
 
-static int ip_eval_float_atan(ip_value_t *result, ip_float_t x)
+static int ip_eval_float_tan_degrees(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, tan(x * M_PI / 180.0));
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_tan_degrees(ip_value_t *result, ip_int_t x)
+{
+    return ip_eval_float_tan_degrees(result, x);
+}
+
+static int ip_eval_float_tan_pis(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, tan(x * M_PI));
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_tan_pis(ip_value_t *result, ip_int_t x)
+{
+    return ip_eval_float_tan_pis(result, x);
+}
+
+static int ip_eval_float_atan_radians(ip_value_t *result, ip_float_t x)
 {
     ip_value_set_float(result, atan(x));
     return IP_EXEC_OK;
 }
 
-static int ip_eval_int_atan(ip_value_t *result, ip_int_t x)
+static int ip_eval_int_atan_radians(ip_value_t *result, ip_int_t x)
 {
-    return ip_eval_float_atan(result, x);
+    return ip_eval_float_atan_radians(result, x);
+}
+
+static int ip_eval_float_atan_degrees(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, atan(x) / M_PI * 180.0);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_atan_degrees(ip_value_t *result, ip_int_t x)
+{
+    return ip_eval_float_atan_degrees(result, x);
+}
+
+static int ip_eval_float_atan_pis(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, atan(x) / M_PI);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_atan_pis(ip_value_t *result, ip_int_t x)
+{
+    return ip_eval_float_atan_pis(result, x);
 }
 
 static int ip_eval_float_log(ip_value_t *result, ip_float_t x)
 {
-    ip_value_set_float(result, log(x));
+    /* Classic INTERPROGRAM calculates the logarithm of the absolute value */
+    ip_value_set_float(result, log(fabs(x)));
     return IP_EXEC_OK;
 }
 
@@ -913,19 +1003,51 @@ static int ip_exec_eval_expression
         break;
 
     case ITOK_SIN:
-        EVAL_UNARY(sin);
+        EVAL_UNARY(sin_pis);
         break;
 
     case ITOK_COS:
-        EVAL_UNARY(cos);
+        EVAL_UNARY(cos_pis);
         break;
 
     case ITOK_TAN:
-        EVAL_UNARY(tan);
+        EVAL_UNARY(tan_pis);
         break;
 
     case ITOK_ATAN:
-        EVAL_UNARY(atan);
+        EVAL_UNARY(atan_pis);
+        break;
+
+    case ITOK_SIN_RADIANS:
+        EVAL_UNARY(sin_radians);
+        break;
+
+    case ITOK_COS_RADIANS:
+        EVAL_UNARY(cos_radians);
+        break;
+
+    case ITOK_TAN_RADIANS:
+        EVAL_UNARY(tan_radians);
+        break;
+
+    case ITOK_ATAN_RADIANS:
+        EVAL_UNARY(atan_radians);
+        break;
+
+    case ITOK_SIN_DEGREES:
+        EVAL_UNARY(sin_degrees);
+        break;
+
+    case ITOK_COS_DEGREES:
+        EVAL_UNARY(cos_degrees);
+        break;
+
+    case ITOK_TAN_DEGREES:
+        EVAL_UNARY(tan_degrees);
+        break;
+
+    case ITOK_ATAN_DEGREES:
+        EVAL_UNARY(atan_degrees);
         break;
 
     case ITOK_LOG:

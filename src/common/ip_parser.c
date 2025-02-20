@@ -726,6 +726,14 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_COS:
     case ITOK_TAN:
     case ITOK_ATAN:
+    case ITOK_SIN_RADIANS:
+    case ITOK_COS_RADIANS:
+    case ITOK_TAN_RADIANS:
+    case ITOK_ATAN_RADIANS:
+    case ITOK_SIN_DEGREES:
+    case ITOK_COS_DEGREES:
+    case ITOK_TAN_DEGREES:
+    case ITOK_ATAN_DEGREES:
     case ITOK_LOG:
     case ITOK_EXP:
     case ITOK_ABS:

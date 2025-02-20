@@ -85,27 +85,35 @@ extern "C" {
 
 /* Token codes for extensions to the original INTERPROGRAM language */
 #define ITOK_ABS                0xB4    /**< FORM ABSOLUTE */
-#define ITOK_EQUAL_TO           0xB5    /**< IS EQUAL TO */
-#define ITOK_NOT_EQUAL_TO       0xB6    /**< IS NOT EQUAL TO */
-#define ITOK_GREATER_OR_EQUAL   0xB7    /**< IS GREATER THAN OR EQUAL TO */
-#define ITOK_SMALLER_OR_EQUAL   0xB8    /**< IS SMALLER THAN OR EQUAL TO */
-#define ITOK_NOT_ZERO           0xB9    /**< IS NOT ZERO */
-#define ITOK_FINITE             0xBA    /**< IS FINITE */
-#define ITOK_INFINITE           0xBB    /**< IS INFINITE */
-#define ITOK_NAN                0xBC    /**< IS NOT A NUMBER */
-#define ITOK_MODULO             0xBD    /**< MODULO */
-#define ITOK_BITWISE_AND_NOT    0xBE    /**< BITWISE AND WITH NOT */
-#define ITOK_BITWISE_AND        0xBF    /**< BITWISE AND WITH */
-#define ITOK_BITWISE_OR         0xC0    /**< BITWISE OR WITH */
-#define ITOK_BITWISE_XOR        0xC1    /**< BITWISE XOR WITH */
-#define ITOK_BITWISE_NOT        0xC2    /**< BITWISE NOT */
-#define ITOK_SHIFT_LEFT         0xC3    /**< SHIFT LEFT BY */
-#define ITOK_SHIFT_RIGHT        0xC4    /**< SHIFT RIGHT BY */
-#define ITOK_MUL                0xC5    /**< Multiplication operator "*" */
-#define ITOK_DIV                0xC6    /**< Division operator "/" */
-#define ITOK_RAISE              0xC7    /**< RAISE TO THE POWER OF */
-#define ITOK_CALL               0xC8    /**< CALL */
-#define ITOK_RETURN             0xC9    /**< RETURN */
+#define ITOK_SIN_RADIANS        0xB5    /**< FORM SINE RADIANS */
+#define ITOK_COS_RADIANS        0xB6    /**< FORM COSINE RADIANS */
+#define ITOK_TAN_RADIANS        0xB7    /**< FORM TANGENT RADIANS */
+#define ITOK_ATAN_RADIANS       0xB8    /**< FORM ARCTAN RADIANS */
+#define ITOK_SIN_DEGREES        0xB9    /**< FORM SINE DEGREES */
+#define ITOK_COS_DEGREES        0xBA    /**< FORM COSINE DEGREES */
+#define ITOK_TAN_DEGREES        0xBB    /**< FORM TANGENT DEGREES */
+#define ITOK_ATAN_DEGREES       0xBC    /**< FORM ARCTAN DEGREES */
+#define ITOK_EQUAL_TO           0xBD    /**< IS EQUAL TO */
+#define ITOK_NOT_EQUAL_TO       0xBE    /**< IS NOT EQUAL TO */
+#define ITOK_GREATER_OR_EQUAL   0xBF    /**< IS GREATER THAN OR EQUAL TO */
+#define ITOK_SMALLER_OR_EQUAL   0xC0    /**< IS SMALLER THAN OR EQUAL TO */
+#define ITOK_NOT_ZERO           0xC1    /**< IS NOT ZERO */
+#define ITOK_FINITE             0xC2    /**< IS FINITE */
+#define ITOK_INFINITE           0xC3    /**< IS INFINITE */
+#define ITOK_NAN                0xC4    /**< IS NOT A NUMBER */
+#define ITOK_MODULO             0xC5    /**< MODULO */
+#define ITOK_BITWISE_AND_NOT    0xC6    /**< BITWISE AND WITH NOT */
+#define ITOK_BITWISE_AND        0xC7    /**< BITWISE AND WITH */
+#define ITOK_BITWISE_OR         0xC8    /**< BITWISE OR WITH */
+#define ITOK_BITWISE_XOR        0xC9    /**< BITWISE XOR WITH */
+#define ITOK_BITWISE_NOT        0xCA    /**< BITWISE NOT */
+#define ITOK_SHIFT_LEFT         0xCB    /**< SHIFT LEFT BY */
+#define ITOK_SHIFT_RIGHT        0xCC    /**< SHIFT RIGHT BY */
+#define ITOK_MUL                0xCD    /**< Multiplication operator "*" */
+#define ITOK_DIV                0xCE    /**< Division operator "/" */
+#define ITOK_RAISE              0xCF    /**< RAISE TO THE POWER OF */
+#define ITOK_CALL               0xD0    /**< CALL */
+#define ITOK_RETURN             0xD1    /**< RETURN */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA

@@ -127,6 +127,14 @@ static int check_identifiers(void)
     KEYWORD("FORM NATURAL LOG",                     ITOK_LOG);
     KEYWORD("FORM EXPONENTIAL",                     ITOK_EXP);
     KEYWORD("FORM ABSOLUTE",                        ITOK_ABS);
+    KEYWORD("FORM SINE RADIANS",                    ITOK_SIN_RADIANS);
+    KEYWORD("FORM COSINE RADIANS",                  ITOK_COS_RADIANS);
+    KEYWORD("FORM TANGENT RADIANS",                 ITOK_TAN_RADIANS);
+    KEYWORD("FORM ARCTAN RADIANS",                  ITOK_ATAN_RADIANS);
+    KEYWORD("FORM SINE DEGREES",                    ITOK_SIN_DEGREES);
+    KEYWORD("FORM COSINE DEGREES",                  ITOK_COS_DEGREES);
+    KEYWORD("FORM TANGENT DEGREES",                 ITOK_TAN_DEGREES);
+    KEYWORD("FORM ARCTAN DEGREES",                  ITOK_ATAN_DEGREES);
     KEYWORD("IS EQUAL TO",                          ITOK_EQUAL_TO);
     KEYWORD("IS NOT EQUAL TO",                      ITOK_NOT_EQUAL_TO);
     KEYWORD("IS GREATER THAN OR EQUAL TO",          ITOK_GREATER_OR_EQUAL);
