@@ -49,12 +49,13 @@ struct ip_var_s
     /** Non-zero if this node is "red" in the name lookup red-black tree */
     unsigned char red;
 
-    /** Non-zero if this variable is an array with a negative size */
-    unsigned char negative_size;
-
-    /** Size of the array if type is IP_TYPE_ARRAY_OF_INT or
+    /** Minimum array subscript if type is IP_TYPE_ARRAY_OF_INT or
      *  IP_TYPE_ARRAY_OF_FLOAT.  Otherwise zero. */
-    ip_uint_t size;
+    ip_int_t min_subscript;
+
+    /** Maximum array subscript if type is IP_TYPE_ARRAY_OF_INT or
+     *  IP_TYPE_ARRAY_OF_FLOAT.  Otherwise zero. */
+    ip_int_t max_subscript;
 
     union {
         /** Integer value of the variable, if type is IP_TYPE_INT */
@@ -141,15 +142,15 @@ ip_var_t *ip_var_create
  * @brief Dimensions an array variable.
  *
  * @param[in,out] var The variable to turn into an array.
- * @param[in] max_subscript The maximum subscript for the array, which
- * can be negative.  Indexes range from zero to @a max_subscript.
+ * @param[in] min_subscript The minimum subscript for the array.
+ * @param[in] max_subscript The maximum subscript for the array.
+ * Must be greater than or equal to @a min_subscript.
  *
  * If the variable already exists as an array, then this will redimension
- * the array to the new size while preserving as much of the original
- * contents as possible.  If the new size is greater, then the new
- * elements will be set to zero.
+ * the array and clear the contents to zero.
  */
-void ip_var_dimension_array(ip_var_t *var, ip_int_t max_subscript);
+void ip_var_dimension_array
+    (ip_var_t *var, ip_int_t min_subscript, ip_int_t max_subscript);
 
 #ifdef __cplusplus
 }

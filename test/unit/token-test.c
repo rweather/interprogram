@@ -156,6 +156,7 @@ static int check_identifiers(void)
     KEYWORD("RAISE TO THE POWER OF",                ITOK_RAISE);
     KEYWORD("CALL",                                 ITOK_CALL);
     KEYWORD("RETURN",                               ITOK_RETURN);
+    KEYWORD(":",                                    ITOK_COLON);
 
     /* Check that we have tested all of the keywords */
     for (index = ITOK_FIRST_KEYWORD; index <= ITOK_LAST_KEYWORD; ++index) {

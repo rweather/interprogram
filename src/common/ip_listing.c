@@ -77,10 +77,14 @@ static void ip_program_list_array_symbols
                 fprintf(file, "%s", var->name);
                 *saw_arrays = 1;
             }
-            if (var->negative_size) {
-                fprintf(file, "(-%lu)", (unsigned long)(var->size - 1));
+            if (var->min_subscript == 0) {
+                fprintf(file, "(%ld)", (long)(var->max_subscript));
+            } else if (var->max_subscript == 0) {
+                fprintf(file, "(%ld)", (long)(var->min_subscript));
             } else {
-                fprintf(file, "(%lu)", (unsigned long)(var->size - 1));
+                fprintf(file, "(%ld:%ld)",
+                        (long)(var->min_subscript),
+                        (long)(var->max_subscript));
             }
         }
         ip_program_list_array_symbols

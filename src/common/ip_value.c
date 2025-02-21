@@ -153,17 +153,9 @@ int ip_value_to_var(ip_var_t *dest, const ip_value_t *src)
     return IP_EXEC_OK;
 }
 
-static int ip_value_validate_index(const ip_var_t *src, ip_int_t *index)
+static int ip_value_validate_index(const ip_var_t *src, ip_int_t index)
 {
-    if (!(src->negative_size)) {
-        return *index >= 0 && ((ip_uint_t)*index) < src->size;
-    } else {
-        if (*index > 0 || ((ip_uint_t)(-(*index))) >= src->size) {
-            return 0;
-        }
-        *index = -(*index);
-        return 1;
-    }
+    return (index >= src->min_subscript && index <= src->max_subscript);
 }
 
 int ip_value_from_array(ip_value_t *dest, const ip_var_t *src, ip_int_t index)
@@ -182,8 +174,8 @@ int ip_value_from_array(ip_value_t *dest, const ip_var_t *src, ip_int_t index)
 
     case IP_TYPE_ARRAY_OF_INT:
         dest->type = IP_TYPE_INT;
-        if (ip_value_validate_index(src, &index)) {
-            dest->ivalue = src->iarray[index];
+        if (ip_value_validate_index(src, index)) {
+            dest->ivalue = src->iarray[index - src->min_subscript];
         } else {
             dest->ivalue = 0;
             return IP_EXEC_BAD_INDEX;
@@ -192,8 +184,8 @@ int ip_value_from_array(ip_value_t *dest, const ip_var_t *src, ip_int_t index)
 
     case IP_TYPE_ARRAY_OF_FLOAT:
         dest->type = IP_TYPE_FLOAT;
-        if (ip_value_validate_index(src, &index)) {
-            dest->fvalue = src->farray[index];
+        if (ip_value_validate_index(src, index)) {
+            dest->fvalue = src->farray[index - src->min_subscript];
         } else {
             dest->fvalue = 0;
             return IP_EXEC_BAD_INDEX;
@@ -207,26 +199,26 @@ int ip_value_to_array(ip_var_t *dest, ip_int_t index, const ip_value_t *src)
 {
     switch (dest->type) {
     case IP_TYPE_ARRAY_OF_INT:
-        if (!ip_value_validate_index(dest, &index)) {
+        if (!ip_value_validate_index(dest, index)) {
             return IP_EXEC_BAD_INDEX;
         }
         if (src->type == IP_TYPE_INT) {
-            dest->iarray[index] = src->ivalue;
+            dest->iarray[index - dest->min_subscript] = src->ivalue;
         } else if (src->type == IP_TYPE_FLOAT) {
-            dest->iarray[index] = (ip_int_t)(src->fvalue);
+            dest->iarray[index - dest->min_subscript] = (ip_int_t)(src->fvalue);
         } else {
             return IP_EXEC_BAD_TYPE;
         }
         break;
 
     case IP_TYPE_ARRAY_OF_FLOAT:
-        if (!ip_value_validate_index(dest, &index)) {
+        if (!ip_value_validate_index(dest, index)) {
             return IP_EXEC_BAD_INDEX;
         }
         if (src->type == IP_TYPE_FLOAT) {
-            dest->farray[index] = src->fvalue;
+            dest->farray[index - dest->min_subscript] = src->fvalue;
         } else if (src->type == IP_TYPE_INT) {
-            dest->farray[index] = (ip_float_t)(src->ivalue);
+            dest->farray[index - dest->min_subscript] = (ip_float_t)(src->ivalue);
         } else {
             return IP_EXEC_BAD_TYPE;
         }

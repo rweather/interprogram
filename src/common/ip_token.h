@@ -114,12 +114,13 @@ extern "C" {
 #define ITOK_RAISE              0xCF    /**< RAISE TO THE POWER OF */
 #define ITOK_CALL               0xD0    /**< CALL */
 #define ITOK_RETURN             0xD1    /**< RETURN */
+#define ITOK_COLON              0xD2    /**< ":" */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA
 
 /** Last keyword token */
-#define ITOK_LAST_KEYWORD       ITOK_RETURN
+#define ITOK_LAST_KEYWORD       ITOK_COLON
 
 /* Meta-tokens for non-keyword elements */
 #define ITOK_VAR_NAME           0xF0    /**< Variable name */

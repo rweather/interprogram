@@ -108,6 +108,7 @@ static ip_token_info_t const tokens[] = {
     {"RAISE TO THE POWER OF",               ITOK_RAISE,             ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"CALL",                                ITOK_CALL,              ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"RETURN",                              ITOK_RETURN,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {":",                                   ITOK_COLON,             ITOK_TYPE_ANY | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
 
@@ -637,6 +638,7 @@ int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
     IP_SIMPLE_TOKEN('+', ITOK_PLUS,         ITOK_TYPE_EXPRESSION)
     IP_SIMPLE_TOKEN('-', ITOK_MINUS,        ITOK_TYPE_EXPRESSION)
     IP_SIMPLE_TOKEN('/', ITOK_DIV,          ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION)
+    IP_SIMPLE_TOKEN(':', ITOK_COLON,        ITOK_TYPE_ANY | ITOK_TYPE_EXTENSION)
 
     case '(':
         /* Special handling for '(' in preliminary sections, for the

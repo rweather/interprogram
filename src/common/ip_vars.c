@@ -64,6 +64,7 @@ void ip_var_table_free(ip_var_table_t *vars)
 
 static void ip_var_reset(ip_var_table_t *vars, ip_var_t *var)
 {
+    ip_uint_t size;
     if (var != &(vars->nil)) {
         switch (var->type) {
         case IP_TYPE_INT:
@@ -77,11 +78,13 @@ static void ip_var_reset(ip_var_table_t *vars, ip_var_t *var)
             break;
 
         case IP_TYPE_ARRAY_OF_INT:
-            memset(var->iarray, 0, sizeof(ip_int_t) * var->size);
+            size = var->max_subscript - var->min_subscript + 1;
+            memset(var->iarray, 0, sizeof(ip_int_t) * size);
             break;
 
         case IP_TYPE_ARRAY_OF_FLOAT:
-            memset(var->farray, 0, sizeof(ip_float_t) * var->size);
+            size = var->max_subscript - var->min_subscript + 1;
+            memset(var->farray, 0, sizeof(ip_float_t) * size);
             break;
 
         default: break;
@@ -247,7 +250,8 @@ ip_var_t *ip_var_create
     return var;
 }
 
-void ip_var_dimension_array(ip_var_t *var, ip_int_t max_subscript)
+void ip_var_dimension_array
+    (ip_var_t *var, ip_int_t min_subscript, ip_int_t max_subscript)
 {
     ip_uint_t prev_size;
     ip_uint_t size;
@@ -259,16 +263,11 @@ void ip_var_dimension_array(ip_var_t *var, ip_int_t max_subscript)
         return;
     }
 
-    /* Determine the size of the array from the maximum subscript */
-    prev_size = var->size;
-    if (max_subscript < 0) {
-        size = ((ip_uint_t)(-max_subscript)) + 1;
-        var->negative_size = 1;
-    } else {
-        size = ((ip_uint_t)max_subscript) + 1;
-        var->negative_size = 0;
-    }
-    var->size = size;
+    /* Determine the size of the array from the subscript range */
+    prev_size = var->max_subscript - var->min_subscript + 1;
+    size = max_subscript - min_subscript + 1;
+    var->min_subscript = min_subscript;
+    var->max_subscript = max_subscript;
     var->initialised = 1; /* Arrays are implicitly initialised */
 
     /* Convert the variable into an array if it isn't already */
@@ -283,29 +282,23 @@ void ip_var_dimension_array(ip_var_t *var, ip_int_t max_subscript)
     /* Allocate or reallocate the memory for the array */
     if (var->type == IP_TYPE_ARRAY_OF_INT) {
         if (!(var->iarray)) {
-            var->iarray = calloc(size, sizeof(ip_int_t));
+            var->iarray = malloc(size * sizeof(ip_int_t));
         } else if (size != prev_size) {
             var->iarray = realloc(var->iarray, size * sizeof(ip_int_t));
         }
         if (!(var->iarray)) {
             ip_out_of_memory();
         }
-        if (prev_size != 0 && prev_size < size) {
-            memset(var->iarray + prev_size, 0,
-                   (size - prev_size) * sizeof(ip_int_t));
-        }
+        memset(var->iarray, 0, size * sizeof(ip_int_t));
     } else {
         if (!(var->farray)) {
-            var->farray = calloc(size, sizeof(ip_float_t));
+            var->farray = malloc(size * sizeof(ip_float_t));
         } else if (size != prev_size) {
-            var->iarray = realloc(var->iarray, size * sizeof(ip_int_t));
+            var->farray = realloc(var->farray, size * sizeof(ip_int_t));
         }
         if (!(var->farray)) {
             ip_out_of_memory();
         }
-        if (prev_size != 0 && prev_size < size) {
-            memset(var->farray + prev_size, 0,
-                   (size - prev_size) * sizeof(ip_float_t));
-        }
+        memset(var->farray, 0, size * sizeof(ip_float_t));
     }
 }

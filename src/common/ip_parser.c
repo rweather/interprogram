@@ -1115,7 +1115,8 @@ static void ip_parse_symbols(ip_parser_t *parser)
 /*
  * ArraySize ::= [ "-" ] INTEGER
  */
-static int ip_parse_array_size(ip_parser_t *parser, ip_int_t *size)
+static int ip_parse_array_size
+    (ip_parser_t *parser, ip_int_t *size, int min_subscript)
 {
     int is_neg = 0;
     *size = 0;
@@ -1123,6 +1124,8 @@ static int ip_parse_array_size(ip_parser_t *parser, ip_int_t *size)
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
         if (parser->tokeniser.token == ITOK_MINUS) {
             is_neg = 1;
+            ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+        } else if (parser->tokeniser.token == ITOK_PLUS) {
             ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
         }
         if (parser->tokeniser.token == ITOK_INT_VALUE) {
@@ -1134,8 +1137,15 @@ static int ip_parse_array_size(ip_parser_t *parser, ip_int_t *size)
             if (parser->tokeniser.token == ITOK_RPAREN) {
                 ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);
                 return 1;
+            } else if (min_subscript && parser->tokeniser.token == ITOK_COLON) {
+                ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);
+                return 2;
             }
-            ip_error_near(parser, "')' expected");
+            if (min_subscript) {
+                ip_error_near(parser, "')' or ':' expected");
+            } else {
+                ip_error_near(parser, "')' expected");
+            }
         } else {
             ip_error_near(parser, "integer constant expected");
         }
@@ -1155,6 +1165,8 @@ static void ip_parse_arrays(ip_parser_t *parser)
     const char *name;
     ip_var_t *var;
     ip_int_t size;
+    ip_int_t size2;
+    int status;
 
     /* Bail out if we don't have the correct prefix */
     if (parser->tokeniser.token != ITOK_MAX_SUBSCRIPTS) {
@@ -1187,8 +1199,27 @@ static void ip_parse_arrays(ip_parser_t *parser)
                      name);
             }
             ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
-            if (ip_parse_array_size(parser, &size)) {
-                ip_var_dimension_array(var, size);
+            status = ip_parse_array_size(parser, &size, 1);
+            if (status == 1) {
+                /* Dimensions are specified as A(N) or A(-N) */
+                if (size < 0) {
+                    ip_var_dimension_array(var, size, 0);
+                } else {
+                    ip_var_dimension_array(var, 0, size);
+                }
+            } else if (status == 2) {
+                /* Dimensions are specified as A(min:max) */
+                if (ip_parse_array_size(parser, &size2, 0)) {
+                    if (size > size2) {
+                        ip_int_t temp = size;
+                        size = size2;
+                        size2 = temp;
+                        ip_warning(parser, "minimum subscript is greater than maximum");
+                    }
+                    ip_var_dimension_array(var, size, size2);
+                } else {
+                    break;
+                }
             } else {
                 break;
             }
