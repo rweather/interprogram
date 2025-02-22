@@ -51,29 +51,39 @@ typedef double ip_float_t;
 #define IP_TYPE_UNKNOWN         0
 
 /**
- * @brief Type of the node is known to be integer.
+ * @brief Type of the value is determined dynamically at runtime.
  */
-#define IP_TYPE_INT             1
+#define IP_TYPE_DYNAMIC         1
 
 /**
- * @brief Type of the node is known to be floating-point.
+ * @brief Type of the value is known to be integer.
  */
-#define IP_TYPE_FLOAT           2
+#define IP_TYPE_INT             2
 
 /**
- * @brief Type of the node is determined dynamically at runtime.
+ * @brief Type of the value is known to be floating-point.
  */
-#define IP_TYPE_DYNAMIC         3
+#define IP_TYPE_FLOAT           3
 
 /**
- * @brief Type of the node is an array of integers (variables only).
+ * @brief Type of the value is known to be a string.
  */
-#define IP_TYPE_ARRAY_OF_INT    4
+#define IP_TYPE_STRING          4
 
 /**
- * @brief Type of the node is an array of floating-point values (variables only).
+ * @brief Type of a variable is an array of integers.
  */
-#define IP_TYPE_ARRAY_OF_FLOAT  5
+#define IP_TYPE_ARRAY_OF_INT    5
+
+/**
+ * @brief Type of a variable is an array of floating-point values.
+ */
+#define IP_TYPE_ARRAY_OF_FLOAT  6
+
+/**
+ * @brief Type of a variable is an array of string values.
+ */
+#define IP_TYPE_ARRAY_OF_STRING 7
 
 /**
  * @brief Report out of memory and exit the program.

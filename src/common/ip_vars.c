@@ -35,20 +35,57 @@ void ip_var_table_init(ip_var_table_t *vars)
     vars->root.right = &(vars->nil);
 }
 
+static void ip_var_init_string_array(ip_string_t **array, ip_uint_t size)
+{
+    ip_string_t *str = ip_string_create_empty();
+    while (size > 0) {
+        ip_string_ref(str);
+        *array++ = str;
+        --size;
+    }
+    ip_string_deref(str);
+}
+
+static void ip_var_free_string_array(ip_string_t **array, ip_uint_t size)
+{
+    while (size > 0) {
+        ip_string_deref(*array++);
+        --size;
+    }
+}
+
 static void ip_var_free(ip_var_table_t *vars, ip_var_t *var)
 {
     if (var && var != &(vars->nil)) {
         if (var->name) {
             free(var->name);
         }
-        if (var->type == IP_TYPE_ARRAY_OF_INT) {
+        switch (var->type) {
+        case IP_TYPE_STRING:
+            ip_string_deref(var->svalue);
+            break;
+
+        case IP_TYPE_ARRAY_OF_INT:
             if (var->iarray) {
                 free(var->iarray);
             }
-        } else if (var->type == IP_TYPE_ARRAY_OF_FLOAT) {
-            if (var->iarray) {
+            break;
+
+        case IP_TYPE_ARRAY_OF_FLOAT:
+            if (var->farray) {
                 free(var->farray);
             }
+            break;
+
+        case IP_TYPE_ARRAY_OF_STRING:
+            if (var->sarray) {
+                ip_var_free_string_array
+                    (var->sarray, var->max_subscript - var->min_subscript + 1);
+                free(var->sarray);
+            }
+            break;
+
+        default: break;
         }
         ip_var_free(vars, var->left);
         ip_var_free(vars, var->right);
@@ -77,6 +114,14 @@ static void ip_var_reset(ip_var_table_t *vars, ip_var_t *var)
             var->fvalue = 0;
             break;
 
+        case IP_TYPE_STRING:
+            var->initialised = 0;
+            if (var->svalue->len != 0) {
+                ip_string_deref(var->svalue);
+                var->svalue = ip_string_create_empty();
+            }
+            break;
+
         case IP_TYPE_ARRAY_OF_INT:
             size = var->max_subscript - var->min_subscript + 1;
             memset(var->iarray, 0, sizeof(ip_int_t) * size);
@@ -85,6 +130,12 @@ static void ip_var_reset(ip_var_table_t *vars, ip_var_t *var)
         case IP_TYPE_ARRAY_OF_FLOAT:
             size = var->max_subscript - var->min_subscript + 1;
             memset(var->farray, 0, sizeof(ip_float_t) * size);
+            break;
+
+        case IP_TYPE_ARRAY_OF_STRING:
+            size = var->max_subscript - var->min_subscript + 1;
+            ip_var_free_string_array(var->sarray, size);
+            ip_var_init_string_array(var->sarray, size);
             break;
 
         default: break;
@@ -244,6 +295,9 @@ ip_var_t *ip_var_create
         ip_out_of_memory();
     }
     var->type = type;
+    if (var->type == IP_TYPE_STRING) {
+        var->svalue = ip_string_create_empty();
+    }
 
     /* Insert the new variable into the red-black tree */
     ip_var_insert(vars, var);
@@ -257,9 +311,7 @@ void ip_var_dimension_array
     ip_uint_t size;
 
     /* Check that the variable can be converted into an array */
-    if (var->type != IP_TYPE_INT && var->type != IP_TYPE_FLOAT &&
-            var->type != IP_TYPE_ARRAY_OF_INT &&
-            var->type != IP_TYPE_ARRAY_OF_FLOAT) {
+    if (var->type < IP_TYPE_INT || var->type > IP_TYPE_ARRAY_OF_STRING) {
         return;
     }
 
@@ -277,6 +329,9 @@ void ip_var_dimension_array
     } else if (var->type == IP_TYPE_FLOAT) {
         var->type = IP_TYPE_ARRAY_OF_FLOAT;
         var->farray = 0;
+    } else if (var->type == IP_TYPE_STRING) {
+        var->type = IP_TYPE_ARRAY_OF_STRING;
+        var->sarray = 0;
     }
 
     /* Allocate or reallocate the memory for the array */
@@ -290,15 +345,28 @@ void ip_var_dimension_array
             ip_out_of_memory();
         }
         memset(var->iarray, 0, size * sizeof(ip_int_t));
-    } else {
+    } else if (var->type == IP_TYPE_ARRAY_OF_FLOAT) {
         if (!(var->farray)) {
             var->farray = malloc(size * sizeof(ip_float_t));
         } else if (size != prev_size) {
-            var->farray = realloc(var->farray, size * sizeof(ip_int_t));
+            var->farray = realloc(var->farray, size * sizeof(ip_float_t));
         }
         if (!(var->farray)) {
             ip_out_of_memory();
         }
         memset(var->farray, 0, size * sizeof(ip_float_t));
+    } else {
+        if (var->sarray) {
+            ip_var_free_string_array(var->sarray, size);
+            if (size != prev_size) {
+                var->sarray = realloc(var->sarray, size * sizeof(ip_string_t));
+            }
+        } else {
+            var->sarray = malloc(size * sizeof(ip_string_t *));
+        }
+        if (!(var->sarray)) {
+            ip_out_of_memory();
+        }
+        ip_var_init_string_array(var->sarray, size);
     }
 }

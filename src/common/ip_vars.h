@@ -24,6 +24,7 @@
 #define INTERPROGRAM_VARS_H
 
 #include "ip_types.h"
+#include "ip_string.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,12 +50,10 @@ struct ip_var_s
     /** Non-zero if this node is "red" in the name lookup red-black tree */
     unsigned char red;
 
-    /** Minimum array subscript if type is IP_TYPE_ARRAY_OF_INT or
-     *  IP_TYPE_ARRAY_OF_FLOAT.  Otherwise zero. */
+    /** Minimum array subscript if the type is an array */
     ip_int_t min_subscript;
 
-    /** Maximum array subscript if type is IP_TYPE_ARRAY_OF_INT or
-     *  IP_TYPE_ARRAY_OF_FLOAT.  Otherwise zero. */
+    /** Maximum array subscript if the type is an array */
     ip_int_t max_subscript;
 
     union {
@@ -64,11 +63,17 @@ struct ip_var_s
         /** Floating-point value of the variable, if type is IP_TYPE_FLOAT */
         ip_float_t fvalue;
 
+        /** String value of the variable, if the type is IP_TYPE_STRING */
+        ip_string_t *svalue;
+
         /** Pointer to the array contents, if type is IP_TYPE_ARRAY_OF_INT */
         ip_int_t *iarray;
 
         /** Pointer to the array contents, if type is IP_TYPE_ARRAY_OF_FLOAT */
         ip_float_t *farray;
+
+        /** Pointer to the array contents, if type is IP_TYPE_ARRAY_OF_STRING */
+        ip_string_t **sarray;
     };
 
     /** Left sub-tree in the name lookup red-black tree */

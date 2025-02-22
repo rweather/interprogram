@@ -109,6 +109,13 @@ static ip_token_info_t const tokens[] = {
     {"CALL",                                ITOK_CALL,              ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"RETURN",                              ITOK_RETURN,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {":",                                   ITOK_COLON,             ITOK_TYPE_ANY | ITOK_TYPE_EXTENSION},
+    {"IS EMPTY",                            ITOK_EMPTY,             ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"IS NOT EMPTY",                        ITOK_NOT_EMPTY,         ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"LENGTH OF",                           ITOK_LENGTH_OF,         ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
+    {"SUBSTRING FROM",                      ITOK_SUBSTRING,         ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"TO",                                  ITOK_TO,                ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
+    {"SYMBOLS FOR STRINGS",                 ITOK_SYMBOLS_STR,       ITOK_TYPE_PRELIM_2 | ITOK_TYPE_EXTENSION},
+    {"EXIT INTERPROGRAM",                   ITOK_EXIT_PROGRAM,      ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
 
@@ -547,6 +554,64 @@ static int ip_tokeniser_get_line(ip_tokeniser_t *tokeniser)
     return 1;
 }
 
+/**
+ * @brief Gets a string constant from the input.
+ *
+ * @param[in,out] tokeniser The tokeniser to read from.
+ * @param[in] ch The quote character that started the string.
+ */
+static void ip_tokeniser_get_string(ip_tokeniser_t *tokeniser, int quote)
+{
+    int ch;
+
+    /* Drop the leading quote from the in-progress string */
+    tokeniser->name_len = 0;
+
+    /* Get the characters for the rest of the string */
+    while (tokeniser->buffer_posn < tokeniser->buffer_len) {
+        ch = tokeniser->buffer[tokeniser->buffer_posn];
+        if (ch == '\n') {
+            /* String ends implicitly at the end of the line */
+            break;
+        } else if (ch == quote) {
+            /* If the quote is doubled, then it indicates an escaped quote.
+             * Otherwise it is the end of the string. */
+            ++(tokeniser->buffer_posn);
+            if (tokeniser->buffer_posn >= tokeniser->buffer_len ||
+                    tokeniser->buffer[tokeniser->buffer_posn] != quote) {
+                break;
+            }
+        } else if (ch == '\\') {
+            /* Recognise a limited number of C-like escape sequences. */
+            ++(tokeniser->buffer_posn);
+            if ((tokeniser->buffer_posn >= tokeniser->buffer_len) ||
+                    tokeniser->buffer[tokeniser->buffer_posn] == '\n') {
+                /* Backslash at the end of the line continues the
+                 * string on the next line. */
+                if (!ip_tokeniser_get_line(tokeniser)) {
+                    break;
+                }
+                continue;
+            }
+            ch = tokeniser->buffer[tokeniser->buffer_posn];
+            switch (ch) {
+            case 'a':   ip_tokeniser_add_name(tokeniser, '\a'); break;
+            case 'b':   ip_tokeniser_add_name(tokeniser, '\b'); break;
+            case 'e':   ip_tokeniser_add_name(tokeniser, 0x1B); break;
+            case 'f':   ip_tokeniser_add_name(tokeniser, '\f'); break;
+            case 'n':   ip_tokeniser_add_name(tokeniser, '\n'); break;
+            case 'r':   ip_tokeniser_add_name(tokeniser, '\r'); break;
+            case 't':   ip_tokeniser_add_name(tokeniser, '\t'); break;
+            case 'v':   ip_tokeniser_add_name(tokeniser, '\v'); break;
+            default:    ip_tokeniser_add_name(tokeniser, ch); break;
+            }
+        }
+        ip_tokeniser_add_name(tokeniser, ch);
+        ++(tokeniser->buffer_posn);
+    }
+    ip_tokeniser_set_token(tokeniser, ITOK_STR_VALUE);
+}
+
 int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
 {
     int ch;
@@ -665,6 +730,15 @@ int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
             ip_tokeniser_set_token_code(tokeniser, ITOK_MUL);
         } else {
             ip_tokeniser_set_token_code(tokeniser, ITOK_LABEL);
+        }
+        break;
+
+    case '\'': case '"':
+        /* String constant in extended mode, error in classic mode */
+        if ((context & ITOK_TYPE_EXTENSION) != 0) {
+            ip_tokeniser_get_string(tokeniser, ch);
+        } else {
+            ip_tokeniser_set_token(tokeniser, ITOK_ERROR);
         }
         break;
 

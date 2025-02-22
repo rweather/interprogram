@@ -115,29 +115,39 @@ extern "C" {
 #define ITOK_CALL               0xD0    /**< CALL */
 #define ITOK_RETURN             0xD1    /**< RETURN */
 #define ITOK_COLON              0xD2    /**< ":" */
+#define ITOK_EMPTY              0xD3    /**< IS EMPTY */
+#define ITOK_NOT_EMPTY          0xD4    /**< IS NOT EMPTY */
+#define ITOK_LENGTH_OF          0xD5    /**< LENGTH OF */
+#define ITOK_SUBSTRING          0xD6    /**< SUBSTRING FROM */
+#define ITOK_TO                 0xD7    /**< TO */
+#define ITOK_SYMBOLS_STR        0xD8    /**< SYMBOLS FOR STRINGS */
+#define ITOK_EXIT_PROGRAM       0xD9    /**< EXIT INTERPROGRAM */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA
 
 /** Last keyword token */
-#define ITOK_LAST_KEYWORD       ITOK_COLON
+#define ITOK_LAST_KEYWORD       ITOK_EXIT_PROGRAM
 
 /* Meta-tokens for non-keyword elements */
-#define ITOK_VAR_NAME           0xF0    /**< Variable name */
-#define ITOK_INT_VALUE          0xF1    /**< Integer value */
-#define ITOK_FLOAT_VALUE        0xF2    /**< Floating-point value */
-#define ITOK_ERROR              0xF3    /**< Error token */
-#define ITOK_EOF                0xF4    /**< End of file encountered */
-#define ITOK_EOL                0xF5    /**< End of line marker */
-#define ITOK_TEXT               0xF6    /**< Raw text */
-#define ITOK_TO_INT             0xF7    /**< Convert to an integer */
-#define ITOK_TO_FLOAT           0xF8    /**< Convert to floating-point */
-#define ITOK_TO_DYNAMIC         0xF9    /**< Convert to dynamic */
-#define ITOK_INDEX_INT          0xFA    /**< Index into an array of integers */
-#define ITOK_INDEX_FLOAT        0xFB    /**< Index into an array of floats */
-#define ITOK_OUTPUT_NO_EOL      0xFC    /**< Output with no end of line */
-#define ITOK_PUNCH_NO_BLANKS    0xFD    /**< PUNCH without "~~~~~" */
-#define ITOK_COPY_NO_BLANKS     0xFE    /**< COPY TAPE without "~~~~~" */
+#define ITOK_VAR_NAME           0xE0    /**< Variable name */
+#define ITOK_INT_VALUE          0xE1    /**< Integer value */
+#define ITOK_FLOAT_VALUE        0xE2    /**< Floating-point value */
+#define ITOK_STR_VALUE          0xE3    /**< String value */
+#define ITOK_ERROR              0xE4    /**< Error token */
+#define ITOK_EOF                0xE5    /**< End of file encountered */
+#define ITOK_EOL                0xE6    /**< End of line marker */
+#define ITOK_TEXT               0xE7    /**< Raw text */
+#define ITOK_TO_INT             0xE8    /**< Convert to an integer */
+#define ITOK_TO_FLOAT           0xE9    /**< Convert to floating-point */
+#define ITOK_TO_STRING          0xEA    /**< Convert to string */
+#define ITOK_TO_DYNAMIC         0xEB    /**< Convert to dynamic */
+#define ITOK_INDEX_INT          0xEC    /**< Index into an array of integers */
+#define ITOK_INDEX_FLOAT        0xED    /**< Index into an array of floats */
+#define ITOK_INDEX_STRING       0xEE    /**< Index into an array of strings */
+#define ITOK_OUTPUT_NO_EOL      0xEF    /**< Output with no end of line */
+#define ITOK_PUNCH_NO_BLANKS    0xF0    /**< PUNCH without "~~~~~" */
+#define ITOK_COPY_NO_BLANKS     0xF1    /**< COPY TAPE without "~~~~~" */
 
 /* Token type flags */
 /** Token can start a section of the preliminary statements */

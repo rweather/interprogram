@@ -71,7 +71,7 @@ struct ip_ast_node_s
         ip_float_t fvalue;
 
         /** Value of a text node */
-        char *text;
+        ip_string_t *text;
 
         /** Reference to a variable when "type" is ITOK_VAR_NAME */
         ip_var_t *var;

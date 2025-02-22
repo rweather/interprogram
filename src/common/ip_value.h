@@ -25,6 +25,7 @@
 
 #include "ip_types.h"
 #include "ip_vars.h"
+#include "ip_string.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,6 +45,9 @@ typedef struct
 
         /** Floating-point value */
         ip_float_t fvalue;
+
+        /** String value (reference counted) */
+        ip_string_t *svalue;
     };
 
 } ip_value_t;
@@ -88,6 +92,15 @@ void ip_value_set_int(ip_value_t *dest, ip_int_t src);
 void ip_value_set_float(ip_value_t *dest, ip_float_t src);
 
 /**
+ * @brief Sets a value to a string.
+ *
+ * @param[in,out] dest Destination to assign to.
+ * @param[in] src Source string to assign.  The reference count on
+ * the string will be incremented.
+ */
+void ip_value_set_string(ip_value_t *dest, ip_string_t *str);
+
+/**
  * @brief Sets a value to unknown.
  *
  * @param[in,out] value Value to be set to unknown.
@@ -111,6 +124,15 @@ int ip_value_to_int(ip_value_t *value);
  * @return IP_EXEC_OK or an error code if the value cannot be converted.
  */
 int ip_value_to_float(ip_value_t *value);
+
+/**
+ * @brief Converts a value into a string.
+ *
+ * @param[in,out] value The value to be converted.
+ *
+ * @return IP_EXEC_OK or an error code if the value cannot be converted.
+ */
+int ip_value_to_string(ip_value_t *value);
 
 /**
  * @brief Assigns the contents of a variable to a value.

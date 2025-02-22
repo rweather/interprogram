@@ -79,6 +79,9 @@ static ip_ast_node_t *ip_parse_negate_node
 /** Set if array expressions are allowed in a variable expression */
 #define IP_VAR_ALLOW_ARRAYS 0x0001
 
+/** Set if parsing an r-value instead of an l-value */
+#define IP_VAR_ALLOW_RVALUES 0x0002
+
 /*
  * Variable ::= VAR-NAME [ '(' Expression ')' ]
  */
@@ -120,8 +123,22 @@ static ip_ast_node_t *ip_parse_variable_expression
         }
         break;
 
+    case IP_TYPE_STRING:
+        if ((allowed & IP_VAR_ALLOW_RVALUES) != 0 &&
+                (allowed & IP_VAR_ALLOW_ARRAYS) != 0 &&
+                parser->tokeniser.token == ITOK_LPAREN) {
+            /* Indexing into a string to extract a character */
+            node = ip_parse_expression(parser);
+            node = ip_ast_make_array_access
+                (var, node, &(parser->tokeniser.loc));
+        } else {
+            node = ip_ast_make_variable(var, &(parser->tokeniser.loc));
+        }
+        break;
+
     case IP_TYPE_ARRAY_OF_INT:
     case IP_TYPE_ARRAY_OF_FLOAT:
+    case IP_TYPE_ARRAY_OF_STRING:
         if (parser->tokeniser.token == ITOK_LPAREN) {
             /* Parse the array index expression */
             node = ip_parse_expression(parser);
@@ -146,10 +163,13 @@ static ip_ast_node_t *ip_parse_variable_expression
 }
 
 /*
- * UnaryExpression ::= {"+" | "-"} BaseExpression
+ * UnaryExpression ::=
+ *      {"+" | "-"} BaseExpression
+ *    | "LENGTH OF" BaseExpression
  * BaseExpression ::=
  *      "THIS"
  *    | NUMBER
+ *    | STRING
  *    | Variable
  *    | "(" Expression ")"
  */
@@ -185,7 +205,8 @@ static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
 
     case ITOK_VAR_NAME:
         /* Parse the variable name, optionally followed by an array index */
-        node = ip_parse_variable_expression(parser, IP_VAR_ALLOW_ARRAYS);
+        node = ip_parse_variable_expression
+            (parser, IP_VAR_ALLOW_ARRAYS | IP_VAR_ALLOW_RVALUES);
         break;
 
     case ITOK_INT_VALUE:
@@ -216,6 +237,18 @@ static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
         break;
 
+    case ITOK_STR_VALUE:
+        /* Recognise a string constant */
+        if (is_neg) {
+            ip_error(parser, "string negation is not permitted");
+        }
+        node = ip_ast_make_text
+            (token, parser->tokeniser.token_info->name,
+             &(parser->tokeniser.loc));
+        node->value_type = IP_TYPE_STRING;
+        ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+        break;
+
     case ITOK_LPAREN:
         /* Parse an expression in parentheses */
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
@@ -227,8 +260,20 @@ static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
         }
         break;
 
+    case ITOK_LENGTH_OF:
+        /* Operator to get the length of a string */
+        ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+        node = ip_parse_unary_expression(parser);
+        if (node && node->value_type != IP_TYPE_STRING) {
+            ip_error_at(parser, &(node->loc),
+                        "string value expected for 'LENGTH OF'");
+        }
+        node = ip_ast_make_unary
+            (token, node, &(parser->tokeniser.loc));
+        break;
+
     default:
-        ip_error_near(parser, "variable name or number expected");
+        ip_error_near(parser, "variable name or constant expected");
         node = 0;
         break;
     }
@@ -238,6 +283,24 @@ static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
         node = ip_parse_negate_node(parser, node);
     }
     return node;
+}
+
+/**
+ * @brief Check if a node is numeric and complain if it is not.
+ *
+ * @param[in,out] parser The parse state.
+ * @param[in] node The node to check.
+ *
+ * @return Non-zero if the node is numeric, or zero if it is a string.
+ */
+static int ip_parse_numeric_check(ip_parser_t *parser, ip_ast_node_t *node)
+{
+    if (node && node->value_type == IP_TYPE_STRING) {
+        ip_error_at(parser, &(node->loc),
+                    "strings are not permitted in this type of expression");
+        return 0;
+    }
+    return 1;
 }
 
 /*
@@ -252,8 +315,16 @@ static ip_ast_node_t *ip_parse_multiplicative_expression(ip_parser_t *parser)
     ip_ast_node_t *node2;
     int token = parser->tokeniser.token;
     while (token == ITOK_MUL || token == ITOK_DIV || token == ITOK_MODULO) {
+        if (!ip_parse_numeric_check(parser, node)) {
+            ip_ast_node_free(node);
+            node = 0;
+        }
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
         node2 = ip_parse_unary_expression(parser);
+        if (node && !ip_parse_numeric_check(parser, node2)) {
+            ip_ast_node_free(node2);
+            node2 = 0;
+        }
         node = ip_ast_make_binary(token, node, node2, &(parser->tokeniser.loc));
         token = parser->tokeniser.token;
     }
@@ -273,8 +344,17 @@ static ip_ast_node_t *ip_parse_extended_expression(ip_parser_t *parser)
     ip_ast_node_t *node2;
     int token = parser->tokeniser.token;
     while (token == ITOK_PLUS || token == ITOK_MINUS) {
+        if (token != ITOK_PLUS && !ip_parse_numeric_check(parser, node)) {
+            ip_ast_node_free(node);
+            node = 0;
+        }
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
         node2 = ip_parse_multiplicative_expression(parser);
+        if (token != ITOK_PLUS && node &&
+                !ip_parse_numeric_check(parser, node2)) {
+            ip_ast_node_free(node2);
+            node2 = 0;
+        }
         node = ip_ast_make_binary(token, node, node2, &(parser->tokeniser.loc));
         token = parser->tokeniser.token;
     }
@@ -325,7 +405,8 @@ static ip_ast_node_t *ip_parse_classic_expression(ip_parser_t *parser)
 
     case ITOK_VAR_NAME:
         /* Variable name which may be followed by "+ N" or "- N" */
-        node = ip_parse_variable_expression(parser, 0);
+        node = ip_parse_variable_expression
+            (parser, IP_VAR_ALLOW_RVALUES);
         token = parser->tokeniser.token;
         if (token == ITOK_PLUS || token == ITOK_MINUS) {
             ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
@@ -368,7 +449,8 @@ static ip_ast_node_t *ip_parse_classic_expression(ip_parser_t *parser)
 
         case ITOK_VAR_NAME:
             /* Name of a variable which is being negated */
-            node = ip_parse_variable_expression(parser, 0);
+            node = ip_parse_variable_expression
+                (parser, IP_VAR_ALLOW_RVALUES);
             node = ip_parse_negate_node(parser, node);
             break;
 
@@ -430,6 +512,8 @@ static ip_ast_node_t *ip_parse_next_float_expression(ip_parser_t *parser)
  *    | "IS NOT EQUAL TO"
  *    | "IS GREATER THAN OR EQUAL TO"
  *    | "IS SMALLER THAN OR EQUAL TO"
+ *    | "IS EMPTY"
+ *    | "IS NOT EMPTY"
  *
  * UnaryConditionOperator ::=
  *      "IS ZERO"
@@ -474,6 +558,8 @@ static ip_ast_node_t *ip_parse_condition(ip_parser_t *parser)
     case ITOK_FINITE:
     case ITOK_INFINITE:
     case ITOK_NAN:
+    case ITOK_EMPTY:
+    case ITOK_NOT_EMPTY:
         node = ip_ast_make_unary(token, node, &(parser->tokeniser.loc));
         if (node) {
             /* Conditions always have a boolean result */
@@ -548,6 +634,29 @@ static ip_ast_node_t *ip_parse_label_name(ip_parser_t *parser)
     return node;
 }
 
+static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
+{
+    ip_ast_node_t *from;
+    ip_ast_node_t *node;
+
+    /* Skip "SUBSTRING FROM" and parse the starting index */
+    from = ip_parse_next_integer_expression(parser);
+
+    /* If the next token is "TO", then we also have an ending index.
+     * Otherwise extract everything from the starting index onwards. */
+    if (parser->tokeniser.token == ITOK_TO) {
+        node = ip_parse_next_integer_expression(parser);
+        node = ip_ast_make_binary_statement
+            (ITOK_SUBSTRING, IP_TYPE_STRING, from, node,
+             &(parser->tokeniser.loc));
+    } else {
+        node = ip_ast_make_unary_statement
+            (ITOK_SUBSTRING, IP_TYPE_STRING, from,
+             &(parser->tokeniser.loc));
+    }
+    return node;
+}
+
 /*
  * Statement ::=
  *      AssignmentStatement
@@ -557,6 +666,7 @@ static ip_ast_node_t *ip_parse_label_name(ip_parser_t *parser)
  *    | IfStatement
  *    | ControlFlowStatement
  *    | InputOutputStatement
+ *    | StringStatement
  *    | "&" ...
  *
  * AssignmentStatement ::=
@@ -590,6 +700,14 @@ static ip_ast_node_t *ip_parse_label_name(ip_parser_t *parser)
  *    | "FORM EXPONENTIAL"
  *    | "FORM ABSOLUTE"                 # Extensions
  *    | "RAISE TO THE POWER OF" Expression
+ *    | "FORM SINE RADIANS"
+ *    | "FORM COSINE RADIANS"
+ *    | "FORM TANGENT RADIANS"
+ *    | "FORM ARCTAN RADIANS"
+ *    | "FORM SINE DEGREES"
+ *    | "FORM COSINE DEGREES"
+ *    | "FORM TANGENT DEGREES"
+ *    | "FORM ARCTAN DEGREES"
  *
  * ControlFlowStatement ::=
  *      "GO TO" LabelName
@@ -610,6 +728,10 @@ static ip_ast_node_t *ip_parse_label_name(ip_parser_t *parser)
  *    | "PUNCH THE FOLLOWING CHARACTERS" EOL TEXT BLANKS
  *    | "COPY TAPE"
  *    | "IGNORE TAPE"
+ *
+ * StringStatement ::=
+ *      "SUBSTRING FROM" Expression [ "TO" Expression ]
+ *    | "LENGTH OF"
  */
 static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
 {
@@ -659,13 +781,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_SET:
         /* SET variable = expression */
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
-        if ((parser->flags & ITOK_TYPE_EXTENSION) != 0) {
-            /* Extended INTERPROGRAM allows assigning array elements */
-            var = ip_parse_variable_expression(parser, IP_VAR_ALLOW_ARRAYS);
-        } else {
-            /* Classic INTERPROGRAM only allows simple variables for "SET" */
-            var = ip_parse_variable_expression(parser, 0);
-        }
+        var = ip_parse_variable_expression(parser, IP_VAR_ALLOW_ARRAYS);
         if (parser->tokeniser.token == ITOK_EQUAL) {
             /* Parse the expresion */
             node = ip_parse_next_expression(parser);
@@ -800,6 +916,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
 
     case ITOK_END_PROCESS:
     case ITOK_END_PROGRAM:
+    case ITOK_EXIT_PROGRAM:
     case ITOK_PAUSE:
         node = ip_ast_make_standalone(token, &(parser->tokeniser.loc));
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
@@ -906,6 +1023,21 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_IGNORE_TAPE:
         node = ip_ast_make_standalone(token, &(parser->tokeniser.loc));
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+        break;
+
+    /* ------------- String statements ------------- */
+
+    case ITOK_SUBSTRING:
+        node = ip_parse_extract_substring(parser);
+        break;
+
+    case ITOK_LENGTH_OF:
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+        node = ip_ast_make_this_unary
+            (token, parser->this_type, IP_TYPE_STRING,
+             &(parser->tokeniser.loc));
+        node->value_type = IP_TYPE_INT;
+        node->this_type = IP_TYPE_INT;
         break;
 
     default:
@@ -1073,7 +1205,10 @@ static void ip_parse_symbols(ip_parser_t *parser)
     unsigned char type = IP_TYPE_INT;
 
     /* Bail out if we don't have the correct prefix */
-    if (parser->tokeniser.token != ITOK_SYMBOLS_INT) {
+    if (parser->tokeniser.token == ITOK_SYMBOLS_STR) {
+        /* "SYMBOLS FOR STRINGS" keyword */
+        type = IP_TYPE_STRING;
+    } else if (parser->tokeniser.token != ITOK_SYMBOLS_INT) {
         ip_error(parser, "'SYMBOLS FOR INTEGERS' expected");
         return;
     }
@@ -1192,7 +1327,8 @@ static void ip_parse_arrays(ip_parser_t *parser)
                     (&(parser->program->vars), name, IP_TYPE_FLOAT);
             }
             if (var->type == IP_TYPE_ARRAY_OF_INT ||
-                    var->type == IP_TYPE_ARRAY_OF_FLOAT) {
+                    var->type == IP_TYPE_ARRAY_OF_FLOAT ||
+                    var->type == IP_TYPE_ARRAY_OF_STRING) {
                 ip_error
                     (parser,
                      "symbol '%s' is already declared as an array",

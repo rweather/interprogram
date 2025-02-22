@@ -157,6 +157,13 @@ static int check_identifiers(void)
     KEYWORD("CALL",                                 ITOK_CALL);
     KEYWORD("RETURN",                               ITOK_RETURN);
     KEYWORD(":",                                    ITOK_COLON);
+    KEYWORD("IS EMPTY",                             ITOK_EMPTY);
+    KEYWORD("IS NOT EMPTY",                         ITOK_NOT_EMPTY);
+    KEYWORD("LENGTH OF",                            ITOK_LENGTH_OF);
+    KEYWORD("SUBSTRING FROM",                       ITOK_SUBSTRING);
+    KEYWORD("TO",                                   ITOK_TO);
+    KEYWORD("SYMBOLS FOR STRINGS",                  ITOK_SYMBOLS_STR);
+    KEYWORD("EXIT INTERPROGRAM",                    ITOK_EXIT_PROGRAM);
 
     /* Check that we have tested all of the keywords */
     for (index = ITOK_FIRST_KEYWORD; index <= ITOK_LAST_KEYWORD; ++index) {

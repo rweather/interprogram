@@ -262,7 +262,7 @@ Reserved words are any that correspond to a single-word keyword:
     ADD         MODULO      REPLACE     THIS
     CALL        NONE        RETURN      TIMES
     IF          OUTPUT      SET         TITLE
-    INPUT       PAUSE       SUBTRACT
+    INPUT       PAUSE       SUBTRACT    TO
 
 Reserved words cannot be used as variable or label names.
 
@@ -296,7 +296,7 @@ or a reference to an array element.  Some examples:
 
 <table border="1">
 <tr><td><b>Statement</b></td><td><b>Description</b></td><td><b>Extension?</b></td></tr>
-<tr><td><tt>ADD</tt> <i>value</i></td><td>Adds <i>value</i> to <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>ADD</tt> <i>value</i></td><td>Adds <i>value</i> to <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; performs string concatenation if used on string arguments.</td><td>String concatenation is an extension</td></tr>
 <tr><td><tt>SUBTRACT</tt> <i>value</i></td><td>Subtracts <i>value</i> from <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>MULTIPLY BY</tt> <i>value</i></td><td>Multiplies the <i>value</i> with <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>DIVIDE BY</tt> <i>value</i></td><td>Divides <tt>THIS</tt> by <i>value</i>, leaving the quotient in <tt>THIS</tt></td><td> </td></tr>
@@ -325,6 +325,20 @@ or a reference to an array element.  Some examples:
 <tr><td><tt>BITWISE NOT</tt></td><td>Performs a bitwise NOT of integer <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>SHIFT LEFT BY</tt> <i>value</i></td><td>Performs an arithmetic left shift of the integer <tt>THIS</tt> by <i>value</i> bits, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>SHIFT RIGHT BY</tt> <i>value</i></td><td>Performs an arithmetic right shift of the integer <tt>THIS</tt> by <i>value</i> bits, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>LENGTH OF</tt></td><td>Length of the string in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>SUBSTRING FROM</tt> <i>index1</i> [<tt>TO</tt> <i>index2</i>]</td><td>Extracts a substring from <tt>THIS</tt> starting at <i>index1</i> and ending at <i>index2</i>.  If <i>index2</i> is not present, then the rest of the string starting at <i>index1</i> is the result.</td><td>Yes</td></tr>
+</table>
+
+Algebraic expressions in the extension syntax use the following operators
+with precedence from highest to lowest:
+
+<table border="1">
+<tr><td><b>Operator</b></td><td><b>Description</b></td></tr>
+<tr><td>(<i>value</i>)</td><td>Parenthesised expression</td></tr>
+<tr><td><tt>LENGTH OF</tt> <i>value</i></td><td>Length of a string</td></tr>
+<tr><td>-<i>value</i>, +<i>value</i></td><td>Unary negation or unary plus</td></tr>
+<tr><td><i>value1</i> \* <i>value2</i>, <i>value1</i> / <i>value2</i>, <i>value1</i> % <i>value2</i></td><td>Multiplication, division, or remainder</td></tr>
+<tr><td><i>value1</i> + <i>value2</i>, <i>value1</i> - <i>value2</i></td><td>Addition or subtraction</td></tr>
 </table>
 
 ## Control flow statements
@@ -356,6 +370,8 @@ REPEAT FROM
 <tr><td><tt><i>value</i> IS FINITE</tt></td><td>Condition is true if <i>value</i> is a finite value<sup>(see note 3)</sup></td><td>Yes</td></tr>
 <tr><td><tt><i>value</i> IS INFINITE</tt></td><td>Condition is true if <i>value</i> is an infinite value<sup>(see note 3)</td><td>Yes</td></tr>
 <tr><td><tt><i>value</i> IS NOT A NUMBER</tt></td><td>Condition is true if <i>value</i> is not a number<sup>(see note 3)</td><td>Yes</td></tr>
+<tr><td><tt><i>value</i> IS EMPTY</tt></td><td>Condition is true if <i>value</i> is an empty string</td><td>Yes</td></tr>
+<tr><td><tt><i>value</i> IS NOT EMPTY</tt></td><td>Condition is true if <i>value</i> is not an empty string</td><td>Yes</td></tr>
 </table>
 
 Notes:
@@ -377,6 +393,14 @@ of infinities and not-a-numbers.  Integer values are always finite.
 ## Input and Output
 
 TBD
+
+## Other statements
+
+<table border="1">
+<tr><td><b>Statement</b></td><td><b>Description</b></td><td><b>Extension?</b></td></tr>
+<tr><td><tt>END OF INTERPROGRAM</tt></td><td>End the program with an exit status of 0.</td><td> </td></tr>
+<tr><td><tt>EXIT INTERPROGRAM</tt></td><td>End the program with an exit status of <tt>THIS</tt> (0-255).  If <tt>THIS</tt> is not an integer in the range 0 to 255, then the exit status will be 1.</td><td>Yes</td></tr>
+</table>
 
 ## License
 

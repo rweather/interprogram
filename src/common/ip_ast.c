@@ -51,7 +51,7 @@ void ip_ast_node_free(ip_ast_node_t *node)
         if (node->type == ITOK_EOL || node->type == ITOK_TITLE ||
                 node->type == ITOK_PUNCH || node->type == ITOK_TEXT) {
             if (node->text) {
-                free(node->text);
+                ip_string_deref(node->text);
             }
         }
         free(node);
@@ -91,6 +91,12 @@ ip_ast_node_t *ip_ast_make_cast(unsigned char type, ip_ast_node_t *node)
             node2->children.left = node;
             node2->this_type = node->this_type;
             return node2;
+        } else if (type == IP_TYPE_STRING) {
+            node2 = ip_ast_make_node
+                (ITOK_TO_STRING, IP_TYPE_STRING, &(node->loc));
+            node2->has_children = 1;
+            node2->children.left = node;
+            node2->this_type = node->this_type;
         } else if (type == IP_TYPE_DYNAMIC) {
             node2 = ip_ast_make_node
                 (ITOK_TO_DYNAMIC, IP_TYPE_DYNAMIC, &(node->loc));
@@ -125,7 +131,13 @@ ip_ast_node_t *ip_ast_make_binary
     }
 
     /* Cast the arguments to a common type if possible */
-    if (left->value_type == IP_TYPE_FLOAT) {
+    if (left->value_type == IP_TYPE_STRING ||
+            right->value_type == IP_TYPE_STRING) {
+        /* If either sub-tree is a string, then the common type is string */
+        common_type = IP_TYPE_STRING;
+        left = ip_ast_make_cast(IP_TYPE_STRING, left);
+        right = ip_ast_make_cast(IP_TYPE_STRING, right);
+    } else if (left->value_type == IP_TYPE_FLOAT) {
         /* Left sub-tree is float, so upcast right sub-tree to float */
         common_type = IP_TYPE_FLOAT;
         right = ip_ast_make_cast(IP_TYPE_FLOAT, right);
@@ -256,6 +268,12 @@ ip_ast_node_t *ip_ast_make_array_access
         node->has_children = 1;
         node->children.left = var_node;
         node->children.right = index;
+    } else if (var->type == IP_TYPE_ARRAY_OF_STRING) {
+        /* Index into an array of strings */
+        node = ip_ast_make_node(ITOK_INDEX_STRING, IP_TYPE_STRING, loc);
+        node->has_children = 1;
+        node->children.left = var_node;
+        node->children.right = index;
     } else {
         /* Index into an array of floats */
         node = ip_ast_make_node(ITOK_INDEX_FLOAT, IP_TYPE_FLOAT, loc);
@@ -312,10 +330,7 @@ ip_ast_node_t *ip_ast_make_text
 {
     ip_ast_node_t *node = ip_ast_make_standalone(type, loc);
     if (text && (*text != '\0' || type != ITOK_EOL)) {
-        node->text = strdup(text);
-        if (!(node->text)) {
-            ip_out_of_memory();
-        }
+        node->text = ip_string_create(text);
     }
     return node;
 }

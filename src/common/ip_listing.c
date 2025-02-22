@@ -39,7 +39,8 @@ static void ip_program_list_integer_symbols
             }
         }
         if (var->type == IP_TYPE_ARRAY_OF_INT ||
-                var->type == IP_TYPE_ARRAY_OF_FLOAT) {
+                var->type == IP_TYPE_ARRAY_OF_FLOAT ||
+                var->type == IP_TYPE_ARRAY_OF_STRING) {
             *saw_arrays = 1;
         }
         ip_program_list_integer_symbols
@@ -47,16 +48,41 @@ static void ip_program_list_integer_symbols
     }
 }
 
+static void ip_program_list_string_symbols
+    (const ip_program_t *program, const ip_var_t *var,
+     int *saw_strings, FILE *file)
+{
+    if (var != &(program->vars.nil)) {
+        ip_program_list_string_symbols(program, var->left, saw_strings, file);
+        if (var->type == IP_TYPE_STRING ||
+                var->type == IP_TYPE_ARRAY_OF_STRING) {
+            if (*saw_strings) {
+                fprintf(file, ", %s", var->name);
+            } else {
+                fprintf(file, "(2) SYMBOLS FOR STRINGS %s", var->name);
+                *saw_strings = 1;
+            }
+        }
+        ip_program_list_string_symbols(program, var->right, saw_strings, file);
+    }
+}
+
 static int ip_program_list_symbols(const ip_program_t *program, FILE *file)
 {
     int saw_arrays = 0;
     int saw_integers = 0;
+    int saw_strings = 0;
     fprintf(file, "(2) SYMBOLS FOR INTEGERS ");
     ip_program_list_integer_symbols
         (program, program->vars.root.right, &saw_arrays, &saw_integers, file);
     if (!saw_integers) {
         fprintf(file, "NONE\n");
     } else {
+        fprintf(file, "\n");
+    }
+    ip_program_list_string_symbols
+        (program, program->vars.root.right, &saw_strings, file);
+    if (saw_strings) {
         fprintf(file, "\n");
     }
     return saw_arrays;
@@ -70,7 +96,8 @@ static void ip_program_list_array_symbols
         ip_program_list_array_symbols
             (program, var->left, saw_arrays, file);
         if (var->type == IP_TYPE_ARRAY_OF_INT ||
-                var->type == IP_TYPE_ARRAY_OF_FLOAT) {
+                var->type == IP_TYPE_ARRAY_OF_FLOAT ||
+                var->type == IP_TYPE_ARRAY_OF_STRING) {
             if (*saw_arrays) {
                 fprintf(file, ", %s", var->name);
             } else {
@@ -122,11 +149,13 @@ static void ip_program_list_expression
     case ITOK_FLOAT_VALUE:
     case ITOK_INDEX_INT:
     case ITOK_INDEX_FLOAT:
+    case ITOK_LENGTH_OF:
         priority = 10;
         break;
 
     case ITOK_TO_INT:
     case ITOK_TO_FLOAT:
+    case ITOK_TO_STRING:
     case ITOK_TO_DYNAMIC:
         /* Coercion node that is invisible in the output */
         ip_program_list_expression(expr->children.left, parent_priority, file);
@@ -156,6 +185,8 @@ static void ip_program_list_expression
     case ITOK_FINITE:
     case ITOK_INFINITE:
     case ITOK_NAN:
+    case ITOK_EMPTY:
+    case ITOK_NOT_EMPTY:
         priority = 0;
         break;
 
@@ -189,6 +220,7 @@ static void ip_program_list_expression
 
     case ITOK_INDEX_INT:
     case ITOK_INDEX_FLOAT:
+    case ITOK_INDEX_STRING:
         /* Index into an array variable */
         fprintf(file, "%s(", expr->children.left->var->name);
         ip_program_list_expression(expr->children.right, 0, file);
@@ -221,10 +253,18 @@ static void ip_program_list_expression
     case ITOK_FINITE:
     case ITOK_INFINITE:
     case ITOK_NAN:
+    case ITOK_EMPTY:
+    case ITOK_NOT_EMPTY:
         /* Unary postfix operator */
-        ip_program_list_expression(expr->children.left, parent_priority, file);
+        ip_program_list_expression(expr->children.left, priority, file);
         fputc(' ', file);
         ip_program_list_node_name(expr, file);
+        break;
+
+    case ITOK_LENGTH_OF:
+        ip_program_list_node_name(expr, file);
+        fputc(' ', file);
+        ip_program_list_expression(expr->children.left, priority, file);
         break;
     }
 
@@ -279,7 +319,7 @@ static void ip_program_list_node
         break;
 
     case ITOK_TITLE:
-        fprintf(file, "(1) TITLE %s\n", node->text);
+        fprintf(file, "(1) TITLE %s\n", node->text ? node->text->data : "");
         if (ip_program_list_symbols(program, file)) {
             ip_program_list_arrays(program, file);
         }
@@ -293,6 +333,10 @@ static void ip_program_list_node
 
     case ITOK_END_PROGRAM:
         fprintf(file, "END OF INTERPROGRAM");
+        break;
+
+    case ITOK_EXIT_PROGRAM:
+        fprintf(file, "EXIT INTERPROGRAM");
         break;
 
     case ITOK_END_PROCESS:
@@ -374,12 +418,12 @@ static void ip_program_list_node
 
     case ITOK_PUNCH:
         fprintf(file, "PUNCH THE FOLLOWING CHARACTERS\n");
-        fprintf(file, "%s~~~~~", node->text);
+        fprintf(file, "%s~~~~~", node->text ? node->text->data : "");
         break;
 
     case ITOK_PUNCH_NO_BLANKS:
         fprintf(file, "PUNCH THE FOLLOWING CHARACTERS,\n");
-        fprintf(file, "%s~~~~~", node->text);
+        fprintf(file, "%s~~~~~", node->text ? node->text->data : "");
         break;
 
     case ITOK_PAUSE:
@@ -390,9 +434,18 @@ static void ip_program_list_node
     case ITOK_COS:
     case ITOK_TAN:
     case ITOK_ATAN:
+    case ITOK_SIN_RADIANS:
+    case ITOK_COS_RADIANS:
+    case ITOK_TAN_RADIANS:
+    case ITOK_ATAN_RADIANS:
+    case ITOK_SIN_DEGREES:
+    case ITOK_COS_DEGREES:
+    case ITOK_TAN_DEGREES:
+    case ITOK_ATAN_DEGREES:
     case ITOK_LOG:
     case ITOK_EXP:
     case ITOK_ABS:
+    case ITOK_LENGTH_OF:
         ip_program_list_node_name(node, file);
         break;
 
@@ -453,10 +506,19 @@ static void ip_program_list_node
         }
         break;
 
+    case ITOK_SUBSTRING:
+        fprintf(file, "SUBSTRING FROM ");
+        ip_program_list_expression(node->children.left, 0, file);
+        if (node->children.right) {
+            fprintf(file, " TO ");
+            ip_program_list_expression(node->children.right, 0, file);
+        }
+        break;
+
     case ITOK_EOL:
         if (node->text) {
             /* This line ends in a comment */
-            fprintf(file, "#%s\n", node->text);
+            fprintf(file, "#%s\n", node->text->data);
         } else {
             fputc('\n', file);
         }

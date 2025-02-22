@@ -84,6 +84,16 @@ typedef int (*ip_exec_unary_int_t)(ip_value_t *result, ip_int_t x);
 typedef int (*ip_exec_unary_float_t)(ip_value_t *result, ip_float_t x);
 
 /**
+ * @brief Evaluates a unary operator on a string argument.
+ *
+ * @param[out] result Return the result.
+ * @param[in] x Value of the sub-expression.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+typedef int (*ip_exec_unary_string_t)(ip_value_t *result, ip_string_t *x);
+
+/**
  * @brief Evaluates a binary operator on integer arguments.
  *
  * @param[out] result Return the result.
@@ -106,6 +116,18 @@ typedef int (*ip_exec_binary_int_t)
  */
 typedef int (*ip_exec_binary_float_t)
     (ip_float_t *result, ip_float_t x, ip_float_t y);
+
+/**
+ * @brief Evaluates a binary operator on string arguments.
+ *
+ * @param[out] result Return the result.
+ * @param[in] x Value of the left sub-expression.
+ * @param[in] y Value of the right sub-expression.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+typedef int (*ip_exec_binary_string_t)
+    (ip_string_t **result, ip_string_t *x, ip_string_t *y);
 
 #define IP_COND_ST  0x0001  /**< Condition result is smaller than */
 #define IP_COND_EQ  0x0002  /**< Condition result is equal to */
@@ -132,6 +154,17 @@ typedef int (*ip_exec_binary_cond_int_t)(ip_int_t x, ip_int_t y);
  * relationship between the arguments.
  */
 typedef int (*ip_exec_binary_cond_float_t)(ip_float_t x, ip_float_t y);
+
+/**
+ * @brief Evaluates a binary condition on string arguments.
+ *
+ * @param[in] x Value of the left sub-expression.
+ * @param[in] y Value of the right sub-expression.
+ *
+ * @return IP_COND_ST, IP_COND_EQ, or IP_COND_GT depending upon the
+ * relationship between the arguments.
+ */
+typedef int (*ip_exec_binary_cond_string_t)(ip_string_t *x, ip_string_t *y);
 
 /**
  * @brief Evaluates a unary expression.
@@ -161,12 +194,46 @@ static int ip_exec_eval_unary_expression
     /* Evaluate the expression */
     if (sub->type == IP_TYPE_INT) {
         return (*int_func)(result, sub->ivalue);
+    } else if (sub->type == IP_TYPE_STRING) {
+        return IP_EXEC_BAD_TYPE;
     } else {
         status = ip_value_to_float(sub);
         if (status != IP_EXEC_OK) {
             return status;
         }
         return (*float_func)(result, sub->fvalue);
+    }
+    return IP_EXEC_OK;
+}
+
+/**
+ * @brief Evaluates a unary expression on a string argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] expr The expression to be evaluated.
+ * @param[out] result Returns the result.
+ * @param[in,out] sub Temporary storage for the sub-expression's value.
+ * @param[in] string_func Evaluates the expression with a string argument.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_exec_eval_unary_string_expression
+    (ip_exec_t *exec, ip_ast_node_t *expr, ip_value_t *result,
+     ip_value_t *sub, ip_exec_unary_string_t string_func)
+{
+    int status;
+
+    /* Evaluate the subexpression */
+    status = ip_exec_eval_expression(exec, expr->children.left, sub);
+    if (status != IP_EXEC_OK) {
+        return status;
+    }
+
+    /* Evaluate the expression */
+    if (sub->type == IP_TYPE_STRING) {
+        return (*string_func)(result, sub->svalue);
+    } else {
+        return IP_EXEC_BAD_TYPE;
     }
     return IP_EXEC_OK;
 }
@@ -181,13 +248,16 @@ static int ip_exec_eval_unary_expression
  * @param[in,out] right Temporary storage for the right sub-expression's value.
  * @param[in] int_func Evaluates the expression with integer arguments.
  * @param[in] float_func Evaluates the expression with floating-point arguments.
+ * @param[in] string_func Evaluates the expression with string arguments;
+ * may be NULL if strings are not permitted.
  *
  * @return IP_EXEC_OK or an error code.
  */
 static int ip_exec_eval_binary_expression
     (ip_exec_t *exec, ip_ast_node_t *expr, ip_value_t *result,
      ip_value_t *left, ip_value_t *right,
-     ip_exec_binary_int_t int_func, ip_exec_binary_float_t float_func)
+     ip_exec_binary_int_t int_func, ip_exec_binary_float_t float_func,
+     ip_exec_binary_string_t string_func)
 {
     int status;
 
@@ -201,7 +271,7 @@ static int ip_exec_eval_binary_expression
         return status;
     }
 
-    /* Cast the values to a common type (int or float) */
+    /* Cast the values to a common type (int, float, or string) */
     if (left->type == IP_TYPE_INT && right->type == IP_TYPE_INT) {
         ip_int_t ivalue;
         status = (*int_func)(&ivalue, left->ivalue, right->ivalue);
@@ -209,6 +279,25 @@ static int ip_exec_eval_binary_expression
             return status;
         }
         ip_value_set_int(result, ivalue);
+    } else if (left->type == IP_TYPE_STRING || right->type == IP_TYPE_STRING) {
+        ip_string_t *svalue = 0;
+        if (!string_func) {
+            return IP_EXEC_BAD_TYPE;
+        }
+        status = ip_value_to_string(left);
+        if (status != IP_EXEC_OK) {
+            return status;
+        }
+        status = ip_value_to_string(right);
+        if (status != IP_EXEC_OK) {
+            return status;
+        }
+        status = (*string_func)(&svalue, left->svalue, right->svalue);
+        if (status != IP_EXEC_OK) {
+            return status;
+        }
+        ip_value_set_string(result, svalue);
+        ip_string_deref(svalue);
     } else {
         ip_float_t fvalue;
         status = ip_value_to_float(left);
@@ -238,6 +327,8 @@ static int ip_exec_eval_binary_expression
  * @param[in,out] right Temporary storage for the right sub-expression's value.
  * @param[in] int_func Evaluates the expression with integer arguments.
  * @param[in] float_func Evaluates the expression with floating-point arguments.
+ * @param[in] string_func Evaluates the expression with string arguments;
+ * may be NULL if strings are not permitted.
  * @param[in] expected Expected condition; e.g. IP_COND_ST | IP_COND_EQ
  * for smaller than or equal to.
  *
@@ -247,7 +338,8 @@ static int ip_exec_eval_binary_condition
     (ip_exec_t *exec, ip_ast_node_t *expr, ip_value_t *result,
      ip_value_t *left, ip_value_t *right,
      ip_exec_binary_cond_int_t int_func,
-     ip_exec_binary_cond_float_t float_func, int expected)
+     ip_exec_binary_cond_float_t float_func,
+     ip_exec_binary_cond_string_t string_func, int expected)
 {
     int status;
     int cmp;
@@ -262,10 +354,23 @@ static int ip_exec_eval_binary_condition
         return status;
     }
 
-    /* Cast the values to a common type (int or float) */
+    /* Cast the values to a common type (int, float, or string) */
     if (left->type == IP_TYPE_INT && right->type == IP_TYPE_INT) {
         cmp = (*int_func)(left->ivalue, right->ivalue);
-        ip_value_set_int(result, (cmp & expected) ? 1 : 0);
+    } else if (left->type == IP_TYPE_STRING ||
+               right->type == IP_TYPE_STRING) {
+        if (!string_func) {
+            return IP_EXEC_BAD_TYPE;
+        }
+        status = ip_value_to_string(left);
+        if (status != IP_EXEC_OK) {
+            return status;
+        }
+        status = ip_value_to_string(right);
+        if (status != IP_EXEC_OK) {
+            return status;
+        }
+        cmp = (*string_func)(left->svalue, right->svalue);
     } else {
         status = ip_value_to_float(left);
         if (status != IP_EXEC_OK) {
@@ -276,8 +381,8 @@ static int ip_exec_eval_binary_condition
             return status;
         }
         cmp = (*float_func)(left->fvalue, right->fvalue);
-        ip_value_set_int(result, (cmp & expected) ? 1 : 0);
     }
+    ip_value_set_int(result, (cmp & expected) ? 1 : 0);
     return IP_EXEC_OK;
 }
 
@@ -290,6 +395,13 @@ static int ip_eval_int_add(ip_int_t *result, ip_int_t x, ip_int_t y)
 static int ip_eval_float_add(ip_float_t *result, ip_float_t x, ip_float_t y)
 {
     *result = x + y;
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_string_add
+    (ip_string_t **result, ip_string_t *x, ip_string_t *y)
+{
+    *result = ip_string_concat(x, y);
     return IP_EXEC_OK;
 }
 
@@ -377,6 +489,24 @@ static int ip_eval_float_cmp(ip_float_t x, ip_float_t y)
     if (x < y) {
         return IP_COND_ST;
     } else if (x > y) {
+        return IP_COND_GT;
+    } else {
+        return IP_COND_EQ;
+    }
+}
+
+static int ip_eval_string_cmp(ip_string_t *x, ip_string_t *y)
+{
+    int cmp;
+    if (!x) {
+        return y ? IP_COND_ST : IP_COND_EQ;
+    } else if (!y) {
+        return IP_COND_GT;
+    }
+    cmp = strcmp(x->data, y->data);
+    if (cmp < 0) {
+        return IP_COND_ST;
+    } else if (cmp > 0) {
         return IP_COND_GT;
     } else {
         return IP_COND_EQ;
@@ -817,6 +947,24 @@ static int ip_eval_float_shr(ip_float_t *result, ip_float_t x, ip_float_t y)
     return IP_EXEC_OK;
 }
 
+static int ip_eval_string_empty(ip_value_t *result, ip_string_t *x)
+{
+    ip_value_set_int(result, !x || x->len == 0);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_string_not_empty(ip_value_t *result, ip_string_t *x)
+{
+    ip_value_set_int(result, x && x->len != 0);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_string_length(ip_value_t *result, ip_string_t *x)
+{
+    ip_value_set_int(result, x ? x->len : 0);
+    return IP_EXEC_OK;
+}
+
 /**
  * @brief Evaluates an expression.
  *
@@ -865,6 +1013,11 @@ static int ip_exec_eval_expression
         ip_value_set_float(result, expr->fvalue);
         break;
 
+    case ITOK_STR_VALUE:
+        /* String constant */
+        ip_value_set_string(result, expr->text);
+        break;
+
     case ITOK_TO_INT:
         /* Convert the sub-expression's value into an integer */
         status = ip_exec_eval_expression(exec, expr->children.left, result);
@@ -881,6 +1034,14 @@ static int ip_exec_eval_expression
         }
         break;
 
+    case ITOK_TO_STRING:
+        /* Convert the sub-expression's value into a string value */
+        status = ip_exec_eval_expression(exec, expr->children.left, result);
+        if (status == IP_EXEC_OK) {
+            status = ip_value_to_string(result);
+        }
+        break;
+
     case ITOK_TO_DYNAMIC:
         /* Convert the sub-expression's value into a dynamic value.
          * Which is equivalent to just evaluating the sub-expression
@@ -890,6 +1051,7 @@ static int ip_exec_eval_expression
 
     case ITOK_INDEX_INT:
     case ITOK_INDEX_FLOAT:
+    case ITOK_INDEX_STRING:
         /* Index into an array */
         status = ip_exec_eval_expression(exec, expr->children.right, &right);
         if (status == IP_EXEC_OK) {
@@ -905,18 +1067,29 @@ static int ip_exec_eval_expression
     status = ip_exec_eval_unary_expression \
         ((exec), (expr), (result), &left, ip_eval_int_##name, \
          ip_eval_float_##name)
+#define EVAL_UNARY_STRING(name) \
+    status = ip_exec_eval_unary_string_expression \
+        ((exec), (expr), (result), &left, ip_eval_string_##name)
 #define EVAL_BINARY(name) \
     status = ip_exec_eval_binary_expression \
         ((exec), (expr), (result), &left, &right, ip_eval_int_##name, \
-         ip_eval_float_##name)
+         ip_eval_float_##name, 0)
+#define EVAL_BINARY_STRING(name) \
+    status = ip_exec_eval_binary_expression \
+        ((exec), (expr), (result), &left, &right, ip_eval_int_##name, \
+         ip_eval_float_##name, ip_eval_string_##name)
 #define EVAL_BINARY_CONDITION(op, cond) \
     status = ip_exec_eval_binary_condition \
         ((exec), (expr), (result), &left, &right, ip_eval_int_##op, \
-         ip_eval_float_##op, (cond))
+         ip_eval_float_##op, 0, (cond))
+#define EVAL_BINARY_CONDITION_STRING(op, cond) \
+    status = ip_exec_eval_binary_condition \
+        ((exec), (expr), (result), &left, &right, ip_eval_int_##op, \
+         ip_eval_float_##op, ip_eval_string_##op, (cond))
 
     case ITOK_ADD:
     case ITOK_PLUS:
-        EVAL_BINARY(add);
+        EVAL_BINARY_STRING(add);
         break;
 
     case ITOK_SUBTRACT:
@@ -939,7 +1112,7 @@ static int ip_exec_eval_expression
         break;
 
     case ITOK_GREATER_THAN:
-        EVAL_BINARY_CONDITION(cmp, IP_COND_GT);
+        EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_GT);
         break;
 
     case ITOK_MUCH_GREATER_THAN:
@@ -947,7 +1120,7 @@ static int ip_exec_eval_expression
         break;
 
     case ITOK_SMALLER_THAN:
-        EVAL_BINARY_CONDITION(cmp, IP_COND_ST);
+        EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_ST);
         break;
 
     case ITOK_MUCH_SMALLER_THAN:
@@ -967,19 +1140,19 @@ static int ip_exec_eval_expression
         break;
 
     case ITOK_EQUAL_TO:
-        EVAL_BINARY_CONDITION(cmp, IP_COND_EQ);
+        EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_EQ);
         break;
 
     case ITOK_NOT_EQUAL_TO:
-        EVAL_BINARY_CONDITION(cmp, IP_COND_ST | IP_COND_GT);
+        EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_ST | IP_COND_GT);
         break;
 
     case ITOK_GREATER_OR_EQUAL:
-        EVAL_BINARY_CONDITION(cmp, IP_COND_GT | IP_COND_EQ);
+        EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_GT | IP_COND_EQ);
         break;
 
     case ITOK_SMALLER_OR_EQUAL:
-        EVAL_BINARY_CONDITION(cmp, IP_COND_ST | IP_COND_EQ);
+        EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_ST | IP_COND_EQ);
         break;
 
     case ITOK_NOT_ZERO:
@@ -1094,6 +1267,18 @@ static int ip_exec_eval_expression
         EVAL_BINARY(raise);
         break;
 
+    case ITOK_EMPTY:
+        EVAL_UNARY_STRING(empty);
+        break;
+
+    case ITOK_NOT_EMPTY:
+        EVAL_UNARY_STRING(not_empty);
+        break;
+
+    case ITOK_LENGTH_OF:
+        EVAL_UNARY_STRING(length);
+        break;
+
     default:
         /* Don't know what kind of expression this is */
         ip_value_set_unknown(result);
@@ -1186,7 +1371,9 @@ static int ip_exec_assign_variable(ip_exec_t *exec, ip_ast_node_t *node)
     if (node->type == ITOK_VAR_NAME) {
         /* Assign to an ordinary variable */
         status = ip_value_to_var(node->var, &value);
-    } else if (node->type == ITOK_INDEX_INT || node->type == ITOK_INDEX_FLOAT) {
+    } else if (node->type == ITOK_INDEX_INT ||
+               node->type == ITOK_INDEX_FLOAT ||
+               node->type == ITOK_INDEX_STRING) {
         /* Assign to an array element; first evaluate the array index */
         ip_value_init(&index);
         status = ip_exec_eval_expression(exec, node->children.right, &index);
@@ -1334,6 +1521,28 @@ static int ip_exec_repeat_from(ip_exec_t *exec, ip_ast_node_t *node)
 }
 
 /**
+ * @brief Reads a string from the input stream.
+ *
+ * @param[in] input The input stream to read from.
+ *
+ * @return The string that was read or NULL on EOF.
+ */
+static ip_string_t *ip_exec_read_string(FILE *input)
+{
+    char buffer[BUFSIZ];
+    if (fgets(buffer, sizeof(buffer), input)) {
+        size_t len = strlen(buffer);
+        while (len > 0 &&
+               (buffer[len - 1] == '\n' || buffer[len - 1] == '\r')) {
+            /* Strip trailing end of line characters */
+            --len;
+        }
+        return ip_string_create_with_length(buffer, len);
+    }
+    return 0;
+}
+
+/**
  * @brief Reads a value from the input into a variable and "THIS".
  *
  * @param[in,out] exec The execution context.
@@ -1389,6 +1598,16 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
             status = IP_EXEC_BAD_INPUT;
         } else {
             ip_value_set_float(&value, fvalue);
+        }
+        break;
+
+    case IP_TYPE_STRING:
+        /* Read a string value; every character until the next newline */
+        value.type = IP_TYPE_STRING;
+        value.svalue = ip_exec_read_string(exec->input);
+        if (!(value.svalue)) {
+            eof = 1;
+            value.svalue = ip_string_create_empty();
         }
         break;
 
@@ -1469,6 +1688,12 @@ static int ip_exec_output(ip_exec_t *exec, ip_ast_node_t *node, int with_eol)
         }
         break;
 
+    case IP_TYPE_STRING:
+        if (value.svalue) {
+            fputs(value.svalue->data, exec->output);
+        }
+        break;
+
     default:
         status = IP_EXEC_BAD_TYPE;
         break;
@@ -1478,7 +1703,7 @@ static int ip_exec_output(ip_exec_t *exec, ip_ast_node_t *node, int with_eol)
     if (status == IP_EXEC_OK) {
         if (with_eol) {
             fputc('\n', exec->output);
-        } else {
+        } else if (value.type != IP_TYPE_STRING) {
             fputc(' ', exec->output);
             fputc(' ', exec->output);
         }
@@ -1486,6 +1711,76 @@ static int ip_exec_output(ip_exec_t *exec, ip_ast_node_t *node, int with_eol)
 
     /* Clean up and exit */
     ip_value_release(&value);
+    return status;
+}
+
+/**
+ * @brief Extracts a substring from "THIS".
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] node The "SUBSTRING FROM" node for the statement.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_exec_extract_substring(ip_exec_t *exec, ip_ast_node_t *node)
+{
+    ip_value_t str;
+    ip_value_t from;
+    ip_value_t to;
+    ip_string_t *substr;
+    int status = IP_EXEC_OK;
+
+    /* Initialise the sub-expressions */
+    ip_value_init(&str);
+    ip_value_init(&from);
+    ip_value_init(&to);
+
+    /* Get the value of "THIS" which must be a string */
+    ip_value_assign(&str, &(exec->this_value));
+    if (str.type == IP_TYPE_STRING) {
+        /* Evaluate the "FROM" and "TO" sub-expressions */
+        status = ip_exec_eval_expression(exec, node->children.left, &from);
+        if (status == IP_EXEC_OK) {
+            status = ip_value_to_int(&from);
+        }
+        if (status == IP_EXEC_OK) {
+            if (node->children.right) {
+                status = ip_exec_eval_expression
+                    (exec, node->children.right, &to);
+                if (status == IP_EXEC_OK) {
+                    status = ip_value_to_int(&to);
+                }
+            } else {
+                /* Missing "TO" expression, so use the length of the string */
+                ip_value_set_int(&to, str.svalue->len);
+            }
+        }
+        if (status == IP_EXEC_OK) {
+            if (from.ivalue < 1 || to.ivalue < 1) {
+                /* String indices must be 1 or greater */
+                status = IP_EXEC_BAD_INDEX;
+                substr = ip_string_create_empty();
+            } else if (to.ivalue < from.ivalue) {
+                /* Ending index is less than the starting index */
+                substr = ip_string_create_empty();
+            } else {
+                if (to.ivalue > (ip_int_t)(str.svalue->len)) {
+                    to.ivalue = (ip_int_t)(str.svalue->len);
+                }
+                substr = ip_string_substring
+                    (str.svalue, from.ivalue - 1, to.ivalue - from.ivalue + 1);
+            }
+            ip_value_set_string(&(exec->this_value), substr);
+            ip_string_deref(substr);
+        }
+    } else {
+        status = IP_EXEC_BAD_TYPE;
+    }
+
+    /* Clean up and exit */
+    ip_value_release(&str);
+    ip_value_release(&from);
+    ip_value_release(&to);
     return status;
 }
 
@@ -1527,6 +1822,11 @@ int ip_exec_step(ip_exec_t *exec)
         ip_value_set_int(&(exec->this_value), 0);
         return IP_EXEC_FINISHED;
 
+    case ITOK_EXIT_PROGRAM:
+        /* Explicit request to end the program with "THIS" as the exit status */
+        exec->pc = node; /* Back up to redo this node if we step again */
+        return IP_EXEC_FINISHED;
+
     case ITOK_END_PROCESS:
     case ITOK_RETURN:
         /* Return from a subroutine */
@@ -1566,6 +1866,7 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_SHIFT_LEFT:
     case ITOK_SHIFT_RIGHT:
     case ITOK_RAISE:
+    case ITOK_LENGTH_OF:
         /* Perform an arithmetic operation with the result in "THIS" */
         return ip_exec_eval_expression(exec, node, &(exec->this_value));
 
@@ -1621,7 +1922,7 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_PUNCH:
         /* "PUNCH THE FOLLOWING CHARACTERS" to standard output */
         if (node->text) {
-            fputs(node->text, exec->output);
+            fputs(node->text->data, exec->output);
         }
 
         /* Classic INTERPROGRAM terminates punched data with a
@@ -1632,7 +1933,7 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_PUNCH_NO_BLANKS:
         /* "PUNCH THE FOLLOWING CHARACTERS" with no following blanks */
         if (node->text) {
-            fputs(node->text, exec->output);
+            fputs(node->text->data, exec->output);
         }
         break;
 
@@ -1653,6 +1954,10 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_IGNORE_TAPE:
         /* Ignore the input up until the next "~~~~~" or EOF */
         ip_exec_copy_tape(NULL, exec->input);
+        break;
+
+    case ITOK_SUBSTRING:
+        status = ip_exec_extract_substring(exec, node);
         break;
 
     default:
@@ -1683,14 +1988,14 @@ int ip_exec_run(ip_exec_t *exec)
         if (exec->this_value.type == IP_TYPE_INT) {
             if (exec->this_value.ivalue >= 0 &&
                     exec->this_value.ivalue <= 255) {
-                return (int)(exec->this_value.ivalue & 0xFF);
+                return (int)(exec->this_value.ivalue);
             }
         }
         return 1; /* "THIS" is not an integer or is out of range */
 
     case IP_EXEC_DIV_ZERO:      error = "division by zero"; break;
     case IP_EXEC_UNINIT:        error = "uninitialised variable"; break;
-    case IP_EXEC_BAD_INDEX:     error = "array index out of bounds"; break;
+    case IP_EXEC_BAD_INDEX:     error = "index out of range"; break;
     case IP_EXEC_BAD_TYPE:      error = "incompatible types"; break;
     case IP_EXEC_BAD_STATEMENT: error = "unknown statement"; break;
     case IP_EXEC_BAD_RETURN:    error = "return from subroutine without call"; break;
