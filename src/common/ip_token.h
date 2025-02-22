@@ -373,6 +373,17 @@ char *ip_tokeniser_read_title(ip_tokeniser_t *tokeniser);
  */
 void ip_tokeniser_skip_line(ip_tokeniser_t *tokeniser);
 
+/**
+ * @brief Lookahead on the current line and determine if the next
+ * non-whitespace character is a specific character.
+ *
+ * @param[in] tokeniser The tokeniser.
+ * @param[in] ch The character to look for.
+ *
+ * @return Non-zero if @a ch was found, or zero otherwise.
+ */
+int ip_tokeniser_lookahead(ip_tokeniser_t *tokeniser, int ch);
+
 #ifdef __cplusplus
 }
 #endif

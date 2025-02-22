@@ -335,7 +335,7 @@ with precedence from highest to lowest:
 <table border="1">
 <tr><td><b>Operator</b></td><td><b>Description</b></td></tr>
 <tr><td>(<i>value</i>)</td><td>Parenthesised expression</td></tr>
-<tr><td><tt>LENGTH OF</tt> <i>value</i></td><td>Length of a string</td></tr>
+<tr><td><tt>LENGTH OF</tt> <i>value</i></td><td>Length of a string or array</td></tr>
 <tr><td>-<i>value</i>, +<i>value</i></td><td>Unary negation or unary plus</td></tr>
 <tr><td><i>value1</i> \* <i>value2</i>, <i>value1</i> / <i>value2</i>, <i>value1</i> % <i>value2</i></td><td>Multiplication, division, or remainder</td></tr>
 <tr><td><i>value1</i> + <i>value2</i>, <i>value1</i> - <i>value2</i></td><td>Addition or subtraction</td></tr>

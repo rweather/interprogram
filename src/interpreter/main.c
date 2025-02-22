@@ -27,9 +27,10 @@
 #include <string.h>
 #include <getopt.h>
 
-#define short_options "o:cel"
+#define short_options "o:i:cel"
 static struct option long_options[] = {
     {"output",      required_argument,  0,  'o'},
+    {"input",       required_argument,  0,  'i'},
     {"classic",     no_argument,        0,  'c'},
     {"extended",    no_argument,        0,  'e'},
     {"list",        no_argument,        0,  'l'},
@@ -42,6 +43,9 @@ static void usage(const char *progname)
 
     fprintf(stderr, "--output FILE, -o FILE\n");
     fprintf(stderr, "    Set the output file (default is standard output).\n\n");
+
+    fprintf(stderr, "--input FILE, -i FILE\n");
+    fprintf(stderr, "    Set the input file (default is standard input).\n\n");
 
     fprintf(stderr, "--classic, -c\n");
     fprintf(stderr, "    Use the classic INTERPROGRAM syntax.\n\n");
@@ -75,6 +79,10 @@ int main(int argc, char **argv)
             output_filename = optarg;
             break;
 
+        case 'i':
+            input_filename = optarg;
+            break;
+
         case 'c':
             options &= ~ITOK_TYPE_EXTENSION;
             break;
@@ -98,15 +106,12 @@ int main(int argc, char **argv)
         usage(progname);
         return 1;
     }
-    program_filename = argv[optind++];
-
-    /* Get the name of the input tape file if one is provided */
-    if (optind < argc) {
-        input_filename = argv[optind++];
-    }
+    program_filename = argv[optind];
 
     /* Load the program into memory */
-    if (ip_parse_program_file(&program, program_filename, options) != 0) {
+    if (ip_parse_program_file
+            (&program, program_filename, options,
+             argc - optind, argv + optind) != 0) {
         ip_program_free(program);
         return 1;
     }

@@ -21,6 +21,7 @@
  */
 
 #include "ip_parser.h"
+#include "ip_value.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -261,8 +262,23 @@ static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
         break;
 
     case ITOK_LENGTH_OF:
-        /* Operator to get the length of a string */
+        /* Operator to get the length of a string or an array */
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+        if (parser->tokeniser.token == ITOK_VAR_NAME) {
+            /* Is this variable an array name with no indexing?
+             * If so, then we want the length of the array. */
+            ip_var_t *var = ip_var_lookup
+                (&(parser->program->vars), parser->tokeniser.token_info->name);
+            if (var && ip_var_is_array(var) &&
+                    !ip_tokeniser_lookahead(&(parser->tokeniser), '(')) {
+                ip_int_t length =
+                    var->max_subscript - var->min_subscript + 1;
+                node = ip_ast_make_int_constant
+                    (length, &(parser->tokeniser.loc));
+                ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+                break;
+            }
+        }
         node = ip_parse_unary_expression(parser);
         if (node && node->value_type != IP_TYPE_STRING) {
             ip_error_at(parser, &(node->loc),
@@ -1326,9 +1342,7 @@ static void ip_parse_arrays(ip_parser_t *parser)
                 var = ip_var_create
                     (&(parser->program->vars), name, IP_TYPE_FLOAT);
             }
-            if (var->type == IP_TYPE_ARRAY_OF_INT ||
-                    var->type == IP_TYPE_ARRAY_OF_FLOAT ||
-                    var->type == IP_TYPE_ARRAY_OF_STRING) {
+            if (ip_var_is_array(var)) {
                 ip_error
                     (parser,
                      "symbol '%s' is already declared as an array",
@@ -1533,14 +1547,32 @@ static int ip_parse_read_stdio(FILE *input)
 }
 
 unsigned long ip_parse_program_file
-    (ip_program_t **program, const char *filename, unsigned options)
+    (ip_program_t **program, const char *filename, unsigned options,
+     int argc, char **argv)
 {
     FILE *input;
     ip_parser_t parser;
     unsigned long num_errors;
+    int index;
 
     /* Construct the program image */
     *program = ip_program_new(filename ? filename : "-");
+
+    /* Create the "ARGV" variable if necessary */
+    if (argc > 0) {
+        ip_var_t *var = ip_var_create
+            (&((*program)->vars), "ARGV", IP_TYPE_STRING);
+        ip_var_dimension_array(var, 0, argc - 1);
+        var->not_resettable = 1;
+        for (index = 0; index < argc; ++index) {
+            ip_string_t *str = ip_string_create(argv[index]);
+            ip_value_t value;
+            value.type = IP_TYPE_STRING;
+            value.svalue = str;
+            ip_value_to_array(var, index, &value);
+            ip_value_release(&value);
+        }
+    }
 
     /* Open the input file */
     if (filename) {

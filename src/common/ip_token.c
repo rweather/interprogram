@@ -946,3 +946,19 @@ void ip_tokeniser_skip_line(ip_tokeniser_t *tokeniser)
 {
     tokeniser->buffer_posn = tokeniser->buffer_len;
 }
+
+int ip_tokeniser_lookahead(ip_tokeniser_t *tokeniser, int ch)
+{
+    size_t posn = tokeniser->buffer_posn;
+    int lookahead;
+    while (posn < tokeniser->buffer_len) {
+        lookahead = tokeniser->buffer[posn++];
+        if (lookahead == ch) {
+            return 1;
+        }
+        if (!ip_tokeniser_is_space(lookahead)) {
+            break;
+        }
+    }
+    return 0;
+}

@@ -50,6 +50,9 @@ struct ip_var_s
     /** Non-zero if this node is "red" in the name lookup red-black tree */
     unsigned char red;
 
+    /** Non-zero if the variable is not reset by ip_var_table_reset() */
+    unsigned char not_resettable;
+
     /** Minimum array subscript if the type is an array */
     ip_int_t min_subscript;
 
@@ -156,6 +159,15 @@ ip_var_t *ip_var_create
  */
 void ip_var_dimension_array
     (ip_var_t *var, ip_int_t min_subscript, ip_int_t max_subscript);
+
+/**
+ * @brief Determine if a variable is an array.
+ *
+ * @param[in] var The variable to test.
+ *
+ * @return Non-zero if @a var is an array, zero if not.
+ */
+int ip_var_is_array(const ip_var_t *var);
 
 #ifdef __cplusplus
 }

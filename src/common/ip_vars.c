@@ -103,42 +103,44 @@ static void ip_var_reset(ip_var_table_t *vars, ip_var_t *var)
 {
     ip_uint_t size;
     if (var != &(vars->nil)) {
-        switch (var->type) {
-        case IP_TYPE_INT:
-            var->initialised = 0;
-            var->ivalue = 0;
-            break;
+        if (!(var->not_resettable)) {
+            switch (var->type) {
+            case IP_TYPE_INT:
+                var->initialised = 0;
+                var->ivalue = 0;
+                break;
 
-        case IP_TYPE_FLOAT:
-            var->initialised = 0;
-            var->fvalue = 0;
-            break;
+            case IP_TYPE_FLOAT:
+                var->initialised = 0;
+                var->fvalue = 0;
+                break;
 
-        case IP_TYPE_STRING:
-            var->initialised = 0;
-            if (var->svalue->len != 0) {
-                ip_string_deref(var->svalue);
-                var->svalue = ip_string_create_empty();
+            case IP_TYPE_STRING:
+                var->initialised = 0;
+                if (var->svalue->len != 0) {
+                    ip_string_deref(var->svalue);
+                    var->svalue = ip_string_create_empty();
+                }
+                break;
+
+            case IP_TYPE_ARRAY_OF_INT:
+                size = var->max_subscript - var->min_subscript + 1;
+                memset(var->iarray, 0, sizeof(ip_int_t) * size);
+                break;
+
+            case IP_TYPE_ARRAY_OF_FLOAT:
+                size = var->max_subscript - var->min_subscript + 1;
+                memset(var->farray, 0, sizeof(ip_float_t) * size);
+                break;
+
+            case IP_TYPE_ARRAY_OF_STRING:
+                size = var->max_subscript - var->min_subscript + 1;
+                ip_var_free_string_array(var->sarray, size);
+                ip_var_init_string_array(var->sarray, size);
+                break;
+
+            default: break;
             }
-            break;
-
-        case IP_TYPE_ARRAY_OF_INT:
-            size = var->max_subscript - var->min_subscript + 1;
-            memset(var->iarray, 0, sizeof(ip_int_t) * size);
-            break;
-
-        case IP_TYPE_ARRAY_OF_FLOAT:
-            size = var->max_subscript - var->min_subscript + 1;
-            memset(var->farray, 0, sizeof(ip_float_t) * size);
-            break;
-
-        case IP_TYPE_ARRAY_OF_STRING:
-            size = var->max_subscript - var->min_subscript + 1;
-            ip_var_free_string_array(var->sarray, size);
-            ip_var_init_string_array(var->sarray, size);
-            break;
-
-        default: break;
         }
         ip_var_reset(vars, var->left);
         ip_var_reset(vars, var->right);
@@ -369,4 +371,14 @@ void ip_var_dimension_array
         }
         ip_var_init_string_array(var->sarray, size);
     }
+}
+
+int ip_var_is_array(const ip_var_t *var)
+{
+    if (!var) {
+        return 0;
+    }
+    return var->type == IP_TYPE_ARRAY_OF_INT ||
+           var->type == IP_TYPE_ARRAY_OF_FLOAT ||
+           var->type == IP_TYPE_ARRAY_OF_STRING;
 }

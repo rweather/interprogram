@@ -121,11 +121,15 @@ void ip_parse_check_undefined_labels(ip_parser_t *parser);
  * @param[in] filename Name of the file to load the program from,
  * or NULL for standard input.
  * @param[in] options Flags for syntax options; e.g. ITOK_TYPE_EXTENSION.
+ * @param[in] argc Number of arguments to write into the "ARGV" variable,
+ * or zero for no "ARGV" variable.
+ * @param[in] argv Array of arguments for the "ARGV" variable.
  *
  * @return Zero on success or the number of errors that occured.
  */
 unsigned long ip_parse_program_file
-    (ip_program_t **program, const char *filename, unsigned options);
+    (ip_program_t **program, const char *filename, unsigned options,
+     int argc, char **argv);
 
 /**
  * @brief Prints an error message for the current line.
