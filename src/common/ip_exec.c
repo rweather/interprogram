@@ -1558,6 +1558,7 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
     int status = IP_EXEC_OK;
     int eof = 0;
     int scan_result;
+    int skip_eol = 1;
     int64_t ivalue;
     double fvalue;
 
@@ -1609,11 +1610,27 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
             eof = 1;
             value.svalue = ip_string_create_empty();
         }
+        skip_eol = 0;
         break;
 
     default:
         ip_value_release(&value);
         return IP_EXEC_BAD_TYPE;
+    }
+
+    /* After a number, skip the following EOL; after a string, don't do this.
+     * This ensures that if the previous line ended in a number, reading a
+     * string will read a new line instead of the '\n' on the previous. */
+    if (skip_eol) {
+        int ch = fgetc(exec->input);
+        if (ch == '\r') {
+            ch = fgetc(exec->input);
+            if (ch != '\n' && ch != EOF) {
+                ungetc(ch, exec->input);
+            }
+        } else if (ch != '\n' && ch != EOF) {
+            ungetc(ch, exec->input);
+        }
     }
 
     /* Bail out if an error occurred reading the input */

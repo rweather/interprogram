@@ -1012,9 +1012,12 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_PUNCH:
         if (parser->tokeniser.buffer_posn < parser->tokeniser.buffer_len) {
             /* If "PUNCH THE FOLLOWING CHARACTERS" is followed by a comma,
-             * then suppress the output of "~~~~~" blanks at runtime. */
+             * then suppress the output of "~~~~~" blanks at runtime.
+             * We also do this in the extended syntax as blanks are useless. */
             if (parser->tokeniser.buffer[parser->tokeniser.buffer_posn] == ',') {
                 ++(parser->tokeniser.buffer_posn);
+                token = ITOK_PUNCH_NO_BLANKS;
+            } else if ((parser->flags & ITOK_TYPE_EXTENSION) != 0) {
                 token = ITOK_PUNCH_NO_BLANKS;
             }
         }
@@ -1026,9 +1029,12 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_COPY_TAPE:
         if (parser->tokeniser.buffer_posn < parser->tokeniser.buffer_len) {
             /* If "COPY TAPE" is followed by a comma, then suppress the
-             * output of "~~~~~" blanks at runtime. */
+             * output of "~~~~~" blanks at runtime.  We also do this in the
+             * extended syntax as blanks are useless. */
             if (parser->tokeniser.buffer[parser->tokeniser.buffer_posn] == ',') {
                 ++(parser->tokeniser.buffer_posn);
+                token = ITOK_COPY_NO_BLANKS;
+            } else if ((parser->flags & ITOK_TYPE_EXTENSION) != 0) {
                 token = ITOK_COPY_NO_BLANKS;
             }
         }
