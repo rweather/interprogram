@@ -1,0 +1,44 @@
+(1) TITLE String testing
+(2) symbols for integers J
+(2) symbols for strings S, T
+
+    take 'Hello, World!'
+    replace S
+    if length of S is not equal to 13, go to FAIL
+
+    take S
+    substring from 1 to 5
+    if this is not equal to 'Hello', go to FAIL
+
+    take S
+    substring from 7
+    if this is not equal to ' World!', go to FAIL
+
+    take S
+    substring from 9 to 200
+    if this is not equal to 'orld!', go to FAIL
+
+    take S
+    substring from 4 to 1
+    if this is not empty, go to FAIL
+
+    take 'Green Eggs'
+    add ' and Ham'
+    replace T
+    if T is not equal to 'Green Eggs and Ham', go to FAIL
+
+    set S = S + T
+    if S is not equal to 'Hello, World!Green Eggs and Ham', go to FAIL
+
+    if T(1) is not equal to 'G', go to FAIL
+    if T(6) is not equal to ' ', go to FAIL
+    if T(18) is not equal to 'm', go to FAIL
+
+    if T(1) + T(6) + T(17) is not equal to 'G a', go to FAIL
+
+    # If we get here, then all tests have passed.
+    end of interprogram
+
+    # One of the tests failed.  Exit the program with a status of 1.
+*FAIL
+    take 1, exit interprogram

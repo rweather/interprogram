@@ -1,0 +1,70 @@
+(1) TITLE Math test 1 - Basic arithmetic operations
+(2) symbols for integers J, K
+
+    # 1 + 1 = 2
+    take 1
+    add 1
+    if this is not equal to 2, go to FAIL
+    replace J
+    if J is not equal to 2, go to FAIL
+    replace Y
+
+    # 2 + 3 = 5
+    take 2 + 3
+    if this is not equal to 5, go to FAIL
+    replace K
+    if K is not equal to 5, go to FAIL
+
+    # 2 * 5 = 10
+    take J
+    multiply by K
+    if this is not equal to 10, go to FAIL
+
+    # 9.5 * 2 = 19.0
+    set X = (this - 0.5) * Y
+    if X is not equal to 1.9e1, go to FAIL
+
+    # 19.0 / -7 = -2.7142857...
+    take X
+    divide by -7
+    subtract -2.7142857
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
+    # 19.0 mod 7 = 5.0
+    take X
+    modulo 7
+    replace Y
+    if Y is not equal to 5, go to FAIL
+
+    # 2 * 6 + 8 = 20
+    take 2 * 6 + 8
+    if this is not equal to 20, go to FAIL
+
+    # 2 * (6 + 8) = 28
+    take 2 * (6 + 8)
+    if this is not equal to 28, go to FAIL
+
+    # 1/0 = +inf
+    take 1.0 / 0.0
+    if this is finite, go to FAIL
+    if this is not a number, go to FAIL
+    if this is negative, go to FAIL
+
+    # -1/0 = -inf
+    take -1.0 / 0.0
+    if this is finite, go to FAIL
+    if this is not a number, go to FAIL
+    if this is positive, go to FAIL
+
+    # 0/0 = nan
+    take 0.0 / 0.0
+    if this is finite, go to FAIL
+    if this is infinite, go to FAIL
+
+    # If we get here, then all tests have passed.
+    end of interprogram
+
+    # One of the tests failed.  Exit the program with a status of 1.
+*FAIL
+    take 1, exit interprogram

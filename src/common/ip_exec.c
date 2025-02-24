@@ -442,13 +442,8 @@ static int ip_eval_int_div(ip_int_t *result, ip_int_t x, ip_int_t y)
 
 static int ip_eval_float_div(ip_float_t *result, ip_float_t x, ip_float_t y)
 {
-    if (y != 0) {
-        *result = x / y;
-        return IP_EXEC_OK;
-    } else {
-        *result = 0;
-        return IP_EXEC_DIV_ZERO;
-    }
+    *result = x / y;
+    return IP_EXEC_OK;
 }
 
 static int ip_eval_int_mod(ip_int_t *result, ip_int_t x, ip_int_t y)
@@ -464,13 +459,32 @@ static int ip_eval_int_mod(ip_int_t *result, ip_int_t x, ip_int_t y)
 
 static int ip_eval_float_mod(ip_float_t *result, ip_float_t x, ip_float_t y)
 {
-    if (y != 0) {
-        *result = fmod(x, y);
-        return IP_EXEC_OK;
-    } else {
-        *result = 0;
-        return IP_EXEC_DIV_ZERO;
-    }
+    *result = fmod(x, y);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_is(ip_value_t *result, ip_int_t x)
+{
+    ip_value_set_int(result, x != 0);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_float_is(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_int(result, x != 0);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_is_not(ip_value_t *result, ip_int_t x)
+{
+    ip_value_set_int(result, x == 0);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_float_is_not(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_int(result, x == 0);
+    return IP_EXEC_OK;
 }
 
 static int ip_eval_int_cmp(ip_int_t x, ip_int_t y)
@@ -560,18 +574,6 @@ static int ip_eval_float_zero(ip_value_t *result, ip_float_t x)
     return IP_EXEC_OK;
 }
 
-static int ip_eval_int_not_zero(ip_value_t *result, ip_int_t x)
-{
-    ip_value_set_int(result, x != 0);
-    return IP_EXEC_OK;
-}
-
-static int ip_eval_float_not_zero(ip_value_t *result, ip_float_t x)
-{
-    ip_value_set_int(result, fabs(x) >= IP_FLOAT_EPSILON);
-    return IP_EXEC_OK;
-}
-
 static int ip_eval_int_positive(ip_value_t *result, ip_int_t x)
 {
     ip_value_set_int(result, x >= 0);
@@ -622,16 +624,16 @@ static int ip_eval_float_infinite(ip_value_t *result, ip_float_t x)
     return IP_EXEC_OK;
 }
 
-static int ip_eval_int_nan(ip_value_t *result, ip_int_t x)
+static int ip_eval_int_a_number(ip_value_t *result, ip_int_t x)
 {
     (void)x;
-    ip_value_set_int(result, 0);
+    ip_value_set_int(result, 1);
     return IP_EXEC_OK;
 }
 
-static int ip_eval_float_nan(ip_value_t *result, ip_float_t x)
+static int ip_eval_float_a_number(ip_value_t *result, ip_float_t x)
 {
-    ip_value_set_int(result, isnan(x));
+    ip_value_set_int(result, !isnan(x));
     return IP_EXEC_OK;
 }
 
@@ -953,12 +955,6 @@ static int ip_eval_string_empty(ip_value_t *result, ip_string_t *x)
     return IP_EXEC_OK;
 }
 
-static int ip_eval_string_not_empty(ip_value_t *result, ip_string_t *x)
-{
-    ip_value_set_int(result, x && x->len != 0);
-    return IP_EXEC_OK;
-}
-
 static int ip_eval_string_length(ip_value_t *result, ip_string_t *x)
 {
     ip_value_set_int(result, x ? x->len : 0);
@@ -1111,6 +1107,14 @@ static int ip_exec_eval_expression
         EVAL_BINARY(mod);
         break;
 
+    case ITOK_IS:
+        EVAL_UNARY(is);
+        break;
+
+    case ITOK_IS_NOT:
+        EVAL_UNARY(is_not);
+        break;
+
     case ITOK_GREATER_THAN:
         EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_GT);
         break;
@@ -1143,20 +1147,12 @@ static int ip_exec_eval_expression
         EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_EQ);
         break;
 
-    case ITOK_NOT_EQUAL_TO:
-        EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_ST | IP_COND_GT);
-        break;
-
     case ITOK_GREATER_OR_EQUAL:
         EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_GT | IP_COND_EQ);
         break;
 
     case ITOK_SMALLER_OR_EQUAL:
         EVAL_BINARY_CONDITION_STRING(cmp, IP_COND_ST | IP_COND_EQ);
-        break;
-
-    case ITOK_NOT_ZERO:
-        EVAL_UNARY(not_zero);
         break;
 
     case ITOK_FINITE:
@@ -1167,8 +1163,8 @@ static int ip_exec_eval_expression
         EVAL_UNARY(infinite);
         break;
 
-    case ITOK_NAN:
-        EVAL_UNARY(nan);
+    case ITOK_A_NUMBER:
+        EVAL_UNARY(a_number);
         break;
 
     case ITOK_SQRT:
@@ -1269,10 +1265,6 @@ static int ip_exec_eval_expression
 
     case ITOK_EMPTY:
         EVAL_UNARY_STRING(empty);
-        break;
-
-    case ITOK_NOT_EMPTY:
-        EVAL_UNARY_STRING(not_empty);
         break;
 
     case ITOK_LENGTH_OF:
@@ -1872,6 +1864,14 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_COS:
     case ITOK_TAN:
     case ITOK_ATAN:
+    case ITOK_SIN_RADIANS:
+    case ITOK_COS_RADIANS:
+    case ITOK_TAN_RADIANS:
+    case ITOK_ATAN_RADIANS:
+    case ITOK_SIN_DEGREES:
+    case ITOK_COS_DEGREES:
+    case ITOK_TAN_DEGREES:
+    case ITOK_ATAN_DEGREES:
     case ITOK_LOG:
     case ITOK_EXP:
     case ITOK_ABS:
@@ -1974,8 +1974,7 @@ int ip_exec_step(ip_exec_t *exec)
         break;
 
     case ITOK_SUBSTRING:
-        status = ip_exec_extract_substring(exec, node);
-        break;
+        return ip_exec_extract_substring(exec, node);
 
     default:
         /* Unknown statement.  Back up the program counter and exit */

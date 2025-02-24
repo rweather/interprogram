@@ -1,2 +1,2 @@
-(1) Title: "Hello World" example in Extended INTERPROGRAM syntax
+(1) TITLE "Hello World" example in Extended INTERPROGRAM syntax
 output 'Hello, World!'

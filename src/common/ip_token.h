@@ -56,51 +56,51 @@ extern "C" {
 #define ITOK_MULTIPLY           0x97    /**< MULTIPLY BY */
 #define ITOK_DIVIDE             0x98    /**< DIVIDE BY */
 #define ITOK_IF                 0x99    /**< IF */
-#define ITOK_GREATER_THAN       0x9A    /**< IS GREATER THAN */
-#define ITOK_MUCH_GREATER_THAN  0x9B    /**< IS MUCH GREATER THAN */
-#define ITOK_SMALLER_THAN       0x9C    /**< IS SMALLER THAN */
-#define ITOK_MUCH_SMALLER_THAN  0x9D    /**< IS MUCH SMALLER THAN */
-#define ITOK_ZERO               0x9E    /**< IS ZERO */
-#define ITOK_POSITIVE           0x9F    /**< IS POSITIVE */
-#define ITOK_NEGATIVE           0xA0    /**< IS NEGATIVE */
-#define ITOK_REPLACE            0xA1    /**< REPLACE */
-#define ITOK_INPUT              0xA2    /**< INPUT */
-#define ITOK_OUTPUT             0xA3    /**< OUTPUT */
-#define ITOK_SET                0xA4    /**< SET */
-#define ITOK_GO_TO              0xA5    /**< GO TO */
-#define ITOK_EXECUTE_PROCESS    0xA6    /**< EXECUTE PROCESS */
-#define ITOK_REPEAT_FROM        0xA7    /**< REPEAT FROM */
-#define ITOK_TIMES              0xA8    /**< TIMES */
-#define ITOK_PAUSE              0xA9    /**< PAUSE */
-#define ITOK_PUNCH              0xAA    /**< PUNCH THE FOLLOWING CHARACTERS */
-#define ITOK_COPY_TAPE          0xAB    /**< COPY TAPE */
-#define ITOK_IGNORE_TAPE        0xAC    /**< IGNORE TAPE */
-#define ITOK_SQRT               0xAD    /**< FORM SQUARE ROOT */
-#define ITOK_SIN                0xAE    /**< FORM SINE */
-#define ITOK_COS                0xAF    /**< FORM COSINE */
-#define ITOK_TAN                0xB0    /**< FORM TANGENT */
-#define ITOK_ATAN               0xB1    /**< FORM ARCTAN */
-#define ITOK_LOG                0xB2    /**< FORM NATURAL LOG */
-#define ITOK_EXP                0xB3    /**< FORM EXPONENTIAL */
+#define ITOK_IS                 0x9A    /**< IS */
+#define ITOK_GREATER_THAN       0x9B    /**< GREATER THAN */
+#define ITOK_MUCH_GREATER_THAN  0x9C    /**< MUCH GREATER THAN */
+#define ITOK_SMALLER_THAN       0x9D    /**< SMALLER THAN */
+#define ITOK_MUCH_SMALLER_THAN  0x9E    /**< MUCH SMALLER THAN */
+#define ITOK_ZERO               0x9F    /**< ZERO */
+#define ITOK_POSITIVE           0xA0    /**< POSITIVE */
+#define ITOK_NEGATIVE           0xA1    /**< NEGATIVE */
+#define ITOK_REPLACE            0xA2    /**< REPLACE */
+#define ITOK_INPUT              0xA3    /**< INPUT */
+#define ITOK_OUTPUT             0xA4    /**< OUTPUT */
+#define ITOK_SET                0xA5    /**< SET */
+#define ITOK_GO_TO              0xA6    /**< GO TO */
+#define ITOK_EXECUTE_PROCESS    0xA7    /**< EXECUTE PROCESS */
+#define ITOK_REPEAT_FROM        0xA8    /**< REPEAT FROM */
+#define ITOK_TIMES              0xA9    /**< TIMES */
+#define ITOK_PAUSE              0xAA    /**< PAUSE */
+#define ITOK_PUNCH              0xAB    /**< PUNCH THE FOLLOWING CHARACTERS */
+#define ITOK_COPY_TAPE          0xAC    /**< COPY TAPE */
+#define ITOK_IGNORE_TAPE        0xAD    /**< IGNORE TAPE */
+#define ITOK_SQRT               0xAE    /**< FORM SQUARE ROOT */
+#define ITOK_SIN                0xAF    /**< FORM SINE */
+#define ITOK_COS                0xB0    /**< FORM COSINE */
+#define ITOK_TAN                0xB1    /**< FORM TANGENT */
+#define ITOK_ATAN               0xB2    /**< FORM ARCTAN */
+#define ITOK_LOG                0xB3    /**< FORM NATURAL LOG */
+#define ITOK_EXP                0xB4    /**< FORM EXPONENTIAL */
 
 /* Token codes for extensions to the original INTERPROGRAM language */
-#define ITOK_ABS                0xB4    /**< FORM ABSOLUTE */
-#define ITOK_SIN_RADIANS        0xB5    /**< FORM SINE RADIANS */
-#define ITOK_COS_RADIANS        0xB6    /**< FORM COSINE RADIANS */
-#define ITOK_TAN_RADIANS        0xB7    /**< FORM TANGENT RADIANS */
-#define ITOK_ATAN_RADIANS       0xB8    /**< FORM ARCTAN RADIANS */
-#define ITOK_SIN_DEGREES        0xB9    /**< FORM SINE DEGREES */
-#define ITOK_COS_DEGREES        0xBA    /**< FORM COSINE DEGREES */
-#define ITOK_TAN_DEGREES        0xBB    /**< FORM TANGENT DEGREES */
-#define ITOK_ATAN_DEGREES       0xBC    /**< FORM ARCTAN DEGREES */
-#define ITOK_EQUAL_TO           0xBD    /**< IS EQUAL TO */
-#define ITOK_NOT_EQUAL_TO       0xBE    /**< IS NOT EQUAL TO */
-#define ITOK_GREATER_OR_EQUAL   0xBF    /**< IS GREATER THAN OR EQUAL TO */
-#define ITOK_SMALLER_OR_EQUAL   0xC0    /**< IS SMALLER THAN OR EQUAL TO */
-#define ITOK_NOT_ZERO           0xC1    /**< IS NOT ZERO */
-#define ITOK_FINITE             0xC2    /**< IS FINITE */
-#define ITOK_INFINITE           0xC3    /**< IS INFINITE */
-#define ITOK_NAN                0xC4    /**< IS NOT A NUMBER */
+#define ITOK_ABS                0xB5    /**< FORM ABSOLUTE */
+#define ITOK_SIN_RADIANS        0xB6    /**< FORM SINE RADIANS */
+#define ITOK_COS_RADIANS        0xB7    /**< FORM COSINE RADIANS */
+#define ITOK_TAN_RADIANS        0xB8    /**< FORM TANGENT RADIANS */
+#define ITOK_ATAN_RADIANS       0xB9    /**< FORM ARCTAN RADIANS */
+#define ITOK_SIN_DEGREES        0xBA    /**< FORM SINE DEGREES */
+#define ITOK_COS_DEGREES        0xBB    /**< FORM COSINE DEGREES */
+#define ITOK_TAN_DEGREES        0xBC    /**< FORM TANGENT DEGREES */
+#define ITOK_ATAN_DEGREES       0xBD    /**< FORM ARCTAN DEGREES */
+#define ITOK_IS_NOT             0xBE    /**< IS NOT */
+#define ITOK_EQUAL_TO           0xBF    /**< EQUAL TO */
+#define ITOK_GREATER_OR_EQUAL   0xC0    /**< GREATER THAN OR EQUAL TO */
+#define ITOK_SMALLER_OR_EQUAL   0xC1    /**< SMALLER THAN OR EQUAL TO */
+#define ITOK_FINITE             0xC2    /**< FINITE */
+#define ITOK_INFINITE           0xC3    /**< INFINITE */
+#define ITOK_A_NUMBER           0xC4    /**< A NUMBER */
 #define ITOK_MODULO             0xC5    /**< MODULO */
 #define ITOK_BITWISE_AND_NOT    0xC6    /**< BITWISE AND WITH NOT */
 #define ITOK_BITWISE_AND        0xC7    /**< BITWISE AND WITH */
@@ -115,13 +115,12 @@ extern "C" {
 #define ITOK_CALL               0xD0    /**< CALL */
 #define ITOK_RETURN             0xD1    /**< RETURN */
 #define ITOK_COLON              0xD2    /**< ":" */
-#define ITOK_EMPTY              0xD3    /**< IS EMPTY */
-#define ITOK_NOT_EMPTY          0xD4    /**< IS NOT EMPTY */
-#define ITOK_LENGTH_OF          0xD5    /**< LENGTH OF */
-#define ITOK_SUBSTRING          0xD6    /**< SUBSTRING FROM */
-#define ITOK_TO                 0xD7    /**< TO */
-#define ITOK_SYMBOLS_STR        0xD8    /**< SYMBOLS FOR STRINGS */
-#define ITOK_EXIT_PROGRAM       0xD9    /**< EXIT INTERPROGRAM */
+#define ITOK_EMPTY              0xD3    /**< EMPTY */
+#define ITOK_LENGTH_OF          0xD4    /**< LENGTH OF */
+#define ITOK_SUBSTRING          0xD5    /**< SUBSTRING FROM */
+#define ITOK_TO                 0xD6    /**< TO */
+#define ITOK_SYMBOLS_STR        0xD7    /**< SYMBOLS FOR STRINGS */
+#define ITOK_EXIT_PROGRAM       0xD8    /**< EXIT INTERPROGRAM */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA

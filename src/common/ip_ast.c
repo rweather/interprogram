@@ -76,7 +76,7 @@ ip_ast_node_t *ip_ast_make_float_constant(ip_float_t value, const ip_loc_t *loc)
 ip_ast_node_t *ip_ast_make_cast(unsigned char type, ip_ast_node_t *node)
 {
     ip_ast_node_t *node2;
-    if (node && node->type != type) {
+    if (node && node->value_type != type) {
         if (type == IP_TYPE_INT) {
             node2 = ip_ast_make_node
                 (ITOK_TO_INT, IP_TYPE_INT, &(node->loc));
@@ -254,22 +254,16 @@ ip_ast_node_t *ip_ast_make_array_access
         ip_ast_node_free(index);
         return 0;
     }
-    if (index->type != IP_TYPE_INT) {
-        /* Convert the array index into an integer */
-        node = ip_ast_make_node(ITOK_TO_INT, IP_TYPE_INT, loc);
-        node->this_type = index->this_type;
-        node->has_children = 1;
-        node->children.left = index;
-        index = node;
-    }
+    index = ip_ast_make_cast(IP_TYPE_INT, index);
     if (var->type == IP_TYPE_ARRAY_OF_INT) {
         /* Index into an array of integers */
         node = ip_ast_make_node(ITOK_INDEX_INT, IP_TYPE_INT, loc);
         node->has_children = 1;
         node->children.left = var_node;
         node->children.right = index;
-    } else if (var->type == IP_TYPE_ARRAY_OF_STRING) {
-        /* Index into an array of strings */
+    } else if (var->type == IP_TYPE_ARRAY_OF_STRING ||
+               var->type == IP_TYPE_STRING) {
+        /* Index into an array of strings or into a single string */
         node = ip_ast_make_node(ITOK_INDEX_STRING, IP_TYPE_STRING, loc);
         node->has_children = 1;
         node->children.left = var_node;

@@ -52,13 +52,14 @@ static ip_token_info_t const tokens[] = {
     {"MULTIPLY BY",                         ITOK_MULTIPLY,          ITOK_TYPE_STATEMENT},
     {"DIVIDE BY",                           ITOK_DIVIDE,            ITOK_TYPE_STATEMENT},
     {"IF",                                  ITOK_IF,                ITOK_TYPE_STATEMENT},
-    {"IS GREATER THAN",                     ITOK_GREATER_THAN,      ITOK_TYPE_CONDITION},
-    {"IS MUCH GREATER THAN",                ITOK_MUCH_GREATER_THAN, ITOK_TYPE_CONDITION},
-    {"IS SMALLER THAN",                     ITOK_SMALLER_THAN,      ITOK_TYPE_CONDITION},
-    {"IS MUCH SMALLER THAN",                ITOK_MUCH_SMALLER_THAN, ITOK_TYPE_CONDITION},
-    {"IS ZERO",                             ITOK_ZERO,              ITOK_TYPE_CONDITION},
-    {"IS POSITIVE",                         ITOK_POSITIVE,          ITOK_TYPE_CONDITION},
-    {"IS NEGATIVE",                         ITOK_NEGATIVE,          ITOK_TYPE_CONDITION},
+    {"IS",                                  ITOK_IS,                ITOK_TYPE_CONDITION},
+    {"GREATER THAN",                        ITOK_GREATER_THAN,      ITOK_TYPE_CONDITION},
+    {"MUCH GREATER THAN",                   ITOK_MUCH_GREATER_THAN, ITOK_TYPE_CONDITION},
+    {"SMALLER THAN",                        ITOK_SMALLER_THAN,      ITOK_TYPE_CONDITION},
+    {"MUCH SMALLER THAN",                   ITOK_MUCH_SMALLER_THAN, ITOK_TYPE_CONDITION},
+    {"ZERO",                                ITOK_ZERO,              ITOK_TYPE_CONDITION},
+    {"POSITIVE",                            ITOK_POSITIVE,          ITOK_TYPE_CONDITION},
+    {"NEGATIVE",                            ITOK_NEGATIVE,          ITOK_TYPE_CONDITION},
     {"REPLACE",                             ITOK_REPLACE,           ITOK_TYPE_STATEMENT},
     {"INPUT",                               ITOK_INPUT,             ITOK_TYPE_STATEMENT},
     {"OUTPUT",                              ITOK_OUTPUT,            ITOK_TYPE_STATEMENT},
@@ -87,14 +88,13 @@ static ip_token_info_t const tokens[] = {
     {"FORM COSINE DEGREES",                 ITOK_COS_DEGREES,       ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"FORM TANGENT DEGREES",                ITOK_TAN_DEGREES,       ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"FORM ARCTAN DEGREES",                 ITOK_ATAN_DEGREES,      ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
-    {"IS EQUAL TO",                         ITOK_EQUAL_TO,          ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
-    {"IS NOT EQUAL TO",                     ITOK_NOT_EQUAL_TO,      ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
-    {"IS GREATER THAN OR EQUAL TO",         ITOK_GREATER_OR_EQUAL,  ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
-    {"IS SMALLER THAN OR EQUAL TO",         ITOK_SMALLER_OR_EQUAL,  ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
-    {"IS NOT ZERO",                         ITOK_NOT_ZERO,          ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
-    {"IS FINITE",                           ITOK_FINITE,            ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
-    {"IS INFINITE",                         ITOK_INFINITE,          ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
-    {"IS NOT A NUMBER",                     ITOK_NAN,               ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"IS NOT",                              ITOK_IS_NOT,            ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"EQUAL TO",                            ITOK_EQUAL_TO,          ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"GREATER THAN OR EQUAL TO",            ITOK_GREATER_OR_EQUAL,  ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"SMALLER THAN OR EQUAL TO",            ITOK_SMALLER_OR_EQUAL,  ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"FINITE",                              ITOK_FINITE,            ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"INFINITE",                            ITOK_INFINITE,          ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"A NUMBER",                            ITOK_A_NUMBER,          ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
     {"MODULO",                              ITOK_MODULO,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"BITWISE AND WITH NOT",                ITOK_BITWISE_AND_NOT,   ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"BITWISE AND WITH",                    ITOK_BITWISE_AND,       ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
@@ -109,8 +109,7 @@ static ip_token_info_t const tokens[] = {
     {"CALL",                                ITOK_CALL,              ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"RETURN",                              ITOK_RETURN,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {":",                                   ITOK_COLON,             ITOK_TYPE_ANY | ITOK_TYPE_EXTENSION},
-    {"IS EMPTY",                            ITOK_EMPTY,             ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
-    {"IS NOT EMPTY",                        ITOK_NOT_EMPTY,         ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
+    {"EMPTY",                               ITOK_EMPTY,             ITOK_TYPE_CONDITION | ITOK_TYPE_EXTENSION},
     {"LENGTH OF",                           ITOK_LENGTH_OF,         ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"SUBSTRING FROM",                      ITOK_SUBSTRING,         ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"TO",                                  ITOK_TO,                ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
@@ -427,9 +426,11 @@ static void ip_tokeniser_get_number(ip_tokeniser_t *tokeniser, unsigned context)
 static void ip_tokeniser_get_identifier
     (ip_tokeniser_t *tokeniser, unsigned context)
 {
+    const ip_token_info_t *found = 0;
     const ip_token_info_t *info;
     size_t posn = tokeniser->buffer_posn - 1;
     size_t end_var = posn;
+    size_t end_keyword = posn;
     int ch;
     for (;;) {
         /* Skip forward to the next non-alphabetic character */
@@ -450,9 +451,12 @@ static void ip_tokeniser_get_identifier
         info = ip_tokeniser_lookup_keyword
             (tokeniser->buffer + posn, tokeniser->buffer_posn - posn, context);
         if (info) {
-            /* Full keyword found */
-            ip_tokeniser_set_token_info(tokeniser, info);
-            return;
+            /* Full keyword found.  Keep looking because we may find a
+             * longer keyword later in the token table. */
+            if (!found || strlen(info->name) > strlen(found->name)) {
+                found = info;
+                end_keyword = tokeniser->buffer_posn;
+            }
         }
 
         /* If there is whitespace followed by another word, then try
@@ -477,6 +481,13 @@ static void ip_tokeniser_get_identifier
             }
         }
         break;
+    }
+
+    /* Did we find a suitable keyword? */
+    if (found) {
+        tokeniser->buffer_posn = end_keyword;
+        ip_tokeniser_set_token_info(tokeniser, found);
+        return;
     }
 
     /* We have a variable name */

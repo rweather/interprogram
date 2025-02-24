@@ -1,0 +1,85 @@
+(1) TITLE Array testing
+(2) symbols for integers J, K
+(2) symbols for strings S
+(3) maximum subscripts K(99), A(5), B(-5:+3), S(3)
+
+    # Check the lengths of the arrays.
+    if length of K is not equal to 100, go to FAIL
+    if length of A is not equal to 6, go to FAIL
+    if length of B is not equal to 9, go to FAIL
+    if length of S is not equal to 4, go to FAIL
+    if length of S(2) is not equal to 0, go to FAIL
+
+    # Check that the arrays are at their defaults (zero or the empty string).
+    set J = 99
+*10 if K(99-J) is not zero, go to FAIL
+    repeat from *10 J times
+
+    if A(0) is not zero, go to FAIL
+    if A(1) is not zero, go to FAIL
+    if A(2) is not zero, go to FAIL
+    if A(3) is not zero, go to FAIL
+    if A(4) is not zero, go to FAIL
+
+    set J = 8
+*11 if B(J-5) is not zero, go to FAIL
+    repeat from *11 J times
+
+    if S(0) is not empty, go to FAIL
+    if S(1) is not empty, go to FAIL
+    if S(2) is not empty, go to FAIL
+    if S(3) is not empty, go to FAIL
+
+    # Populate the arrays with data.
+    set J = 99
+*20 set K(J) = 200 - J
+    repeat from *20 J times
+
+    set A(0) = 10
+    set A(1) = -76.5
+    set A(2) = 1e20
+    #set A(3) = 0   # No change
+    set A(4) = -1
+
+    set J = 8
+*21 take 2.5
+    raise to the power of J
+    replace B(J-5)
+    repeat from *21 J times
+
+    set S(0) = 'Green'
+    set S(1) = 'Eggs'
+    take 'and'
+    replace S(2)
+    set S(3) = 'Ham'
+
+    # Check that the expected data is present.
+    set J = 99
+*30 if K(J) is not equal to (200 - J), go to FAIL
+    repeat from *30 J times
+
+    if A(0) is not equal to 10.0, go to FAIL
+    if A(1) is not equal to -76.5, go to FAIL
+    if A(2) is not equal to 1e20, go to FAIL
+    if A(3) is not zero, go to FAIL
+    if A(4) is positive, go to FAIL
+
+    set J = 8
+*31 take 2.5
+    raise to the power of J
+    if B(J-5) is not equal to this, go to FAIL
+    repeat from *31 J times
+
+    if S(0) is not equal to 'Green', go to FAIL
+    if S(1) is not equal to 'Eggs', go to FAIL
+    if S(2) is not equal to 'and', go to FAIL
+    if S(3) is not equal to 'Ham', go to FAIL
+    if S(3) is empty, go to FAIL
+    if length of S(2) is not equal to 3, go to FAIL
+
+    # If we get here, then all tests have passed.
+    end of interprogram
+
+    # One of the tests failed.  Exit the program with a status of 1.
+*FAIL
+    take 1, exit interprogram

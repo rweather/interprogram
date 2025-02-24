@@ -1,0 +1,70 @@
+(1) TITLE Control flow statements test
+(2) symbols for integers J
+
+    # "IF" and "GO TO" are pretty heavily tested by other tests.
+    # This file focuses on the remaining control flow statements.
+
+    # Call a subroutine; or "routine process" as Classic INTERPROGRAM called it.
+    take 0.5
+    execute process *100
+    form cosine
+    subtract 0.5
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
+    # Call a similar subroutine using the extended CALL/RETURN syntax.
+    take 0.5
+    call acos
+    form cosine degrees
+    subtract 0.5
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
+    # Loop that calculates the Fibonacci sequence for 21 (20 + 1) iterations.
+    set X = 1
+    set Y = 1
+    set J = 20
+*1
+    take X + Y
+    set X = Y
+    replace Y
+    repeat from *1 J times
+    if Y is not equal to 28657, go to FAIL
+
+    # Do it again with an alphabetic label this time.  Also use a
+    # negative loop control variable which should increase towards zero.
+    set X = 1
+    set Y = 1
+    set J = -20
+*FIB
+    take X + Y
+    set X = Y
+    replace Y
+    repeat from FIB J times
+    if Y is not equal to 28657, go to FAIL
+
+    # Computed GO TO statement.
+    set J = 50
+    go to *J+3
+    go to FAIL
+*53
+
+    # If we get here, then all tests have passed.
+    end of interprogram
+
+    # ARC-COSINE(THIS) from the original INTERPROGRAM manual:
+    #       acos(x) = atan(sqrt(1 - x^2) / x)
+*100
+    replace argument, multiply by this, & -1, add 1
+    form square root, divide by argument, form arctan
+    end of process definition
+
+    # Same thing, with CALL/RETURN and angles in degrees.
+*ACOS
+    replace argument, multiply by this, & -1, add 1
+    form square root, divide by argument, form arctan degrees
+    return
+
+    # One of the tests failed.  Exit the program with a status of 1.
+*FAIL
+    take 1, exit interprogram

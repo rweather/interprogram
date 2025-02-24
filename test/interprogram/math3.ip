@@ -1,0 +1,60 @@
+(1) TITLE Math test 3 - Mathematical functions involving powers and e
+
+    # sqrt(2) = 1.41421356...
+    take 2
+    form square root
+    subtract 1.41421356
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
+    # sqrt(-1) = nan
+    take -1
+    form square root
+    if this is finite, go to FAIL
+    if this is infinite, go to FAIL
+
+    # Cube root of 5 = 1.709975946...
+    take 5
+    raise to the power of 0.333333
+    subtract 1.709975946
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
+    # log_e(27) = 3.29583686...
+    take 27.0
+    form natural log
+    subtract 3.295836866
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
+    # e^3.295836866... = 27
+    take 3.295836866
+    form exponential
+    subtract 27
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
+    # log_10(27) = log_e(27) / log_e(10) = 1.431363764...
+    take 10
+    form natural log
+    replace logbase
+    take 27.0
+    form natural log
+    divide by logbase
+    subtract 1.431363764
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
+    # 10^1.431363764... = 27
+    take 10
+    raise to the power of 1.431363764
+    subtract 27
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
+    # If we get here, then all tests have passed.
+    end of interprogram
+
+    # One of the tests failed.  Exit the program with a status of 1.
+*FAIL
+    take 1, exit interprogram

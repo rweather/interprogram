@@ -61,33 +61,33 @@ syn match   ipOperator          "\<FORM NATURAL LOG\>"
 syn match   ipOperator          "\<FORM EXPONENTIAL\>"
 syn match   ipOperator          "\<FORM ABSOLUTE\>"
 syn match   ipOperator          "\<RAISE TO THE POWER OF\>"
-syn match   ipOperator          "\<BITWISE AND WITH NOT\>"
 syn match   ipOperator          "\<BITWISE AND WITH\>"
+syn match   ipOperator          "\<BITWISE AND WITH NOT\>"
 syn match   ipOperator          "\<BITWISE OR WITH\>"
 syn match   ipOperator          "\<BITWISE XOR WITH\>"
+syn match   ipOperator          "\<BITWISE NOT\>"
 syn match   ipOperator          "\<SHIFT LEFT BY\>"
 syn match   ipOperator          "\<SHIFT RIGHT BY\>"
 syn match   ipOperator          "\<LENGTH OF\>"
 syn match   ipOperator          "\<SUBSTRING FROM\>"
 syn match   ipOperator          "TO"
 
-syn match   ipCondition         "\<IS GREATER THAN\>"
-syn match   ipCondition         "\<IS MUCH GREATER THAN\>"
-syn match   ipCondition         "\<IS SMALLER THAN\>"
-syn match   ipCondition         "\<IS MUCH SMALLER THAN\>"
-syn match   ipCondition         "\<IS ZERO\>"
-syn match   ipCondition         "\<IS NOT ZERO\>"
-syn match   ipCondition         "\<IS POSITIVE\>"
-syn match   ipCondition         "\<IS NEGATIVE\>"
-syn match   ipCondition         "\<IS EQUAL TO\>"
-syn match   ipCondition         "\<IS NOT EQUAL TO\>"
-syn match   ipCondition         "\<IS GREATER THAN OR EQUAL TO\>"
-syn match   ipCondition         "\<IS SMALLER THAN OR EQUAL TO\>"
-syn match   ipCondition         "\<IS FINITE\>"
-syn match   ipCondition         "\<IS INFINITE\>"
-syn match   ipCondition         "\<IS NOT A NUMBER\>"
-syn match   ipCondition         "\<IS EMPTY\>"
-syn match   ipCondition         "\<IS NOT EMPTY\>"
+syn match   ipCondition         "\<IS\>"
+syn match   ipCondition         "\<IS NOT\>"
+syn match   ipCondition         "\<GREATER THAN\>"
+syn match   ipCondition         "\<MUCH GREATER THAN\>"
+syn match   ipCondition         "\<SMALLER THAN\>"
+syn match   ipCondition         "\<MUCH SMALLER THAN\>"
+syn match   ipCondition         "\<ZERO\>"
+syn match   ipCondition         "\<POSITIVE\>"
+syn match   ipCondition         "\<NEGATIVE\>"
+syn match   ipCondition         "\<EQUAL TO\>"
+syn match   ipCondition         "\<GREATER THAN OR EQUAL TO\>"
+syn match   ipCondition         "\<SMALLER THAN OR EQUAL TO\>"
+syn match   ipCondition         "\<FINITE\>"
+syn match   ipCondition         "\<INFINITE\>"
+syn match   ipCondition         "\<A NUMBER\>"
+syn match   ipCondition         "\<EMPTY\>"
 
 syn match   ipConstant          "THIS"
 syn match   ipConstant          /[0-9]*\.[0-9]*/
@@ -96,6 +96,8 @@ syn match   ipConstant          /[0-9]*\.[0-9]*[eE][-+][0-9][0-9]*/
 syn match   ipConstant          /[0-9]*\.[0-9]*([0-9][0-9]*)/
 syn match   ipConstant          /[0-9]*\.[0-9]*([-+][0-9][0-9]*)/
 syn match   ipConstant          /[0-9][0-9]*/
+syn match   ipConstant          /[0-9][0-9]*[eE][0-9][0-9]*/
+syn match   ipConstant          /[0-9][0-9]*[eE][-+][0-9][0-9]*/
 syn region  ipConstant          start=/PUNCH THE FOLLOWING CHARACTERS/ end=/\~\~\~\~\~*/
 
 syn match   ipString            /'[^']*'/

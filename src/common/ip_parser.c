@@ -129,7 +129,14 @@ static ip_ast_node_t *ip_parse_variable_expression
                 (allowed & IP_VAR_ALLOW_ARRAYS) != 0 &&
                 parser->tokeniser.token == ITOK_LPAREN) {
             /* Indexing into a string to extract a character */
+            ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
             node = ip_parse_expression(parser);
+            if (node && parser->tokeniser.token == ITOK_RPAREN) {
+                ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+            } else if (node) {
+                ip_error_near
+                    (parser, "missing \")\" in string index expression");
+            }
             node = ip_ast_make_array_access
                 (var, node, &(parser->tokeniser.loc));
         } else {
@@ -140,9 +147,17 @@ static ip_ast_node_t *ip_parse_variable_expression
     case IP_TYPE_ARRAY_OF_INT:
     case IP_TYPE_ARRAY_OF_FLOAT:
     case IP_TYPE_ARRAY_OF_STRING:
-        if (parser->tokeniser.token == ITOK_LPAREN) {
+        if (parser->tokeniser.token == ITOK_LPAREN &&
+                (allowed & IP_VAR_ALLOW_ARRAYS) != 0) {
             /* Parse the array index expression */
+            ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
             node = ip_parse_expression(parser);
+            if (node && parser->tokeniser.token == ITOK_RPAREN) {
+                ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+            } else if (node) {
+                ip_error_near
+                    (parser, "missing \")\" in array index expression");
+            }
 
             /* Construct a lookup of the specific array index */
             node = ip_ast_make_array_access
@@ -545,22 +560,48 @@ static ip_ast_node_t *ip_parse_condition(ip_parser_t *parser)
     ip_ast_node_t *node;
     ip_ast_node_t *node2;
     int token;
+    int is_condition;
 
     /* Parse the first expression in the conditional */
     node = ip_parse_next_expression(parser);
+
+    /* Expect either "IS" or "IS NOT" to appear next */
+    token = parser->tokeniser.token;
+    if (token == ITOK_IS) {
+        is_condition = 1;
+    } else if (token == ITOK_IS_NOT) {
+        is_condition = 0;
+    } else {
+        if ((parser->flags & ITOK_TYPE_EXTENSION) == 0) {
+            ip_error_near(parser, "'IS' expected");
+        } else {
+            ip_error_near(parser, "'IS' or 'IS NOT' expected");
+        }
+        ip_ast_node_free(node);
+        return 0;
+    }
+    ip_parse_get_next(parser, ITOK_TYPE_CONDITION);
 
     /* Determine what kind of condition we have */
     token = parser->tokeniser.token;
     switch (token) {
     case ITOK_GREATER_THAN:
+    case ITOK_GREATER_OR_EQUAL:
     case ITOK_MUCH_GREATER_THAN:
     case ITOK_SMALLER_THAN:
+    case ITOK_SMALLER_OR_EQUAL:
     case ITOK_MUCH_SMALLER_THAN:
     case ITOK_EQUAL_TO:
-    case ITOK_NOT_EQUAL_TO:
         node2 = ip_parse_next_expression(parser);
         node = ip_ast_make_binary
             (token, node, node2, &(parser->tokeniser.loc));
+        if (is_condition) {
+            node = ip_ast_make_unary
+                (ITOK_IS, node, &(parser->tokeniser.loc));
+        } else {
+            node = ip_ast_make_unary
+                (ITOK_IS_NOT, node, &(parser->tokeniser.loc));
+        }
         if (node) {
             /* Conditions always have a boolean result */
             node->value_type = IP_TYPE_INT;
@@ -568,15 +609,20 @@ static ip_ast_node_t *ip_parse_condition(ip_parser_t *parser)
         break;
 
     case ITOK_ZERO:
-    case ITOK_NOT_ZERO:
     case ITOK_POSITIVE:
     case ITOK_NEGATIVE:
     case ITOK_FINITE:
     case ITOK_INFINITE:
-    case ITOK_NAN:
+    case ITOK_A_NUMBER:
     case ITOK_EMPTY:
-    case ITOK_NOT_EMPTY:
         node = ip_ast_make_unary(token, node, &(parser->tokeniser.loc));
+        if (is_condition) {
+            node = ip_ast_make_unary
+                (ITOK_IS, node, &(parser->tokeniser.loc));
+        } else {
+            node = ip_ast_make_unary
+                (ITOK_IS_NOT, node, &(parser->tokeniser.loc));
+        }
         if (node) {
             /* Conditions always have a boolean result */
             node->value_type = IP_TYPE_INT;
@@ -902,31 +948,27 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_REPEAT_FROM:
         /* REPEAT FROM *expression variable TIMES */
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        if (parser->tokeniser.token == ITOK_LABEL) {
-            node = ip_parse_next_expression(parser);
-            var = ip_parse_variable_expression(parser, 0);
-            if (var && var->type != IP_TYPE_INT) {
-                ip_error_at
-                    (parser, &(var->loc),
-                     "integer variable required for loops");
-            }
-            node = ip_ast_make_binary_statement
-                (token, IP_TYPE_DYNAMIC, node, var, &(parser->tokeniser.loc));
-            if (parser->tokeniser.token == ITOK_TIMES) {
-                ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-                if ((parser->flags & ITOK_TYPE_EXTENSION) == 0) {
-                    /* Classic INTERPROGRAM requires that "REPEAT FROM"
-                     * must be the last statement on a line. */
-                    if (parser->tokeniser.token != ITOK_EOL &&
-                            parser->tokeniser.token != ITOK_EOF) {
-                        ip_error(parser, "end of line expected after 'REPEAT FROM' statement");
-                    }
+        node = ip_parse_label_name(parser);
+        var = ip_parse_variable_expression(parser, 0);
+        if (var && var->value_type != IP_TYPE_INT) {
+            ip_error_at
+                (parser, &(var->loc),
+                 "integer variable required for loops");
+        }
+        node = ip_ast_make_binary_statement
+            (token, IP_TYPE_DYNAMIC, node, var, &(parser->tokeniser.loc));
+        if (parser->tokeniser.token == ITOK_TIMES) {
+            ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+            if ((parser->flags & ITOK_TYPE_EXTENSION) == 0) {
+                /* Classic INTERPROGRAM requires that "REPEAT FROM"
+                 * must be the last statement on a line. */
+                if (parser->tokeniser.token != ITOK_EOL &&
+                        parser->tokeniser.token != ITOK_EOF) {
+                    ip_error(parser, "end of line expected after 'REPEAT FROM' statement");
                 }
-            } else {
-                ip_error_near(parser, "'TIMES' expected");
             }
         } else {
-            ip_error_near(parser, "label reference expected");
+            ip_error_near(parser, "'TIMES' expected");
         }
         break;
 
@@ -1277,37 +1319,36 @@ static int ip_parse_array_size
 {
     int is_neg = 0;
     *size = 0;
-    if (parser->tokeniser.token == ITOK_LPAREN) {
+    if (min_subscript && parser->tokeniser.token != ITOK_LPAREN) {
+        ip_error_near(parser, "'(' expected");
+        return 0;
+    }
+    ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+    if (parser->tokeniser.token == ITOK_MINUS) {
+        is_neg = 1;
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
-        if (parser->tokeniser.token == ITOK_MINUS) {
-            is_neg = 1;
-            ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
-        } else if (parser->tokeniser.token == ITOK_PLUS) {
-            ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+    } else if (parser->tokeniser.token == ITOK_PLUS) {
+        ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+    }
+    if (parser->tokeniser.token == ITOK_INT_VALUE) {
+        *size = (ip_int_t)(parser->tokeniser.ivalue);
+        if (is_neg) {
+            *size = -(*size);
         }
-        if (parser->tokeniser.token == ITOK_INT_VALUE) {
-            *size = (ip_int_t)(parser->tokeniser.ivalue);
-            if (is_neg) {
-                *size = -(*size);
-            }
-            ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
-            if (parser->tokeniser.token == ITOK_RPAREN) {
-                ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);
-                return 1;
-            } else if (min_subscript && parser->tokeniser.token == ITOK_COLON) {
-                ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);
-                return 2;
-            }
-            if (min_subscript) {
-                ip_error_near(parser, "')' or ':' expected");
-            } else {
-                ip_error_near(parser, "')' expected");
-            }
+        ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+        if (parser->tokeniser.token == ITOK_RPAREN) {
+            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);
+            return 1;
+        } else if (min_subscript && parser->tokeniser.token == ITOK_COLON) {
+            return 2;
+        }
+        if (min_subscript) {
+            ip_error_near(parser, "')' or ':' expected");
         } else {
-            ip_error_near(parser, "integer constant expected");
+            ip_error_near(parser, "')' expected");
         }
     } else {
-        ip_error_near(parser, "'(' expected");
+        ip_error_near(parser, "integer constant expected");
     }
     return 0;
 }

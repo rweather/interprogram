@@ -136,7 +136,8 @@ static void ip_program_list_node_name
 }
 
 static void ip_program_list_expression
-    (const ip_ast_node_t *expr, int parent_priority, FILE *file)
+    (const ip_ast_node_t *expr, int parent_priority, FILE *file,
+     const char *condition)
 {
     int priority = parent_priority;
 
@@ -158,7 +159,8 @@ static void ip_program_list_expression
     case ITOK_TO_STRING:
     case ITOK_TO_DYNAMIC:
         /* Coercion node that is invisible in the output */
-        ip_program_list_expression(expr->children.left, parent_priority, file);
+        ip_program_list_expression
+            (expr->children.left, parent_priority, file, 0);
         return;
 
     case ITOK_PLUS:
@@ -171,6 +173,8 @@ static void ip_program_list_expression
         priority = 5;
         break;
 
+    case ITOK_IS:
+    case ITOK_IS_NOT:
     case ITOK_GREATER_THAN:
     case ITOK_MUCH_GREATER_THAN:
     case ITOK_SMALLER_THAN:
@@ -178,15 +182,13 @@ static void ip_program_list_expression
     case ITOK_ZERO:
     case ITOK_POSITIVE:
     case ITOK_NEGATIVE:
-    case ITOK_NOT_EQUAL_TO:
+    case ITOK_EQUAL_TO:
     case ITOK_GREATER_OR_EQUAL:
     case ITOK_SMALLER_OR_EQUAL:
-    case ITOK_NOT_ZERO:
     case ITOK_FINITE:
     case ITOK_INFINITE:
-    case ITOK_NAN:
+    case ITOK_A_NUMBER:
     case ITOK_EMPTY:
-    case ITOK_NOT_EMPTY:
         priority = 0;
         break;
 
@@ -223,7 +225,7 @@ static void ip_program_list_expression
     case ITOK_INDEX_STRING:
         /* Index into an array variable */
         fprintf(file, "%s(", expr->children.left->var->name);
-        ip_program_list_expression(expr->children.right, 0, file);
+        ip_program_list_expression(expr->children.right, 0, file, 0);
         fprintf(file, ")");
         break;
 
@@ -235,36 +237,50 @@ static void ip_program_list_expression
     case ITOK_MUCH_GREATER_THAN:
     case ITOK_SMALLER_THAN:
     case ITOK_MUCH_SMALLER_THAN:
-    case ITOK_NOT_EQUAL_TO:
+    case ITOK_EQUAL_TO:
     case ITOK_GREATER_OR_EQUAL:
     case ITOK_SMALLER_OR_EQUAL:
         /* Binary infix operator */
-        ip_program_list_expression(expr->children.left, priority, file);
+        ip_program_list_expression(expr->children.left, priority, file, 0);
         fputc(' ', file);
+        if (condition) {
+            fprintf(file, "%s ", condition);
+        }
         ip_program_list_node_name(expr, file);
         fputc(' ', file);
-        ip_program_list_expression(expr->children.right, priority, file);
+        ip_program_list_expression(expr->children.right, priority, file, 0);
+        break;
+
+    case ITOK_IS:
+        ip_program_list_expression
+            (expr->children.left, priority, file, "IS");
+        break;
+
+    case ITOK_IS_NOT:
+        ip_program_list_expression
+            (expr->children.left, priority, file, "IS NOT");
         break;
 
     case ITOK_ZERO:
     case ITOK_POSITIVE:
     case ITOK_NEGATIVE:
-    case ITOK_NOT_ZERO:
     case ITOK_FINITE:
     case ITOK_INFINITE:
-    case ITOK_NAN:
+    case ITOK_A_NUMBER:
     case ITOK_EMPTY:
-    case ITOK_NOT_EMPTY:
         /* Unary postfix operator */
-        ip_program_list_expression(expr->children.left, priority, file);
+        ip_program_list_expression(expr->children.left, priority, file, 0);
         fputc(' ', file);
+        if (condition) {
+            fprintf(file, "%s ", condition);
+        }
         ip_program_list_node_name(expr, file);
         break;
 
     case ITOK_LENGTH_OF:
         ip_program_list_node_name(expr, file);
         fputc(' ', file);
-        ip_program_list_expression(expr->children.left, priority, file);
+        ip_program_list_expression(expr->children.left, priority, file, 0);
         break;
     }
 
@@ -281,7 +297,7 @@ static void ip_program_list_unary_statement
     (void)program;
     if (expr) {
         fprintf(file, "%s ", name);
-        ip_program_list_expression(expr, 0, file);
+        ip_program_list_expression(expr, 0, file, 0);
     } else {
         fprintf(file, "%s", name);
     }
@@ -300,7 +316,7 @@ static void ip_program_list_label
             fprintf(file, "%u", (unsigned)(node->label->num));
         }
     } else {
-        ip_program_list_expression(node, 0, file);
+        ip_program_list_expression(node, 0, file, 0);
     }
 }
 
@@ -395,9 +411,9 @@ static void ip_program_list_node
 
     case ITOK_SET:
         fprintf(file, "SET ");
-        ip_program_list_expression(node->children.left, 0, file);
+        ip_program_list_expression(node->children.left, 0, file, 0);
         fprintf(file, " = ");
-        ip_program_list_expression(node->children.right, 0, file);
+        ip_program_list_expression(node->children.right, 0, file, 0);
         break;
 
     case ITOK_GO_TO:
@@ -412,7 +428,7 @@ static void ip_program_list_node
         fprintf(file, "REPEAT FROM ");
         ip_program_list_label(node->children.left, file, 0);
         fputc(' ', file);
-        ip_program_list_expression(node->children.right, 0, file);
+        ip_program_list_expression(node->children.right, 0, file, 0);
         fprintf(file, " TIMES");
         break;
 
@@ -508,10 +524,10 @@ static void ip_program_list_node
 
     case ITOK_SUBSTRING:
         fprintf(file, "SUBSTRING FROM ");
-        ip_program_list_expression(node->children.left, 0, file);
+        ip_program_list_expression(node->children.left, 0, file, 0);
         if (node->children.right) {
             fprintf(file, " TO ");
-            ip_program_list_expression(node->children.right, 0, file);
+            ip_program_list_expression(node->children.right, 0, file, 0);
         }
         break;
 

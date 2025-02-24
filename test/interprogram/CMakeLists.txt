@@ -1,0 +1,10 @@
+enable_testing()
+
+add_test(NAME arrays COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/arrays.ip)
+add_test(NAME conditions COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/conditions.ip)
+add_test(NAME control_flow COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/control_flow.ip)
+add_test(NAME math1 COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/math1.ip)
+add_test(NAME math2 COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/math2.ip)
+add_test(NAME math3 COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/math3.ip)
+add_test(NAME math4 COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/math4.ip)
+add_test(NAME strings COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/strings.ip)

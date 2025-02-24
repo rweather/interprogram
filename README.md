@@ -259,10 +259,11 @@ The last preliminary statement must be `(4) COMPILE THE FOLLOWING INTERPROGRAM`.
 
 Reserved words are any that correspond to a single-word keyword:
 
-    ADD         MODULO      REPLACE     THIS
-    CALL        NONE        RETURN      TIMES
-    IF          OUTPUT      SET         TITLE
-    INPUT       PAUSE       SUBTRACT    TO
+    ADD         INFINITE    NONE        RETURN      TITLE
+    CALL        INPUT       OUTPUT      SET         TO
+    EMPTY       IS          PAUSE       SUBTRACT    ZERO
+    FINITE      MODULO      POSITIVE    THIS
+    IF          NEGATIVE    REPLACE     TIMES
 
 Reserved words cannot be used as variable or label names.
 
@@ -276,10 +277,16 @@ Classic INTERPROGRAM only considered the first four characters to be
 significant, with the remainder ignored when comparing variable names.
 My implementation allows arbitrary-length names.
 
-INTERPROGRAM only has two types: integer and floating-point.
+Classsic INTERPROGRAM only had two types: integer and floating-point.
 Integer variables must be declared with `(2) SYMBOLS FOR INTEGERS`.
+Extended INTERPROGRAM also allows strings.  String values must be
+declared with `(2) SYMBOLS FOR STRINGS`.
 
 Array variables may be subscripted with `X(n)` where `n` is an expression.
+
+Strings may also be subscripted with `X(n)` where `n` is the 1-based
+index into the string.  The character at `n` is returned as a new
+single-character string.
 
 Variables may be assigned with `SET` or `REPLACE`.  The value of a
 variable may appear in any expression, or be taken into `THIS` with `TAKE`.
@@ -353,14 +360,20 @@ REPEAT FROM
 
 ## Conditions
 
+The table below lists the positive form of the condition using `IS`, such as:
+
+    X IS GREATER THAN Y
+
+Each condition also has a negative form using `IS NOT`:
+
+    X IS NOT GREATER THAN Y
+
 <table border="1">
 <tr><td><b>Expression</b></td><td><b>Description</b></td><td><b>Extension?</b></td></tr>
 <tr><td><tt><i>value</i> IS ZERO</tt></td><td>Condition is true if <i>value</i> is equal to zero<sup>(see note 1)</sup></i></td><td> </td></tr>
-<tr><td><tt><i>value</i> IS NOT ZERO</tt></td><td>Condition is true if <i>value</i> is not equal to zero<sup>(see note 1)</sup></i></td><td>Yes</td></tr>
 <tr><td><tt><i>value</i> IS POSITIVE</tt></td><td>Condition is true if <i>value</i> is positive or zero</td><td> </td></tr>
 <tr><td><tt><i>value</i> IS NEGATIVE</tt></td><td>Condition is true if <i>value</i> is negative</td><td> </td></tr>
 <tr><td><tt><i>value1</i> IS EQUAL TO <i>value2</i></tt></td><td>Condition is true if <i>value1</i> is equal to <i>value2</i></td><td>Yes</td></tr>
-<tr><td><tt><i>value1</i> IS NOT EQUAL TO <i>value2</i></tt></td><td>Condition is true if <i>value1</i> is not equal to <i>value2</i></td><td>Yes</td></tr>
 <tr><td><tt><i>value1</i> IS GREATER THAN <i>value2</i></tt></td><td>Condition is true if <i>value1</i> is greater than <i>value2</i></td><td> </td></tr>
 <tr><td><tt><i>value1</i> IS MUCH GREATER THAN <i>value2</i></tt></td><td>Condition is true if <i>value1</i> is much greater than <i>value2</i><sup>(see note 2)</sup></td><td> </td></tr>
 <tr><td><tt><i>value1</i> IS GREATER THAN OR EQUAL TO <i>value2</i></tt></td><td>Condition is true if <i>value1</i> is greater than or equal to <i>value2</i></td><td>Yes</td></tr>
@@ -369,9 +382,8 @@ REPEAT FROM
 <tr><td><tt><i>value1</i> IS SMALLER THAN OR EQUAL TO <i>value2</i></tt></td><td>Condition is true if <i>value1</i> is smaller than or equal to <i>value2</i></td><td>Yes</td></tr>
 <tr><td><tt><i>value</i> IS FINITE</tt></td><td>Condition is true if <i>value</i> is a finite value<sup>(see note 3)</sup></td><td>Yes</td></tr>
 <tr><td><tt><i>value</i> IS INFINITE</tt></td><td>Condition is true if <i>value</i> is an infinite value<sup>(see note 3)</td><td>Yes</td></tr>
-<tr><td><tt><i>value</i> IS NOT A NUMBER</tt></td><td>Condition is true if <i>value</i> is not a number<sup>(see note 3)</td><td>Yes</td></tr>
+<tr><td><tt><i>value</i> IS A NUMBER</tt></td><td>Condition is true if <i>value</i> is not the special "not a number" value<sup>(see note 3)</td><td>Yes</td></tr>
 <tr><td><tt><i>value</i> IS EMPTY</tt></td><td>Condition is true if <i>value</i> is an empty string</td><td>Yes</td></tr>
-<tr><td><tt><i>value</i> IS NOT EMPTY</tt></td><td>Condition is true if <i>value</i> is not an empty string</td><td>Yes</td></tr>
 </table>
 
 Notes:
