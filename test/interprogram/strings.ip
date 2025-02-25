@@ -36,6 +36,11 @@
 
     if T(1) + T(6) + T(17) is not equal to 'G a', go to FAIL
 
+    set S = 'abc''def'
+    set T = "xyz""pqr"
+    if S is not equal to "abc'def", go to FAIL
+    if T is not equal to 'xyz"pqr', go to FAIL
+
     # If we get here, then all tests have passed.
     end of interprogram
 

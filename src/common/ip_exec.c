@@ -1820,7 +1820,6 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_SYMBOLS_INT:
     case ITOK_MAX_SUBSCRIPTS:
     case ITOK_COMPILE_PROGRAM:
-    case ITOK_PAUSE:
     case ITOK_EOL:
         /* Statement that does nothing at runtime */
         break;
@@ -1910,11 +1909,12 @@ int ip_exec_step(ip_exec_t *exec)
         /* Read a value from the input */
         return ip_exec_input(exec, node);
 
+    case ITOK_PAUSE:
     case ITOK_OUTPUT:
     case ITOK_OUTPUT_NO_EOL:
         /* Write a value to the output */
         return ip_exec_output
-            (exec, node->children.left, node->type == ITOK_OUTPUT);
+            (exec, node->children.left, node->type != ITOK_OUTPUT_NO_EOL);
 
     case ITOK_GO_TO:
         /* Jump to a specific label */

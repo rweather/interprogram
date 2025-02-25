@@ -777,7 +777,7 @@ static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
  *    | "REPEAT FROM" LabelName VAR-NAME "TIMES"
  *    | "END OF PROCESS DEFINITION"
  *    | "END OF INTERPROGRAM"
- *    | "PAUSE"
+ *    | "PAUSE" Expression
  *    | "CALL" LabelName                # Extensions
  *    | "RETURN"
  *    | "RETURN" Expression
@@ -975,7 +975,6 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_END_PROCESS:
     case ITOK_END_PROGRAM:
     case ITOK_EXIT_PROGRAM:
-    case ITOK_PAUSE:
         node = ip_ast_make_standalone(token, &(parser->tokeniser.loc));
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
         break;
@@ -1025,6 +1024,16 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
              * "INPUT" statement also side-effects "THIS". */
             node = ip_ast_make_unary_statement
                 (ITOK_INPUT, var->value_type, var, &(parser->tokeniser.loc));
+        }
+        break;
+
+    case ITOK_PAUSE:
+        /* PAUSE expression */
+        node = ip_parse_next_expression(parser);
+        if (node) {
+            node = ip_ast_make_unary_statement
+                (ITOK_PAUSE, IP_TYPE_UNKNOWN, node,
+                 &(parser->tokeniser.loc));
         }
         break;
 
