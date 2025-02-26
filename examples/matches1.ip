@@ -1,9 +1,12 @@
-(1) TITLE Game of NIM
+(1) TITLE Game of 21 Matches
 (2) symbols for integers matches
 (2) symbols for strings answer
 
+# Note: This version of 21 Matches is unbeatable because the computer cheats.
+# See "nim2.ip" for a fairer version.
+
 *1 punch the following characters
-Game of NIM
+Game of 21 Matches
 
 We start with 21 matches and take turns removing 1, 2, or 3 matches.
 The person to have to take the last match loses.  You go first.
@@ -18,7 +21,8 @@ The person to have to take the last match loses.  You go first.
     if count is smaller than 1, go to *3
     if count is greater than 3, go to *3
 
-    # Computer's turn.
+    # Computer's turn.  Always take "4 - count" matches.  This keeps the
+    # total a multiple of 4 until the player is forced to take the last match.
     take 4
     subtract count
     output 'I take ', output this

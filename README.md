@@ -58,7 +58,8 @@ automated tests:
 Then to run some examples:
 
     interprogram examples/hello_world.ip
-    interprogram examples/nim.ip
+    interprogram examples/matches1.ip
+    interprogram examples/matches2.ip
 
 ## Was it used back in the day?
 

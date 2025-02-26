@@ -1,0 +1,74 @@
+(1) TITLE Game of 21 Matches
+(2) symbols for integers matches, guess
+(2) symbols for strings answer
+
+# This version of 21 Matches introduces some randomness to the computer's
+# guesses to make it possible for the player to win - sometimes.
+
+*1 punch the following characters
+Game of 21 Matches
+
+We start with 21 matches and take turns removing 1, 2, or 3 matches.
+The person to have to take the last match loses.  You go first.
+~~~~~
+
+    set matches = 21
+*LOOP
+    # Player's turn.
+    call REMAIN
+    output 'How many do you take? ', input count
+    if count is smaller than 1, go to ERROR
+    if count is greater than 3, go to ERROR
+    if count is greater than or equal to matches, go to WIN
+    set matches = matches - count
+
+    # Computer's turn.  If there is 1 match left, then the computer
+    # will lose.  If there are 2, 3, or 4 matches left, then force the
+    # player to take the last match.  Otherwise take a random number of
+    # matches between 1 and 3.
+    if matches is equal to 1, go to LOSE
+    random number
+    if matches is greater than 4, go to RAND
+    set guess = matches - 1
+    go to ITAKE
+*RAND
+    set guess = this * 3 + 1
+*ITAKE
+    call REMAIN
+    output 'I take ', output guess
+    set matches = matches - guess
+    if matches is equal to 1, go to WIN
+    go to LOOP
+
+    # Computer has lost!
+*LOSE
+    call REMAIN
+    output ''
+    output 'You won!  Want another game? (Y or N) ',
+    go to AGAIN
+
+    # Computer has won!
+*WIN
+    call REMAIN
+    output ''
+    output 'I win!  Want another game? (Y or N) ',
+*AGAIN
+    input answer
+    output ''
+    if answer is equal to "Y", go to *1
+    if answer is equal to "y", go to *1
+    output 'Oh well, it has been nice playing you!'
+
+    # Finished.
+    end of interprogram
+
+    # Invalid input.
+*ERROR
+    output 'Either 1, 2, or 3 please!'
+    go to LOOP
+
+    # Print the number of remaining matches.
+*REMAIN
+    output ''
+    output 'Number of matches left: ', output matches
+    return

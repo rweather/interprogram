@@ -25,6 +25,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <math.h>
+#include <time.h>
 
 void ip_exec_init(ip_exec_t *exec, ip_program_t *program)
 {
@@ -35,6 +36,7 @@ void ip_exec_init(ip_exec_t *exec, ip_program_t *program)
     ip_program_reset_variables(exec->program);
     exec->input = stdin;
     exec->output = stdout;
+    srand(time(0));
 }
 
 void ip_exec_free(ip_exec_t *exec)
@@ -1793,6 +1795,40 @@ static int ip_exec_extract_substring(ip_exec_t *exec, ip_ast_node_t *node)
     return status;
 }
 
+/**
+ * @brief Generates a random number in the range [0, 1).
+ *
+ * @return The random number.
+ */
+static ip_float_t ip_exec_random(void)
+{
+    return ((ip_float_t)rand()) / (((ip_float_t)RAND_MAX) + 1);
+}
+
+/**
+ * @brief Seeds the random number generator with a specific value.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] node The node representing the "SEED RANDOM" statement.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_exec_seed_random(ip_exec_t *exec, ip_ast_node_t *node)
+{
+    ip_value_t seed;
+    int status;
+    ip_value_init(&seed);
+    status = ip_exec_eval_expression(exec, node->children.left, &seed);
+    if (status == IP_EXEC_OK) {
+        status = ip_value_to_int(&seed);
+        if (status == IP_EXEC_OK) {
+            srand((unsigned)(seed.ivalue));
+        }
+    }
+    ip_value_release(&seed);
+    return status;
+}
+
 int ip_exec_step(ip_exec_t *exec)
 {
     ip_exec_stack_item_t *stack_item;
@@ -1885,6 +1921,15 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_LENGTH_OF:
         /* Perform an arithmetic operation with the result in "THIS" */
         return ip_exec_eval_expression(exec, node, &(exec->this_value));
+
+    case ITOK_RANDOM:
+        /* Generate a random number in the range [0, 1) */
+        ip_value_set_float(&(exec->this_value), ip_exec_random());
+        break;
+
+    case ITOK_SEED_RANDOM:
+        /* Seed the random number generator with an integer value */
+        return ip_exec_seed_random(exec, node);
 
     case ITOK_REPLACE:
     case ITOK_SET:

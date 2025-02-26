@@ -115,6 +115,8 @@ static ip_token_info_t const tokens[] = {
     {"TO",                                  ITOK_TO,                ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"SYMBOLS FOR STRINGS",                 ITOK_SYMBOLS_STR,       ITOK_TYPE_PRELIM_2 | ITOK_TYPE_EXTENSION},
     {"EXIT INTERPROGRAM",                   ITOK_EXIT_PROGRAM,      ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"RANDOM NUMBER",                       ITOK_RANDOM,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"SEED RANDOM",                         ITOK_SEED_RANDOM,       ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
 

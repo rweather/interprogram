@@ -163,6 +163,8 @@ static int check_identifiers(void)
     KEYWORD("TO",                                   ITOK_TO);
     KEYWORD("SYMBOLS FOR STRINGS",                  ITOK_SYMBOLS_STR);
     KEYWORD("EXIT INTERPROGRAM",                    ITOK_EXIT_PROGRAM);
+    KEYWORD("RANDOM NUMBER",                        ITOK_RANDOM);
+    KEYWORD("SEED RANDOM",                          ITOK_SEED_RANDOM);
 
     /* Check that we have tested all of the keywords */
     for (index = ITOK_FIRST_KEYWORD; index <= ITOK_LAST_KEYWORD; ++index) {

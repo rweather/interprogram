@@ -770,6 +770,8 @@ static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
  *    | "FORM COSINE DEGREES"
  *    | "FORM TANGENT DEGREES"
  *    | "FORM ARCTAN DEGREES"
+ *    | "RANDOM NUMBER"
+ *    | "SEED RANDOM" Expression
  *
  * ControlFlowStatement ::=
  *      "GO TO" LabelName
@@ -781,6 +783,7 @@ static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
  *    | "CALL" LabelName                # Extensions
  *    | "RETURN"
  *    | "RETURN" Expression
+ *    | "EXIT INTERPROGRAM"
  *
  * InputOutputStatement ::=
  *      "INPUT" Variable
@@ -926,6 +929,20 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
             (token, parser->this_type, IP_TYPE_FLOAT,
              ip_parse_next_float_expression(parser),
              &(parser->tokeniser.loc));
+        break;
+
+    case ITOK_RANDOM:
+        node = ip_ast_make_standalone(token, &(parser->tokeniser.loc));
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+        break;
+
+    case ITOK_SEED_RANDOM:
+        /* SEED RANDOM expression */
+        node = ip_parse_next_expression(parser);
+        if (node) {
+            node = ip_ast_make_unary_statement
+                (token, IP_TYPE_UNKNOWN, node, &(parser->tokeniser.loc));
+        }
         break;
 
     /* ------------- Conditional statements ------------- */

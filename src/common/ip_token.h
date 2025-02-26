@@ -121,12 +121,14 @@ extern "C" {
 #define ITOK_TO                 0xD6    /**< TO */
 #define ITOK_SYMBOLS_STR        0xD7    /**< SYMBOLS FOR STRINGS */
 #define ITOK_EXIT_PROGRAM       0xD8    /**< EXIT INTERPROGRAM */
+#define ITOK_RANDOM             0xD9    /**< RANDOM NUMBER */
+#define ITOK_SEED_RANDOM        0xDA    /**< SEED RANDOM */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA
 
 /** Last keyword token */
-#define ITOK_LAST_KEYWORD       ITOK_EXIT_PROGRAM
+#define ITOK_LAST_KEYWORD       ITOK_SEED_RANDOM
 
 /* Meta-tokens for non-keyword elements */
 #define ITOK_VAR_NAME           0xE0    /**< Variable name */
