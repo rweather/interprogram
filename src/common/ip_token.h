@@ -149,6 +149,7 @@ extern "C" {
 #define ITOK_OUTPUT_NO_EOL      0xEF    /**< Output with no end of line */
 #define ITOK_PUNCH_NO_BLANKS    0xF0    /**< PUNCH without "~~~~~" */
 #define ITOK_COPY_NO_BLANKS     0xF1    /**< COPY TAPE without "~~~~~" */
+#define ITOK_INPUT_DATA         0xF2    /**< Input data embedded in program */
 
 /* Token type flags */
 /** Token can start a section of the preliminary statements */

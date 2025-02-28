@@ -719,6 +719,18 @@ static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
     return node;
 }
 
+/**
+ * @brief Determine if a token terminates the current line.
+ *
+ * @param[in] token The token to test.
+ *
+ * @return Non-zero if @a token terminates the current line.
+ */
+static int ip_parse_token_is_terminator(int token)
+{
+    return token == ITOK_EOF || token == ITOK_EOL || token == ITOK_INPUT_DATA;
+}
+
 /*
  * Statement ::=
  *      AssignmentStatement
@@ -979,8 +991,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
             if ((parser->flags & ITOK_TYPE_EXTENSION) == 0) {
                 /* Classic INTERPROGRAM requires that "REPEAT FROM"
                  * must be the last statement on a line. */
-                if (parser->tokeniser.token != ITOK_EOL &&
-                        parser->tokeniser.token != ITOK_EOF) {
+                if (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
                     ip_error(parser, "end of line expected after 'REPEAT FROM' statement");
                 }
             }
@@ -1003,8 +1014,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
          */
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
         if (parser->tokeniser.token == ITOK_COMMA ||
-                parser->tokeniser.token == ITOK_EOL ||
-                parser->tokeniser.token == ITOK_EOF) {
+                ip_parse_token_is_terminator(parser->tokeniser.token)) {
             /* "RETURN" with no value other than "THIS" */
             node = ip_ast_make_standalone
                 (ITOK_RETURN, &(parser->tokeniser.loc));
@@ -1034,7 +1044,6 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
         } else {
             /* Input into "THIS" only; always floating-point */
             var = ip_ast_make_this(IP_TYPE_FLOAT, &(parser->tokeniser.loc));
-            ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
         }
         if (var) {
             /* The type of "THIS" is set to that of the variable because the
@@ -1061,8 +1070,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
          */
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
         if (parser->tokeniser.token == ITOK_COMMA ||
-                parser->tokeniser.token == ITOK_EOL ||
-                parser->tokeniser.token == ITOK_EOF) {
+                ip_parse_token_is_terminator(parser->tokeniser.token)) {
             /* Output "THIS" with aligned formatting */
             node = ip_ast_make_standalone
                 (ITOK_OUTPUT, &(parser->tokeniser.loc));
@@ -1227,9 +1235,9 @@ static void ip_parse_statement_label(ip_parser_t *parser)
 void ip_parse_statements(ip_parser_t *parser)
 {
     ip_ast_node_t *stmt;
-    while (parser->tokeniser.token != ITOK_EOF) {
-        while (parser->tokeniser.token != ITOK_EOL &&
-               parser->tokeniser.token != ITOK_EOF) {
+    while (parser->tokeniser.token != ITOK_EOF &&
+           parser->tokeniser.token != ITOK_INPUT_DATA) {
+        while (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
 
             /* Handle "GO TO" labels within the line.  Technically they
              * should only be allowed at the start of the line, but we
@@ -1257,13 +1265,11 @@ void ip_parse_statements(ip_parser_t *parser)
                     stmt->type = ITOK_OUTPUT_NO_EOL;
                 }
                 ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-            } else if (parser->tokeniser.token != ITOK_EOL &&
-                       parser->tokeniser.token != ITOK_EOF) {
+            } else if (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
                 /* We don't know what this is.  Print an error and
                  * skip tokens until we see end of line. */
                 ip_error_near(parser, 0);
-                while (parser->tokeniser.token != ITOK_EOL &&
-                       parser->tokeniser.token != ITOK_EOF) {
+                while (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
                     ip_parse_get_next(parser, ITOK_TYPE_ANY);
                 }
             }
@@ -1280,6 +1286,12 @@ void ip_parse_statements(ip_parser_t *parser)
             /* "&" stops repeating when the end of the line is reached */
             parser->last_statement = -1;
         }
+    }
+    if (parser->tokeniser.token == ITOK_INPUT_DATA) {
+        /* Record the embedded input data at the end of the program */
+        ip_program_set_input
+            (parser->program, parser->tokeniser.token_info->name);
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
     }
 }
 
@@ -1307,16 +1319,14 @@ static void ip_parse_symbols(ip_parser_t *parser)
     ip_parse_get_next(parser, ITOK_TYPE_PRELIM_2);
     if (parser->tokeniser.token == ITOK_NONE) {
         ip_parse_get_next(parser, ITOK_TYPE_PRELIM_2);
-        if (parser->tokeniser.token != ITOK_EOL &&
-                parser->tokeniser.token != ITOK_EOF) {
+        if (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
             ip_error(parser, "end of line expected");
         }
         return;
     }
 
     /* Parse a comma-separated list of symbols (commas are optional) */
-    while (parser->tokeniser.token != ITOK_EOL &&
-           parser->tokeniser.token != ITOK_EOF) {
+    while (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
         if (parser->tokeniser.token == ITOK_COMMA) {
             /* Skip the comma */
             ip_parse_get_next(parser, ITOK_TYPE_PRELIM_2);
@@ -1402,8 +1412,7 @@ static void ip_parse_arrays(ip_parser_t *parser)
     ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);
 
     /* Parse a comma-separated list of array definitions */
-    while (parser->tokeniser.token != ITOK_EOL &&
-           parser->tokeniser.token != ITOK_EOF) {
+    while (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
         if (parser->tokeniser.token == ITOK_COMMA) {
             /* Skip the comma */
             ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);

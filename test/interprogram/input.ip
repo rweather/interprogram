@@ -1,0 +1,44 @@
+(1) TITLE Testing of embedded input data
+(2) symbols for integers J
+(2) symbols for strings S
+(3) maximum subscripts A(3)
+
+    # Read the values from the embedded input.
+    ignore tape
+    input J
+    if J is not equal to 42, go to FAIL
+    if this is not equal to 42, go to FAIL
+    input S
+    if S is not equal to 'Hello, World!', go to FAIL
+    if this is not equal to 'Hello, World!', go to FAIL
+    input A(1)
+    if A(1) is not equal to 27.5, go to FAIL
+    if this is not equal to 27.5, go to FAIL
+    input # this only
+    if this is not equal to -800, go to FAIL
+    ignore tape
+    input S
+    if S is not equal to 'END', go to FAIL
+    if this is not equal to 'END', go to FAIL
+
+    # We expect end of file here, which will cause "go to FAIL" to be skipped.
+    input J, go to FAIL
+
+    # If we get here, then all tests have passed.
+    end of interprogram
+
+    # One of the tests failed.  Exit the program with a status of 1.
+*FAIL
+    take 1, exit interprogram
+
+~~~~~ # Start of embedded input data.
+Skipped by the first 'ignore tape' statement.
+~~~~~
+42
+Hello, World!
+27.5
+-800
+Skipped by the second 'ignore tape'
+statement.
+~~~~~
+END

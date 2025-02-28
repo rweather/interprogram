@@ -26,6 +26,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 
 void ip_exec_init(ip_exec_t *exec, ip_program_t *program)
 {
@@ -1408,13 +1409,58 @@ static void ip_exec_write_tildes(FILE *output, size_t count)
  * @brief Copies the contents of an input stream to an output stream,
  * until "~~~~~" or EOF.
  *
+ * @param[in,out] exec The execution context.
  * @param[in] output The output stream, or NULL to ignore the input.
  * @param[in] input The input stream.
  */
-static void ip_exec_copy_tape(FILE *output, FILE *input)
+static void ip_exec_copy_tape(ip_exec_t *exec, FILE *output, FILE *input)
 {
     size_t tilde_count = 0;
     int ch;
+    if (exec->program->next_input) {
+        /* Read from the embedded input data in the program */
+        if (exec->program->next_input[0] == '\0') {
+            /* We have reached the end of the embedded input.
+             * Report EOF and switch to using exec->input next time. */
+            exec->program->next_input = 0;
+            return;
+        }
+
+        /* Copy characters from the embedded input until "~~~~~" or EOF */
+        while ((ch = *(exec->program->next_input)++) != '\0') {
+            if (ch == '~') {
+                ++tilde_count;
+                if (tilde_count >= 5) {
+                    /* We have found the "~~~~~" separator.  It may be
+                     * followed by more tilde's, so deal with them too. */
+                    while ((ch = *(exec->program->next_input)++) != '\0') {
+                        if (ch != '~') {
+                            --(exec->program->next_input);
+                            break;
+                        }
+                    }
+                    if (exec->program->next_input[0] == '\n') {
+                        /* Skip the EOL after the tildes if present */
+                        ++(exec->program->next_input);
+                    }
+                    return;
+                }
+            } else {
+                /* Non-tilde character; output it directly */
+                if (output != NULL) {
+                    if (tilde_count > 0) {
+                        ip_exec_write_tildes(output, tilde_count);
+                    }
+                    fputc(ch, output);
+                }
+                tilde_count = 0;
+            }
+        }
+        if (tilde_count > 0 && output != NULL) {
+            ip_exec_write_tildes(output, tilde_count);
+        }
+        return;
+    }
     while ((ch = fgetc(input)) != EOF) {
         if (ch == '~') {
             ++tilde_count;
@@ -1423,7 +1469,15 @@ static void ip_exec_copy_tape(FILE *output, FILE *input)
                  * followed by more tilde's, so deal with them too. */
                 while ((ch = fgetc(input)) != EOF) {
                     if (ch != '~') {
-                        ungetc(ch, input);
+                        /* Skip the EOL after the tildes if present */
+                        if (ch == '\r') {
+                            ch = fgetc(input);
+                            if (ch != '\n' && ch != EOF) {
+                                ungetc(ch, input);
+                            }
+                        } else if (ch != '\n') {
+                            ungetc(ch, input);
+                        }
                         break;
                     }
                 }
@@ -1536,6 +1590,20 @@ static ip_string_t *ip_exec_read_string(FILE *input)
     return 0;
 }
 
+static void ip_exec_input_skip_spaces(ip_exec_t *exec)
+{
+    const char *input = exec->program->next_input;
+    int ch;
+    while ((ch = *input) != '\0') {
+        if (ch == ' ' || ch == '\t' || ch == '\v' || ch == '\f' || ch == '\n') {
+            ++input;
+        } else {
+            break;
+        }
+    }
+    exec->program->next_input = input;
+}
+
 /**
  * @brief Reads a value from the input into a variable and "THIS".
  *
@@ -1553,14 +1621,38 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
     int eof = 0;
     int scan_result;
     int skip_eol = 1;
+    int ch;
     int64_t ivalue;
     double fvalue;
+    char *end;
 
     /* Read the value from the input source */
     ip_value_init(&value);
     switch (node->children.left->value_type) {
     case IP_TYPE_INT:
         /* Read an integer value */
+        if (exec->program->next_input) {
+            /* Read from the embedded input data in the program */
+            ip_exec_input_skip_spaces(exec);
+            if (exec->program->next_input[0] == '\0') {
+                /* We have reached the end of the embedded input.
+                 * Report EOF and switch to using exec->input next time. */
+                exec->program->next_input = 0;
+                eof = 1;
+                skip_eol = 0;
+            } else {
+                long long llvalue =
+                    strtoll(exec->program->next_input, &end, 10);
+                if (!llvalue && end == exec->program->next_input) {
+                    /* Invalid number in the embedded input */
+                    status = IP_EXEC_BAD_INPUT;
+                    break;
+                }
+                exec->program->next_input = end;
+                ip_value_set_int(&value, (ip_int_t)llvalue);
+            }
+            break;
+        }
         if (sizeof(ip_int_t) == 2) {
             int16_t i16value = 0;
             scan_result = fscanf(exec->input, "%" SCNd16, &i16value);
@@ -1586,6 +1678,27 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
          * uses notation like "1.23(45)" to indicate a number with an
          * exponent.  However, fscanf() doesn't do this so any existing
          * input data needs to be modified to use "e" notation instead. */
+        if (exec->program->next_input) {
+            /* Read from the embedded input data in the program */
+            ip_exec_input_skip_spaces(exec);
+            if (exec->program->next_input[0] == '\0') {
+                /* We have reached the end of the embedded input.
+                 * Report EOF and switch to using exec->input next time. */
+                exec->program->next_input = 0;
+                eof = 1;
+                skip_eol = 0;
+            } else {
+                fvalue = strtod(exec->program->next_input, &end);
+                if (fvalue == 0.0 && end == exec->program->next_input) {
+                    /* Invalid number in the embedded input */
+                    status = IP_EXEC_BAD_INPUT;
+                    break;
+                }
+                exec->program->next_input = end;
+                ip_value_set_float(&value, (ip_float_t)fvalue);
+            }
+            break;
+        }
         scan_result = fscanf(exec->input, "%lf", &fvalue) ;
         if (scan_result < 0) {
             eof = 1;
@@ -1599,12 +1712,38 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
     case IP_TYPE_STRING:
         /* Read a string value; every character until the next newline */
         value.type = IP_TYPE_STRING;
+        skip_eol = 0;
+        if (exec->program->next_input) {
+            /* Read from the embedded input data in the program */
+            if (exec->program->next_input[0] == '\0') {
+                /* We have reached the end of the embedded input.
+                 * Report EOF and switch to using exec->input next time. */
+                exec->program->next_input = 0;
+                value.svalue = ip_string_create_empty();
+                eof = 1;
+            } else {
+                /* Read characters from the embedded input until EOL */
+                end = strchr(exec->program->next_input, '\n');
+                if (end) {
+                    value.svalue = ip_string_create_with_length
+                        (exec->program->next_input,
+                         end - exec->program->next_input);
+                    ++end;
+                } else {
+                    end = strchr(exec->program->next_input, '\0');
+                    value.svalue = ip_string_create_with_length
+                        (exec->program->next_input,
+                         end - exec->program->next_input);
+                }
+                exec->program->next_input = end;
+            }
+            break;
+        }
         value.svalue = ip_exec_read_string(exec->input);
         if (!(value.svalue)) {
             eof = 1;
             value.svalue = ip_string_create_empty();
         }
-        skip_eol = 0;
         break;
 
     default:
@@ -1614,27 +1753,33 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
 
     /* After a number, skip the following EOL; after a string, don't do this.
      * This ensures that if the previous line ended in a number, reading a
-     * string will read a new line instead of the '\n' on the previous. */
+     * string will read a new line instead of the '\n' on the previous line. */
     if (skip_eol) {
-        int ch = fgetc(exec->input);
-        if (ch == '\r') {
+        if (exec->program->next_input) {
+            if (exec->program->next_input[0] == '\n') {
+                ++(exec->program->next_input);
+            }
+        } else {
             ch = fgetc(exec->input);
-            if (ch != '\n' && ch != EOF) {
+            if (ch == '\r') {
+                ch = fgetc(exec->input);
+                if (ch != '\n' && ch != EOF) {
+                    ungetc(ch, exec->input);
+                }
+            } else if (ch != '\n' && ch != EOF) {
                 ungetc(ch, exec->input);
             }
-        } else if (ch != '\n' && ch != EOF) {
-            ungetc(ch, exec->input);
         }
     }
 
-    /* Bail out if an error occurred reading the input */
+    /* Bail out if an error occurred while reading the input */
     if (status != IP_EXEC_OK) {
         ip_value_release(&value);
         return status;
     }
 
     /* Skip the next statement on EOF, without doing the assignment */
-    if (eof && exec->pc) {
+    if (eof && exec->pc && exec->pc->type != ITOK_EOL) {
         exec->pc = exec->pc->next;
         ip_value_release(&value);
         return IP_EXEC_OK;
@@ -2001,7 +2146,7 @@ int ip_exec_step(ip_exec_t *exec)
 
     case ITOK_COPY_TAPE:
         /* Copy the input to the output until the next "~~~~~" or EOF */
-        ip_exec_copy_tape(exec->output, exec->input);
+        ip_exec_copy_tape(exec, exec->output, exec->input);
 
         /* Classic INTERPROGRAM terminates copied data with a
          * series of blank characters, so output those as well. */
@@ -2010,12 +2155,12 @@ int ip_exec_step(ip_exec_t *exec)
 
     case ITOK_COPY_NO_BLANKS:
         /* "COPY TAPE" with no following blanks in the output */
-        ip_exec_copy_tape(exec->output, exec->input);
+        ip_exec_copy_tape(exec, exec->output, exec->input);
         break;
 
     case ITOK_IGNORE_TAPE:
         /* Ignore the input up until the next "~~~~~" or EOF */
-        ip_exec_copy_tape(NULL, exec->input);
+        ip_exec_copy_tape(exec, NULL, exec->input);
         break;
 
     case ITOK_SUBSTRING:

@@ -625,6 +625,38 @@ static void ip_tokeniser_get_string(ip_tokeniser_t *tokeniser, int quote)
     ip_tokeniser_set_token(tokeniser, ITOK_STR_VALUE);
 }
 
+/**
+ * @brief Reads the rest of the input as a single literal string.
+ *
+ * @param[in,out] tokeniser The tokeniser.
+ */
+static void ip_tokeniser_read_rest(ip_tokeniser_t *tokeniser)
+{
+    int ch;
+    while (!(tokeniser->saw_eof)) {
+        if (tokeniser->unget_char == -1) {
+            ch = (*(tokeniser->read_char))(tokeniser->user_data);
+        } else {
+            ch = tokeniser->unget_char;
+            tokeniser->unget_char = -1;
+        }
+        if (ch == -1) {
+            tokeniser->saw_eof = 1;
+        } else if (ch == '\r') {
+            /* Check for CRLF and convert it into just LF */
+            ch = (*(tokeniser->read_char))(tokeniser->user_data);
+            if (ch == -1) {
+                tokeniser->saw_eof = 1;
+            } else if (ch != '\n') {
+                tokeniser->unget_char = ch;
+            }
+            ip_tokeniser_add_name(tokeniser, '\n');
+        } else if (ch != '\0') {
+            ip_tokeniser_add_name(tokeniser, ch);
+        }
+    }
+}
+
 int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
 {
     int ch;
@@ -751,6 +783,28 @@ int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
         if ((context & ITOK_TYPE_EXTENSION) != 0) {
             ip_tokeniser_get_string(tokeniser, ch);
         } else {
+            ip_tokeniser_set_token(tokeniser, ITOK_ERROR);
+        }
+        break;
+
+    case '~':
+        /* May be the end of the program code and the start of the
+         * embedded input data. */
+        if ((tokeniser->buffer_posn + 4) <= tokeniser->buffer_len &&
+                tokeniser->buffer[tokeniser->buffer_posn]     == '~' &&
+                tokeniser->buffer[tokeniser->buffer_posn + 1] == '~' &&
+                tokeniser->buffer[tokeniser->buffer_posn + 2] == '~' &&
+                tokeniser->buffer[tokeniser->buffer_posn + 3] == '~') {
+            /* Discard the rest of the current line and read the
+             * rest of the input as a literal string. */
+            ++(tokeniser->line);
+            tokeniser->buffer_posn = 0;
+            tokeniser->buffer_len = 0;
+            tokeniser->name_len = 0;
+            ip_tokeniser_read_rest(tokeniser);
+            ip_tokeniser_set_token(tokeniser, ITOK_INPUT_DATA);
+        } else {
+            /* Not enough blanks, so treat this as an error */
             ip_tokeniser_set_token(tokeniser, ITOK_ERROR);
         }
         break;

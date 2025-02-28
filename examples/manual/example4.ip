@@ -16,3 +16,7 @@
        FORM ARCTAN, OUTPUT              # END PRINTED ROW
        GO TO *2                         # REPEAT FOR EACH DATUM VALUE
  *4    END OF INTERPROGRAM
+~~~~~
+SAMPLE SET OF DATA
+~~~~~0.0   0.166667   0.25   0.333333   0.5   0.666667   1.0
+ 2.71828   -0.166667   -0.25   -0.5   123.456   -4567.89

@@ -48,6 +48,12 @@ typedef struct
     /** Name of the file that the program was loaded from */
     char *filename;
 
+    /** Input data that is embedded in the program */
+    char *embedded_input;
+
+    /** Next embedded character to be read by "INPUT" */
+    const char *next_input;
+
 } ip_program_t;
 
 /**
@@ -70,6 +76,14 @@ void ip_program_free(ip_program_t *program);
  * @param[in,out] program The program containing the variables to reset.
  */
 void ip_program_reset_variables(ip_program_t *program);
+
+/**
+ * @brief Sets the embedded input for the program.
+ *
+ * @param[in,out] program The program state.
+ * @param[in] input The input to be embedded.
+ */
+void ip_program_set_input(ip_program_t *program, const char *input);
 
 /**
  * @brief List the contents of a program.

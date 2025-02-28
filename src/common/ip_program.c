@@ -48,6 +48,9 @@ void ip_program_free(ip_program_t *program)
         ip_label_table_free(&(program->labels));
         ip_ast_list_free(&(program->statements));
         free(program->filename);
+        if (program->embedded_input) {
+            free(program->embedded_input);
+        }
         free(program);
     }
 }
@@ -55,4 +58,23 @@ void ip_program_free(ip_program_t *program)
 void ip_program_reset_variables(ip_program_t *program)
 {
     ip_var_table_reset(&(program->vars));
+    program->next_input = program->embedded_input;
+}
+
+void ip_program_set_input(ip_program_t *program, const char *input)
+{
+    char *temp;
+    if (input) {
+        temp = strdup(input);
+        if (!temp) {
+            ip_out_of_memory();
+        }
+    } else {
+        temp = 0;
+    }
+    if (program->embedded_input) {
+        free(program->embedded_input);
+    }
+    program->embedded_input = temp;
+    program->next_input = temp;
 }
