@@ -8,8 +8,78 @@ computer to survive intact to this day.
 
 INTERPROGRAM is an interpreted high-level programming language, advertised as
 "English Language for Automatic Programming".  The syntax is very easy
-for beginners to programming to learn.  It predated
-[BASIC](https://en.wikipedia.org/wiki/BASIC) by three years.
+for beginners to programming to learn.
+
+## Historical context
+
+A lot of innovation in programming languages was happening around 1960:
+
+* 1957: Fortran
+* 1958: ALGOL-58
+* 1959: COBOL
+* 1960: <b>INTERPROGRAM</b>
+* 1960: Lisp
+* 1963: BASIC
+
+INTERPROGRAM was inspired a little by Fortran, which was becoming popular
+in the scientific community at the time.  INTERPROGRAM can be viewed as the
+parts of Fortran that were able to fit on the memory-limited CSIRAC.
+
+Crucially, INTERPROGRAM was invented three years before BASIC and has a
+"beginner's language" feel to it.  The use of "English language" constructs
+makes INTERPROGRAM very easy to learn.
+
+## Is it really "Programming in English"?
+
+Yes and no.  Obviously, the CSIRAC did not have the capability to parse
+freeform natural language.  The syntax of INTERPROGRAM was formalised,
+but designed to read like regular English.
+
+The essence of teaching a beginner to program is teaching them to break the
+problem down into primitive steps, and then tell the computer to do each of
+those steps.  The final language doesn't matter: Fortran, C, Python, Java,
+Rust, etc are all just syntactic details.  The goal is the same.
+
+Take a simple computation: "set z to the square root of (x<sup>2</sup> + y)".
+Let's write out the primitive steps of the computation in plain English:
+
+1. Take the value of x.
+2. Multiply it by itself.
+3. Add the value of y.
+4. Form the square root of the result so for.
+5. Replace the contents of the variable z with the final result.
+
+That is how you would perform the computation with pencil and paper.
+Here is what it looks like in INTERPROGRAM:
+
+    TAKE X
+    MULTIPLY BY THIS
+    ADD Y
+    FORM SQUARE ROOT
+    REPLACE Z
+
+That's almost the same!  Here is another example of replacing X with the
+absolute value of X:
+
+        TAKE X
+        IF THIS IS POSITIVE, GO TO *1
+        MULTIPLY BY -1
+    *1  REPLACE X
+
+This is the key to INTERPROGRAM's syntactic style: let the plain English
+description of the algorithm inform how the code is written.  The
+code should read the way it is written.  And don't be afraid to use
+multiple words if it makes the code easier to read aloud; for example,
+"MULTIPLY BY" and "FORM SQUARE ROOT", not "MULTIPLY" and "SQRT".
+
+INTERPROGRAM can seem verbose at times, but there are ways to reduce
+the verbosity.  See the [Extended Language Reference](doc/reference.md)
+for more information.
+
+INTERPROGRAM has a short mental distance between "what do I want to do?"
+and "how do I tell the computer to do it?".  Excellent for beginners.
+Don't believe me?  Check out the programs in the "examples" directory and
+see if you can read them!
 
 ## What is this project?
 
@@ -41,7 +111,7 @@ page reads:
     WAFFLE FOR THE COVER OF THE INTERPROGRAM MANUAL 1/10/60.
 
 The syntax for my implementation of "Extended INTERPROGRAM" is described
-in the [Language Reference](doc/reference.md).
+in the [Extended Language Reference](doc/reference.md).
 
 ## Building
 

@@ -8,10 +8,8 @@
 --------------------------------------------------------
 ~~~~~
 
-    SET A = 20.0
-    SET B = 36.5
-
     # CLASSIC INTERPROGRAM SYNTAX
+    INPUT A, & B
     TAKE A
     MULTIPLY BY THIS
     REPLACE SUM
@@ -24,10 +22,8 @@
     # OUTPUT THE ARGUMENTS AND THE RESULT
     TAKE A, OUTPUT, TAKE B, OUTPUT, TAKE H, OUTPUT
 
-    SET A = 15.5
-    SET B = 12.7
-
     # MODERN ALGEBRAIC SYNTAX
+    INPUT A, & B
     TAKE A*A + B*B
     FORM SQUARE ROOT
     REPLACE H
@@ -36,3 +32,6 @@
     TAKE A, OUTPUT, TAKE B, OUTPUT, TAKE H, OUTPUT
 
     END OF INTERPROGRAM
+~~~~~
+20.0 36.5
+15.5 12.7
