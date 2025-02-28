@@ -27,13 +27,12 @@
 #include <string.h>
 #include <getopt.h>
 
-#define short_options "o:i:cel"
+#define short_options "o:i:ce"
 static struct option long_options[] = {
     {"output",      required_argument,  0,  'o'},
     {"input",       required_argument,  0,  'i'},
     {"classic",     no_argument,        0,  'c'},
     {"extended",    no_argument,        0,  'e'},
-    {"list",        no_argument,        0,  'l'},
     {0,             0,                  0,  0},
 };
 
@@ -52,9 +51,6 @@ static void usage(const char *progname)
 
     fprintf(stderr, "--extended, -e\n");
     fprintf(stderr, "    Use the extended INTERPROGRAM syntax (default).\n\n");
-
-    fprintf(stderr, "--list, -l\n");
-    fprintf(stderr, "    List the parsed INTERPROGRAM code (for debugging).\n\n");
 }
 
 int main(int argc, char **argv)
@@ -65,7 +61,7 @@ int main(int argc, char **argv)
     const char *input_filename = 0;
     const char *output_filename = 0;
     ip_program_t *program = 0;
-    int make_listing = 0;
+    ip_exec_t exec;
     int opt, index;
     int exitval = 0;
     FILE *input = stdin;
@@ -89,10 +85,6 @@ int main(int argc, char **argv)
 
         case 'e':
             options |= ITOK_TYPE_EXTENSION;
-            break;
-
-        case 'l':
-            make_listing = 1;
             break;
 
         default:
@@ -137,18 +129,12 @@ int main(int argc, char **argv)
         }
     }
 
-    /* List or run the program */
-    if (make_listing) {
-        ip_program_list(program, output);
-        ip_program_free(program);
-    } else {
-        ip_exec_t exec;
-        ip_exec_init(&exec, program);
-        exec.input = input;
-        exec.output = output;
-        exitval = ip_exec_run(&exec);
-        ip_exec_free(&exec);
-    }
+    /* Run the program */
+    ip_exec_init(&exec, program);
+    exec.input = input;
+    exec.output = output;
+    exitval = ip_exec_run(&exec);
+    ip_exec_free(&exec);
 
     /* Clean up and exit */
     if (input_filename) {

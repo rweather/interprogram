@@ -25,7 +25,6 @@
 
 #include "ip_ast.h"
 #include "ip_labels.h"
-#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,14 +83,6 @@ void ip_program_reset_variables(ip_program_t *program);
  * @param[in] input The input to be embedded.
  */
 void ip_program_set_input(ip_program_t *program, const char *input);
-
-/**
- * @brief List the contents of a program.
- *
- * @param[in] program The program to be listed.
- * @param[in] file The file to write the listing to.
- */
-void ip_program_list(const ip_program_t *program, FILE *file);
 
 #ifdef __cplusplus
 }

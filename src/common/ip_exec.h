@@ -25,6 +25,7 @@
 
 #include "ip_program.h"
 #include "ip_value.h"
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
