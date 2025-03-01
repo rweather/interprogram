@@ -418,6 +418,9 @@ provides alternative statements for angles in radians and degrees.
 <tr><td><tt>SHIFT RIGHT BY</tt> <i>value</i></td><td>Performs an arithmetic right shift of the integer <tt>THIS</tt> by <i>value</i> bits, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>LENGTH OF</tt></td><td>Length of the string in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>SUBSTRING FROM</tt> <i>index1</i> [<tt>TO</tt> <i>index2</i>]</td><td>Extracts a substring from <tt>THIS</tt> starting at <i>index1</i> and ending at <i>index2</i>.  If <i>index2</i> is not present, then the rest of the string starting at <i>index1</i> is the result.  String indexes are 1-based.</td><td>Yes</td></tr>
+<tr><td><tt>ROUND NEAREST</tt></td><td>Rounds <tt>THIS</tt> to the nearest integer, rounding halfway cases away from zero.  Same as the round() function in C.</td><td>Yes</td></tr>
+<tr><td><tt>ROUND UP</tt></td><td>Rounds <tt>THIS</tt> to an integer, rounding up.  Same as the ceil() function in C.</td><td>Yes</td></tr>
+<tr><td><tt>ROUND DOWN</tt></td><td>Rounds <tt>THIS</tt> to an integer, rounding down.  Same as the floor() function in C.</td><td>Yes</td></tr>
 </table>
 
 Algebraic expressions in the extension syntax use the following operators

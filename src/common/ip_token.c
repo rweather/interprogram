@@ -123,6 +123,9 @@ static ip_token_info_t const tokens[] = {
     {"END IF",                              ITOK_END_IF,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"REPEAT WHILE",                        ITOK_REPEAT_WHILE,      ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"END REPEAT",                          ITOK_END_REPEAT,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"ROUND NEAREST",                       ITOK_ROUND_NEAREST,     ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"ROUND UP",                            ITOK_ROUND_UP,          ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"ROUND DOWN",                          ITOK_ROUND_DOWN,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
 

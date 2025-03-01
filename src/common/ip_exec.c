@@ -825,6 +825,42 @@ static int ip_eval_int_abs(ip_value_t *result, ip_int_t x)
     return IP_EXEC_OK;
 }
 
+static int ip_eval_float_round_nearest(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, round(x));
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_round_nearest(ip_value_t *result, ip_int_t x)
+{
+    ip_value_set_int(result, x);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_float_round_up(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, ceil(x));
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_round_up(ip_value_t *result, ip_int_t x)
+{
+    ip_value_set_int(result, x);
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_float_round_down(ip_value_t *result, ip_float_t x)
+{
+    ip_value_set_float(result, floor(x));
+    return IP_EXEC_OK;
+}
+
+static int ip_eval_int_round_down(ip_value_t *result, ip_int_t x)
+{
+    ip_value_set_int(result, x);
+    return IP_EXEC_OK;
+}
+
 static int ip_eval_float_raise(ip_float_t *result, ip_float_t x, ip_float_t y)
 {
     *result = pow(x, y);
@@ -1232,6 +1268,18 @@ static int ip_exec_eval_expression
 
     case ITOK_ABS:
         EVAL_UNARY(abs);
+        break;
+
+    case ITOK_ROUND_NEAREST:
+        EVAL_UNARY(round_nearest);
+        break;
+
+    case ITOK_ROUND_UP:
+        EVAL_UNARY(round_up);
+        break;
+
+    case ITOK_ROUND_DOWN:
+        EVAL_UNARY(round_down);
         break;
 
     case ITOK_BITWISE_AND_NOT:
@@ -2078,6 +2126,9 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_LOG:
     case ITOK_EXP:
     case ITOK_ABS:
+    case ITOK_ROUND_NEAREST:
+    case ITOK_ROUND_UP:
+    case ITOK_ROUND_DOWN:
     case ITOK_BITWISE_AND_NOT:
     case ITOK_BITWISE_AND:
     case ITOK_BITWISE_OR:

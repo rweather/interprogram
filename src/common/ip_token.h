@@ -129,12 +129,15 @@ extern "C" {
 #define ITOK_END_IF             0x9E    /**< END IF */
 #define ITOK_REPEAT_WHILE       0x9F    /**< REPEAT WHILE */
 #define ITOK_END_REPEAT         0xA0    /**< END REPEAT */
+#define ITOK_ROUND_NEAREST      0xA1    /**< ROUND NEAREST */
+#define ITOK_ROUND_UP           0xA2    /**< ROUND UP */
+#define ITOK_ROUND_DOWN         0xA3    /**< ROUND DOWN */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA
 
 /** Last keyword token */
-#define ITOK_LAST_KEYWORD       ITOK_END_REPEAT
+#define ITOK_LAST_KEYWORD       ITOK_ROUND_DOWN
 
 /* Meta-tokens for non-keyword elements */
 #define ITOK_VAR_NAME           0xE0    /**< Variable name */

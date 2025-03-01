@@ -934,6 +934,9 @@ static int ip_parse_token_is_terminator(int token)
  *    | "FORM ARCTAN DEGREES"
  *    | "RANDOM NUMBER"
  *    | "SEED RANDOM" Expression
+ *    | "ROUND NEAREST"
+ *    | "ROUND UP"
+ *    | "ROUND DOWN"
  *
  * ControlFlowStatement ::=
  *      "GO TO" LabelName
@@ -1082,6 +1085,9 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_LOG:
     case ITOK_EXP:
     case ITOK_ABS:
+    case ITOK_ROUND_NEAREST:
+    case ITOK_ROUND_UP:
+    case ITOK_ROUND_DOWN:
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
         node = ip_ast_make_this_unary
             (token, parser->this_type, IP_TYPE_FLOAT,
