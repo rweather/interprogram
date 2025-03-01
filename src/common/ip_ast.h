@@ -53,6 +53,9 @@ struct ip_ast_node_s
     /** Non-zero if the node has children */
     unsigned char has_children;
 
+    /** Non-zero if the right child should not be freed */
+    unsigned char dont_free_right;
+
     union {
         struct {
 

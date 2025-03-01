@@ -165,6 +165,12 @@ static int check_identifiers(void)
     KEYWORD("EXIT INTERPROGRAM",                    ITOK_EXIT_PROGRAM);
     KEYWORD("RANDOM NUMBER",                        ITOK_RANDOM);
     KEYWORD("SEED RANDOM",                          ITOK_SEED_RANDOM);
+    KEYWORD("THEN",                                 ITOK_THEN);
+    KEYWORD("ELSE",                                 ITOK_ELSE);
+    KEYWORD("ELSE IF",                              ITOK_ELSE_IF);
+    KEYWORD("END IF",                               ITOK_END_IF);
+    KEYWORD("REPEAT WHILE",                         ITOK_REPEAT_WHILE);
+    KEYWORD("END REPEAT",                           ITOK_END_REPEAT);
 
     /* Check that we have tested all of the keywords */
     for (index = ITOK_FIRST_KEYWORD; index <= ITOK_LAST_KEYWORD; ++index) {

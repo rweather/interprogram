@@ -1569,6 +1569,29 @@ static int ip_exec_repeat_from(ip_exec_t *exec, ip_ast_node_t *node)
 }
 
 /**
+ * @brief "REPEAT WHILE" loop construct.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] node The "REPEAT WHILE" node in the program.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_exec_repeat_while(ip_exec_t *exec, ip_ast_node_t *node)
+{
+    int status = ip_exec_eval_condition(exec, node->children.left);
+    if (status == IP_EXEC_FALSE) {
+        /* Condition is false, so jump to just past the
+         * matching 'END REPEAT' at the end of the loop */
+        exec->pc = node->children.right;
+        if (exec->pc) {
+            exec->pc = exec->pc->next;
+        }
+        status = IP_EXEC_OK;
+    }
+    return status;
+}
+
+/**
  * @brief Reads a string from the input stream.
  *
  * @param[in] input The input stream to read from.
@@ -2095,6 +2118,47 @@ int ip_exec_step(ip_exec_t *exec)
         }
         break;
 
+    case ITOK_THEN:
+        /* "IF ... THEN ..." structured conditional statement */
+        for (;;) {
+            exec->pc = node->next;
+            status = ip_exec_eval_condition(exec, node->children.left);
+            if (status == IP_EXEC_FALSE) {
+                /* Condition is false, so skip to the next "ELSE IF",
+                 * "ELSE", or "END IF" that matches this "IF" */
+                node = exec->pc = node->children.right;
+                if (node->type == ITOK_ELSE_IF) {
+                    /* Evaluate the condition in the "ELSE IF" clause */
+                    continue;
+                } else {
+                    /* We have hit the "ELSE" or "END IF"; start
+                     * execution again from the next statement. */
+                    exec->pc = node->next;
+                    break;
+                }
+            } else if (status != IP_EXEC_OK) {
+                /* Error occurred while evaluating the condition */
+                return status;
+            } else {
+                /* Condition is true, so continue from the next statement */
+                break;
+            }
+        }
+        break;
+
+    case ITOK_ELSE:
+    case ITOK_ELSE_IF:
+        /* If we encounter an "ELSE" or "ELSE IF", then we have just
+         * been executing a previous "THEN" clause.  Skip to "END IF". */
+        do {
+            exec->pc = node->children.right;
+        } while (exec->pc && exec->pc->type != ITOK_END_IF);
+        break;
+
+    case ITOK_END_IF:
+        /* Nothing to do once we reach the "END IF" */
+        break;
+
     case ITOK_INPUT:
         /* Read a value from the input */
         return ip_exec_input(exec, node);
@@ -2125,6 +2189,15 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_REPEAT_FROM:
         /* Repeat from a specific label if the loop variable is non-zero */
         return ip_exec_repeat_from(exec, node);
+
+    case ITOK_REPEAT_WHILE:
+        /* Repeat while a condition is true */
+        return ip_exec_repeat_while(exec, node);
+
+    case ITOK_END_REPEAT:
+        /* Jump back to the top of the loop and re-evaluate the condition */
+        exec->pc = node->children.right;
+        break;
 
     case ITOK_PUNCH:
         /* "PUNCH THE FOLLOWING CHARACTERS" to standard output */

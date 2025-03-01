@@ -30,6 +30,25 @@ extern "C" {
 #endif
 
 /**
+ * @brief Context information for block-structured statements.
+ */
+typedef struct ip_parse_block_context_s ip_parse_block_context_t;
+struct ip_parse_block_context_s
+{
+    /* Type of block; ITOK_IF, ITOK_REPEAT_WHILE, etc */
+    int type;
+
+    /** Pointer to the block's controlling node */
+    ip_ast_node_t *control;
+
+    /** Pointer to the node to be back-patched for false conditions */
+    ip_ast_node_t *patch;
+
+    /* Next outer block context */
+    ip_parse_block_context_t *next;
+};
+
+/**
  * @brief Information about an in-progress parse of an INTERPROGRAM program.
  */
 typedef struct
@@ -54,6 +73,9 @@ typedef struct
 
     /** Number of warnings that were reported during the parsing process */
     unsigned long num_warnings;
+
+    /** In-progress structured programming blocks */
+    ip_parse_block_context_t *blocks;
 
 } ip_parser_t;
 
@@ -111,6 +133,13 @@ void ip_parse_preliminary_statements(ip_parser_t *parser);
  * @param[in,out] parser The parser state.
  */
 void ip_parse_check_undefined_labels(ip_parser_t *parser);
+
+/**
+ * @brief Checks for open 'IF' and 'REPEAT' blocks and prints error messages.
+ *
+ * @param[in,out] parser The parser state.
+ */
+void ip_parse_check_open_blocks(ip_parser_t *parser);
 
 /**
  * @brief Parse a program file and return the program image.

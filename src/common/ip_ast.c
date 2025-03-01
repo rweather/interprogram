@@ -46,7 +46,12 @@ void ip_ast_node_free(ip_ast_node_t *node)
         next = node->next;
         if (node->has_children) {
             ip_ast_node_free(node->children.left);
-            ip_ast_node_free(node->children.right);
+            if (!(node->dont_free_right)) {
+                /* 'THEN', 'ELSE', 'ELSE IF', 'REPEAT WHILE', and 'END REPEAT'
+                 * nodes use the right child pointer as a "next" clause pointer,
+                 * which will be freed separately */
+                ip_ast_node_free(node->children.right);
+            }
         }
         if (node->type == ITOK_EOL || node->type == ITOK_TITLE ||
                 node->type == ITOK_PUNCH || node->type == ITOK_TEXT) {

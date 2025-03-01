@@ -1,0 +1,56 @@
+(1) TITLE Control flow structured statements test
+(2) symbols for integers J
+
+    # Tests the structured 'IF ... THEN ...' construct.
+    set J = 42
+    if J is equal to 42 then
+        set J = J + 1
+    else
+        go to FAIL
+    end if
+    if J is not equal to 43, go to FAIL
+    if J is equal to 42 then
+        go to FAIL
+    else if J is equal to 27 then
+        go to FAIL
+    else
+        set J = J - 2
+    end if
+    if J is not equal to 41, go to FAIL
+    set J = 27
+    if J is equal to 42 then
+        go to FAIL
+    else if J is equal to 55 then
+        set J = J + 2
+    else if J is equal to 27 then
+        set J = J - 2
+    else
+        go to FAIL
+    end if
+    if J is not equal to 25, go to FAIL
+    if J is not equal to 25 then
+        go to FAIL
+    else
+        if J is not equal to 25 then
+            go to FAIL
+        end if
+        set J = J + 2
+    end if
+    if J is not equal to 27, go to FAIL
+
+    # Test the structured 'REPEAT WHILE' looping construct.
+    set X = 0
+    set Y = 0
+    repeat while X is smaller than 10
+        set Y = Y + X
+        set X = X + 1
+    end repeat
+    if X is not equal to 10, go to FAIL
+    if Y is not equal to 45, go to FAIL
+
+    # If we get here, then all tests have passed.
+    end of interprogram
+
+    # One of the tests failed.  Exit the program with a status of 1.
+*FAIL
+    take 1, exit interprogram

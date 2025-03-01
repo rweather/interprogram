@@ -117,6 +117,12 @@ static ip_token_info_t const tokens[] = {
     {"EXIT INTERPROGRAM",                   ITOK_EXIT_PROGRAM,      ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"RANDOM NUMBER",                       ITOK_RANDOM,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"SEED RANDOM",                         ITOK_SEED_RANDOM,       ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"THEN",                                ITOK_THEN,              ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
+    {"ELSE",                                ITOK_ELSE,              ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"ELSE IF",                             ITOK_ELSE_IF,           ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"END IF",                              ITOK_END_IF,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"REPEAT WHILE",                        ITOK_REPEAT_WHILE,      ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"END REPEAT",                          ITOK_END_REPEAT,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
 

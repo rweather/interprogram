@@ -335,11 +335,13 @@ The last preliminary statement must be `(4) COMPILE THE FOLLOWING INTERPROGRAM`.
 
 Reserved words are any that correspond to a single-word keyword:
 
-    ADD         INFINITE    NONE        RETURN      TITLE
-    CALL        INPUT       OUTPUT      SET         TO
-    EMPTY       IS          PAUSE       SUBTRACT    ZERO
-    FINITE      MODULO      POSITIVE    THIS
-    IF          NEGATIVE    REPLACE     TIMES
+    ADD         INPUT       POSITIVE    TIMES
+    CALL        IS          REPLACE     TITLE
+    ELSE        MODULO      RETURN      TO
+    EMPTY       NEGATIVE    SET         ZERO
+    FINITE      NONE        SUBTRACT
+    IF          OUTPUT      THEN
+    INFINITE    PAUSE       THIS
 
 Reserved words cannot be used as variable or label names.
 
@@ -620,6 +622,71 @@ Copies characters from the input stream until "~~~~~" is seen.
 <tt>IGNORE TAPE</tt>
 
 Ignores characters from the input stream until "~~~~~" is seen.
+
+## Structured programming
+
+Using <tt>IF</tt> and <tt>GO TO</tt> for control flow is difficult in
+more complicated applications.  Extended INTERPROGRAM provides a true
+<tt>IF ... THEN ... ELSE</tt> construct:
+
+    IF X IS NEGATIVE THEN
+        SET X = -X
+    END IF
+
+    IF X IS NEGATIVE THEN, SET X = -X, END IF
+
+    IF X IS GREATER THAN Y THEN
+        SET MAX = X
+    ELSE
+        SET MAX = Y
+    END IF
+
+This can be extended to multiple <tt>ELSE IF</tt> conditions if needed:
+
+    IF condition1 THEN
+        ...
+    ELSE IF condition2 THEN
+        ...
+    ELSE IF condition3 THEN
+        ...
+    ELSE
+        ...
+    END IF
+
+Note that the <tt>ELSE</tt> and <tt>IF</tt> must be on the same line
+to make it part of the original <tt>IF</tt> statement.  If they are on
+different lines, then the <tt>IF</tt> starts a nested <tt>IF</tt> statement:
+
+    IF condition1 THEN
+        ...
+    ELSE
+        IF condition2 THEN
+            ...
+        END IF
+    END IF
+
+While loops are accomplished with the <tt>REPEAT WHILE</tt> construct:
+
+    REPEAT WHILE X IS LESS THAN 10
+        ...
+        SET X = X + 1
+    END REPEAT
+
+Currently there is no equivalent of <tt>continue</tt> or <tt>break</tt>
+from C.  However, it is possible to get the same effect with <tt>GO TO</tt>:
+
+    REPEAT WHILE X IS LESS THAN 10
+        IF X IS EQUAL TO 5 THEN
+            SET X = X + 2
+            GO TO CONTINUE
+        ELSE IF STOP IS NOT ZERO THEN
+            GO TO BREAK
+        END IF
+        ...
+        SET X = X + 1
+    *CONTINUE
+    END REPEAT
+    *BREAK
 
 ## Random numbers
 

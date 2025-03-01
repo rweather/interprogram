@@ -37,9 +37,34 @@ void ip_parse_init(ip_parser_t *parser)
     parser->last_statement = -1;
 }
 
+static void ip_parse_create_block
+    (ip_parser_t *parser, int type, ip_ast_node_t *node)
+{
+    ip_parse_block_context_t *block;
+    block = calloc(1, sizeof(ip_parse_block_context_t));
+    if (!block) {
+        ip_out_of_memory();
+    }
+    block->type = type;
+    block->control = node;
+    block->patch = node;
+    block->next = parser->blocks;
+    parser->blocks = block;
+}
+
+static void ip_parse_free_top_block(ip_parser_t *parser)
+{
+    ip_parse_block_context_t *block = parser->blocks;
+    parser->blocks = block->next;
+    free(block);
+}
+
 void ip_parse_free(ip_parser_t *parser)
 {
     ip_tokeniser_free(&(parser->tokeniser));
+    while (parser->blocks) {
+        ip_parse_free_top_block(parser);
+    }
     memset(parser, 0, sizeof(ip_parser_t));
 }
 
@@ -639,13 +664,138 @@ static ip_ast_node_t *ip_parse_condition(ip_parser_t *parser)
 }
 
 /*
- * IfStatement ::= "IF" Condition
+ * IfStatement ::=
+ *      "IF" Condition
+ *    | "IF" Condition "THEN" Statements { ElseIfClause } [ ElseClause ] EndIf
  */
 static ip_ast_node_t *ip_parse_if_statement(ip_parser_t *parser)
 {
+    ip_ast_node_t *node;
+
+    /* Parse the basic "IF" statement form */
+    node = ip_parse_condition(parser);
+    if (parser->tokeniser.token != ITOK_THEN) {
+        return ip_ast_make_unary_statement
+            (ITOK_IF, IP_TYPE_UNKNOWN, node, &(parser->tokeniser.loc));
+    }
+
+    /* Next token is "THEN", so we are doing a fully-structured "IF" */
+    node = ip_ast_make_unary_statement
+        (ITOK_THEN, IP_TYPE_UNKNOWN, node, &(parser->tokeniser.loc));
+    ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    if (node) {
+        ip_parse_create_block(parser, ITOK_IF, node);
+    }
+    return node;
+}
+
+/*
+ * ElseIfClause ::= "ELSE IF" Condition "THEN" Statements
+ */
+static ip_ast_node_t *ip_parse_else_if(ip_parser_t *parser)
+{
     ip_ast_node_t *node = ip_parse_condition(parser);
-    return ip_ast_make_unary_statement
-        (ITOK_IF, IP_TYPE_UNKNOWN, node, &(parser->tokeniser.loc));
+    if (parser->tokeniser.token != ITOK_THEN) {
+        ip_error_near(parser, "'THEN' expected");
+    } else {
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    }
+    node = ip_ast_make_unary_statement
+        (ITOK_ELSE_IF, IP_TYPE_UNKNOWN, node, &(parser->tokeniser.loc));
+    if (!node) {
+        return node;
+    }
+    if (!parser->blocks || parser->blocks->type != ITOK_IF) {
+        ip_error(parser, "'ELSE IF' without a matching 'IF'");
+    } else if (parser->blocks->patch->type == ITOK_ELSE) {
+        ip_error(parser, "'ELSE IF' after 'ELSE'");
+    } else {
+        /* Backpatch the 'IF' to add the 'ELSE IF' clause */
+        parser->blocks->patch->children.right = node;
+        parser->blocks->patch->dont_free_right = 1;
+        parser->blocks->patch = node;
+    }
+    return node;
+}
+
+/*
+ * ElseClause ::= "ELSE" Statements
+ */
+static ip_ast_node_t *ip_parse_else(ip_parser_t *parser)
+{
+    ip_ast_node_t *node;
+    ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    node = ip_ast_make_standalone(ITOK_ELSE, &(parser->tokeniser.loc));
+    if (!parser->blocks || parser->blocks->type != ITOK_IF) {
+        ip_error(parser, "'ELSE' without a matching 'IF'");
+    } else if (parser->blocks->patch->type == ITOK_ELSE) {
+        ip_error(parser, "multiple 'ELSE' clauses in an 'IF' statement");
+    } else {
+        /* Backpatch the 'IF' to add the 'ELSE' clause */
+        parser->blocks->patch->children.right = node;
+        parser->blocks->patch->dont_free_right = 1;
+        parser->blocks->patch = node;
+    }
+    return node;
+}
+
+/*
+ * EndIf ::= "END IF"
+ */
+static ip_ast_node_t *ip_parse_end_if(ip_parser_t *parser)
+{
+    ip_ast_node_t *node;
+    ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    node = ip_ast_make_standalone(ITOK_END_IF, &(parser->tokeniser.loc));
+    if (!parser->blocks || parser->blocks->type != ITOK_IF) {
+        ip_error(parser, "'END IF' without a matching 'IF'");
+    } else {
+        /* Backpatch the 'IF' to add the 'END IF' */
+        parser->blocks->patch->children.right = node;
+        parser->blocks->patch->dont_free_right = 1;
+
+        /* Pop the 'IF' block from the context stack */
+        ip_parse_free_top_block(parser);
+    }
+    return node;
+}
+
+/*
+ * WhileStatement ::= "REPEAT WHILE" Condition
+ */
+static ip_ast_node_t *ip_parse_while_statement(ip_parser_t *parser)
+{
+    ip_ast_node_t *node = ip_parse_condition(parser);
+    node = ip_ast_make_unary_statement
+        (ITOK_REPEAT_WHILE, IP_TYPE_UNKNOWN, node, &(parser->tokeniser.loc));
+    ip_parse_create_block(parser, ITOK_REPEAT_WHILE, node);
+    return node;
+}
+
+/*
+ * EndRepeatStatement ::= "END REPEAT"
+ */
+static ip_ast_node_t *ip_parse_end_repeat_statement(ip_parser_t *parser)
+{
+    ip_ast_node_t *node;
+    ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    node = ip_ast_make_standalone(ITOK_END_REPEAT, &(parser->tokeniser.loc));
+    if (!parser->blocks || parser->blocks->type != ITOK_REPEAT_WHILE) {
+        ip_error(parser, "'END REPEAT' without a matching 'REPEAT'");
+    } else {
+        /* Backpatch the 'REPEAT WHILE' to point at the 'END REPEAT'
+         * node and point the 'END REPEAT' node at the 'REPEAT WHILE'. */
+        ip_ast_node_t *repeat = parser->blocks->patch;
+        repeat->children.right = node;
+        repeat->dont_free_right = 1;
+        node->has_children = 1;
+        node->dont_free_right = 1;
+        node->children.right = repeat;
+
+        /* Pop the 'REPEAT WHILE' block from the context stack */
+        ip_parse_free_top_block(parser);
+    }
+    return node;
 }
 
 /*
@@ -796,6 +946,8 @@ static int ip_parse_token_is_terminator(int token)
  *    | "RETURN"
  *    | "RETURN" Expression
  *    | "EXIT INTERPROGRAM"
+ *    | WhileStatement
+ *    | EndRepeatStatement
  *
  * InputOutputStatement ::=
  *      "INPUT" Variable
@@ -963,6 +1115,18 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
         node = ip_parse_if_statement(parser);
         break;
 
+    case ITOK_ELSE_IF:
+        node = ip_parse_else_if(parser);
+        break;
+
+    case ITOK_ELSE:
+        node = ip_parse_else(parser);
+        break;
+
+    case ITOK_END_IF:
+        node = ip_parse_end_if(parser);
+        break;
+
     /* ------------- Control flow statements ------------- */
 
     case ITOK_GO_TO:
@@ -1028,6 +1192,16 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
             node = ip_ast_make_unary_statement
                 (ITOK_RETURN, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
         }
+        break;
+
+    case ITOK_REPEAT_WHILE:
+        /* REPEAT WHILE Condition */
+        node = ip_parse_while_statement(parser);
+        break;
+
+    case ITOK_END_REPEAT:
+        /* END REPEAT */
+        node = ip_parse_end_repeat_statement(parser);
         break;
 
     /* ------------- Input/Output statements ------------- */
@@ -1623,6 +1797,19 @@ void ip_parse_check_undefined_labels(ip_parser_t *parser)
     ip_parse_check_labels(parser, parser->program->labels.root.right);
 }
 
+void ip_parse_check_open_blocks(ip_parser_t *parser)
+{
+    while (parser->blocks) {
+        ip_ast_node_t *node = parser->blocks->control;
+        if (parser->blocks->type == ITOK_IF) {
+            ip_error_at(parser, &(node->loc), "unterminated 'IF'");
+        } else {
+            ip_error_at(parser, &(node->loc), "unterminated 'REPEAT WHILE'");
+        }
+        ip_parse_free_top_block(parser);
+    }
+}
+
 static int ip_parse_read_stdio(FILE *input)
 {
     return getc(input);
@@ -1683,6 +1870,7 @@ unsigned long ip_parse_program_file
     ip_parse_preliminary_statements(&parser);
     ip_parse_statements(&parser);
     ip_parse_check_undefined_labels(&parser);
+    ip_parse_check_open_blocks(&parser);
 
     /* Clean up and exit */
     if (filename) {

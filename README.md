@@ -19,14 +19,15 @@ A lot of innovation in programming languages was happening around 1960:
 * 1959: COBOL
 * 1960: <b>INTERPROGRAM</b>
 * 1960: Lisp
+* 1960: ALGOL-60
 * 1963: BASIC
 
 INTERPROGRAM was inspired a little by Fortran, which was becoming popular
 in the scientific community at the time.  INTERPROGRAM can be viewed as the
 parts of Fortran that were able to fit on the memory-limited CSIRAC.
 
-Crucially, INTERPROGRAM was invented three years before BASIC and has a
-"beginner's language" feel to it.  The use of "English language" constructs
+Crucially, INTERPROGRAM has a "beginner's language" feel to it, but was
+invented three years before BASIC.  The use of "English language" constructs
 makes INTERPROGRAM very easy to learn.
 
 ## Is it really "Programming in English"?
