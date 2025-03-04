@@ -296,6 +296,20 @@ ip_ast_node_t *ip_ast_make_text
     (unsigned char type, const char *text, const ip_loc_t *loc);
 
 /**
+ * @brief Makes an argument passing node.
+ *
+ * @param[in] type The type of node to make.
+ * @param[in] num The argument number.
+ * @param[in] expr The expression to evaluate for the argument.
+ * @param[in] loc Location of the argument in the original source file.
+ *
+ * @return The new node.
+ */
+ip_ast_node_t *ip_ast_make_argument
+    (unsigned char type, ip_int_t num, ip_ast_node_t *expr,
+     const ip_loc_t *loc);
+
+/**
  * @brief Initializes a list of nodes.
  *
  * @param[out] list The list to initialize.

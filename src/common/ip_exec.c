@@ -40,6 +40,15 @@ void ip_exec_init(ip_exec_t *exec, ip_program_t *program)
     srand(time(0));
 }
 
+static void ip_exec_free_stack_item(ip_exec_stack_item_t *item)
+{
+    unsigned index;
+    for (index = 0; index < IP_MAX_LOCALS; ++index) {
+        ip_value_release(&(item->locals[index]));
+    }
+    free(item);
+}
+
 void ip_exec_free(ip_exec_t *exec)
 {
     ip_exec_stack_item_t *stack;
@@ -49,7 +58,7 @@ void ip_exec_free(ip_exec_t *exec)
     stack = exec->stack;
     while (stack != 0) {
         next = stack->next;
-        free(stack);
+        ip_exec_free_stack_item(stack);
         stack = next;
     }
     memset(exec, 0, sizeof(ip_exec_t));
@@ -1322,6 +1331,19 @@ static int ip_exec_eval_expression
         EVAL_UNARY_STRING(length);
         break;
 
+    case ITOK_ARG_NUMBER:
+        /* Reference to a local variable in the current subroutine */
+        if (exec->stack) {
+            ip_value_assign(result, &(exec->stack->locals[expr->ivalue]));
+            if (result->type == IP_TYPE_UNKNOWN) {
+                status = IP_EXEC_UNINIT;
+            }
+        } else {
+            /* Not currently within a subroutine */
+            status = IP_EXEC_BAD_LOCAL;
+        }
+        break;
+
     default:
         /* Don't know what kind of expression this is */
         ip_value_set_unknown(result);
@@ -1429,6 +1451,16 @@ static int ip_exec_assign_variable(ip_exec_t *exec, ip_ast_node_t *node)
             }
         }
         ip_value_release(&index);
+    } else if (node->type == ITOK_ARG_NUMBER) {
+        /* Assign to a local variable in the current stack frame */
+        if (exec->stack) {
+            ip_value_assign
+                (&(exec->stack->locals[node->ivalue]), &value);
+            status = IP_EXEC_OK;
+        } else {
+            /* Cannot assign local variables at the global level */
+            status = IP_EXEC_BAD_LOCAL;
+        }
     } else {
         /* Cannot assign to this type of variable */
         status = IP_EXEC_BAD_TYPE;
@@ -2045,6 +2077,42 @@ static int ip_exec_seed_random(ip_exec_t *exec, ip_ast_node_t *node)
     return status;
 }
 
+/**
+ * @brief Evaluates the arguments to a subroutine call.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] stack The new stack frame for passing the arguments.
+ * @param[in] node The node representing the arguments to the "CALL" statement.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_exec_eval_call_arguments
+    (ip_exec_t *exec, ip_exec_stack_item_t *stack, ip_ast_node_t *arg)
+{
+    int status;
+    if (!arg) {
+        status = IP_EXEC_OK;
+    } else if (arg->type == ITOK_SET) {
+        ip_value_t value;
+        ip_value_init(&value);
+        status = ip_exec_eval_expression(exec, arg->children.right, &value);
+        if (status == IP_EXEC_OK) {
+            ip_value_assign
+                (&(stack->locals[arg->children.left->ivalue]), &value);
+        }
+        ip_value_release(&value);
+    } else if (arg->type == ITOK_ARG_LIST) {
+        status = ip_exec_eval_call_arguments(exec, stack, arg->children.left);
+        if (status == IP_EXEC_OK) {
+            status = ip_exec_eval_call_arguments
+                (exec, stack, arg->children.right);
+        }
+    } else {
+        status = IP_EXEC_BAD_STATEMENT;
+    }
+    return status;
+}
+
 int ip_exec_step(ip_exec_t *exec)
 {
     ip_exec_stack_item_t *stack_item;
@@ -2094,7 +2162,7 @@ int ip_exec_step(ip_exec_t *exec)
             stack_item = exec->stack;
             exec->pc = stack_item->return_node;
             exec->stack = stack_item->next;
-            free(stack_item);
+            ip_exec_free_stack_item(stack_item);
         } else {
             return IP_EXEC_BAD_RETURN;
         }
@@ -2232,6 +2300,16 @@ int ip_exec_step(ip_exec_t *exec)
         if (!stack_item) {
             ip_out_of_memory();
         }
+        if (node->children.right) {
+            /* Evaluate the arguments to the call and populate the
+             * local variables within the new stack frame. */
+            status = ip_exec_eval_call_arguments
+                (exec, stack_item, node->children.right);
+            if (status != IP_EXEC_OK) {
+                ip_exec_free_stack_item(stack_item);
+                return status;
+            }
+        }
         stack_item->return_node = exec->pc;
         stack_item->next = exec->stack;
         exec->stack = stack_item;
@@ -2331,6 +2409,7 @@ int ip_exec_run(ip_exec_t *exec)
     case IP_EXEC_BAD_RETURN:    error = "return from subroutine without call"; break;
     case IP_EXEC_BAD_LABEL:     error = "unknown label"; break;
     case IP_EXEC_BAD_INPUT:     error = "invalid input data"; break;
+    case IP_EXEC_BAD_LOCAL:     error = "invalid local variable reference"; break;
     case IP_EXEC_FALSE:         error = "condition is false"; break;
     default:                    error = "program failed"; break;
     }

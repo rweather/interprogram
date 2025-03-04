@@ -493,6 +493,9 @@ aliases for subroutine operations:
     CALL ARCCOS
     REPLACE ANSWER
 
+See <b>Defining new statements</b> below for another method to call
+subroutines without needing the `CALL` keyword.
+
 Classic INTERPROGRAM had a single looping construct called `REPEAT FROM`:
 
     (2) SYMBOLS FOR INTEGERS J
@@ -626,6 +629,53 @@ Copies characters from the input stream until "~~~~~" is seen.
 
 Ignores characters from the input stream until "~~~~~" is seen.
 
+## Subroutine arguments and local variables
+
+Subroutines in the classic syntax can take a single argument in the
+<tt>THIS</tt> variable, but everything else must be passed in
+global variables.
+
+The extension syntax supports up to 9 subroutine arguments with the special
+variable names <tt>@1</tt>, <tt>@2</tt>, ..., <tt>@9</tt>.
+
+The following example defines a function that computes the reciprocal
+of its argument and returns the answer in <tt>THIS</tt>:
+
+    CALL RECIP 3
+
+    *RECIP
+        TAKE 1.0
+        DIVIDE BY @1
+        RETURN
+
+If the subroutine takes more than one argument, separate them with colons:
+
+    CALL MYFUNC X : Y + 2 : Z * 6 + W
+
+Unused arguments are set to "uninitialised" and will give an error
+when read.
+
+Argument variables, even unused ones, can be assigned.  This gives the
+subroutine a method to store local variables.  The original manual
+contained this example for computing the arc-cosine of the value in
+<tt>THIS</tt>:
+
+    *100
+        REPLACE ARGUMENT, MULTIPLY BY THIS, & -1, ADD 1
+        FORM SQUARE ROOT, DIVIDE BY ARGUMENT, FORM ARCTAN
+        END OF PROCESS DEFINITION
+
+This required the use of a temporary global variable called <tt>ARGUMENT</tt>.
+In the extended syntax, we can do this instead:
+
+    *ACOS
+        REPLACE @9, MULTIPLY BY THIS, & -1, ADD 1
+        FORM SQUARE ROOT, DIVIDE BY @9, FORM ARCTAN
+        RETURN
+
+This allows the extended language to more easily support recursion.
+There is however a limit of 9 local variables.
+
 ## Structured programming
 
 Using <tt>IF</tt> and <tt>GO TO</tt> for control flow is difficult in
@@ -690,6 +740,52 @@ from C.  However, it is possible to get the same effect with <tt>GO TO</tt>:
     *CONTINUE
     END REPEAT
     *BREAK
+
+## Defining new statements
+
+The subroutine syntax allows new functionality to be provided under a
+convenient name.  But it is a little annoying to have to use the
+<tt>EXECUTE PROCESS</tt> or <tt>CALL</tt> keywords.
+
+It would be nice if we could add new kinds of statements to the language.
+The extended syntax allows this: first declare that the name is a routine
+with <tt>SYMBOLS FOR ROUTINES</tt>:
+
+    (2) SYMBOLS FOR ROUTINES ARCCOS
+
+Then the name of the subroutine can be used directly as though it was a
+statement:
+
+    TAKE 0.5
+    ARCCOS      # <-----
+    REPLACE ANSWER
+
+    *ARCCOS
+         REPLACE @9, MULTIPLY BY THIS, & -1 , ADD 1
+         FORM SQUARE ROOT, DIVIDE BY @9, FORM ARCTAN
+         RETURN
+
+The <tt>CALL</tt> keyword is added implicitly by the language parser.
+
+But even this isn't perfect.  It would be better to use <tt>FORM ARCCOS</tt>
+to match the built-in <tt>FORM ARCTAN</tt> statement.  This is possible
+using a string when the routine name is declared:
+
+    (2) SYMBOLS FOR ROUTINES 'FORM ARCCOS'
+
+    TAKE 0.5
+    FORM ARCCOS     # <-----
+    REPLACE ANSWER
+
+    *FORM ARCCOS
+         REPLACE @9, MULTIPLY BY THIS, & -1 , ADD 1
+         FORM SQUARE ROOT, DIVIDE BY @9, FORM ARCTAN
+         RETURN
+
+Note that routine names defined in this way must not conflict with
+built-in keywords.
+
+This is how we can add new statements to the language in the program.
 
 ## Random numbers
 

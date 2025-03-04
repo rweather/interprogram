@@ -38,8 +38,8 @@ but designed to read like regular English.
 
 The essence of teaching a beginner to program is teaching them to break the
 problem down into primitive steps, and then tell the computer to do each of
-those steps.  The final language doesn't matter: Fortran, C, Python, Java,
-Rust, etc are all just syntactic details.  The goal is the same.
+those steps.  The final language doesn't matter: Fortran, INTERPROGRAM, C,
+Python, Java, Rust, etc are all just syntactic details.  The goal is the same.
 
 Take a simple computation: "set z to the square root of (x<sup>2</sup> + y)".
 Let's write out the primitive steps of the computation in plain English:
@@ -84,17 +84,22 @@ see if you can read them!
 
 ## What is this project?
 
-There are CSIRAC emulators available on the Internet that can run the
-original INTERPROGRAM environment, but the CSIRAC was very limited.  See
-[this page](doc/CSIRAC-history.md) for the technical specifications
-and history.
+There is a [CSIRAC emulator](https://cis.unimelb.edu.au/about/csirac/emulator)
+available on the Internet that can run the original INTERPROGRAM environment,
+but the CSIRAC was very limited.  See [this page](doc/CSIRAC-history.md) for
+the technical specifications and history.
 
 I was curious what a modern implementation of INTERPROGRAM would look like,
 to explore the language and its possibilities.
 
-What if INTERPROGRAM had continued to be developed by the Australian
-computer community?  What if it had become the standard "BASIC" for Australia?
-What might it have looked like after several decades of improvement?
+I also wanted to speculate on what would the language have evolved into
+had it continued to be developed by the Australian computer community.
+What if it had become the standard "BASIC" for Australia?  What might it
+have looked like after several decades of improvement?
+
+Yes, I extended the language but I have tried to keep the original
+design philosophy as much as possible.  If you want a purer experience,
+then pass the <tt>--classic</tt> option to the interpreter.
 
 ## Manual
 
@@ -156,3 +161,5 @@ MIT License.
 For more information on this project, to report bugs, or to suggest
 improvements, please contact the author Rhys Weatherley via
 [email](mailto:rhys.weatherley@gmail.com).
+
+## <tt>END OF INTERPROGRAM</tt> README

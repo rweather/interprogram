@@ -53,6 +53,10 @@ struct ip_label_s
     /** Non-zero if this label is defined */
     unsigned char is_defined;
 
+    /** Non-zero if this label has been declared as a routine so that it
+     *  can be called without using the "CALL" keyword. */
+    unsigned char is_routine;
+
     /** Points to the node in the program corresponding to the label */
     ip_ast_node_t *node;
 

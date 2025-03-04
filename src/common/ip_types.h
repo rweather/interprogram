@@ -86,6 +86,16 @@ typedef double ip_float_t;
 #define IP_TYPE_ARRAY_OF_STRING 7
 
 /**
+ * @brief Type is a named routine.
+ */
+#define IP_TYPE_ROUTINE         8
+
+/**
+ * @brief Maximum number of local variables in a subroutine.
+ */
+#define IP_MAX_LOCALS           9
+
+/**
  * @brief Report out of memory and exit the program.
  */
 void ip_out_of_memory(void);

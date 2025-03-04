@@ -132,12 +132,13 @@ extern "C" {
 #define ITOK_ROUND_NEAREST      0xA1    /**< ROUND NEAREST */
 #define ITOK_ROUND_UP           0xA2    /**< ROUND UP */
 #define ITOK_ROUND_DOWN         0xA3    /**< ROUND DOWN */
+#define ITOK_SYMBOLS_ROUTINES   0xA4    /**< SYMBOLS FOR ROUTINES */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA
 
 /** Last keyword token */
-#define ITOK_LAST_KEYWORD       ITOK_ROUND_DOWN
+#define ITOK_LAST_KEYWORD       ITOK_SYMBOLS_ROUTINES
 
 /* Meta-tokens for non-keyword elements */
 #define ITOK_VAR_NAME           0xE0    /**< Variable name */
@@ -159,6 +160,9 @@ extern "C" {
 #define ITOK_PUNCH_NO_BLANKS    0xF0    /**< PUNCH without "~~~~~" */
 #define ITOK_COPY_NO_BLANKS     0xF1    /**< COPY TAPE without "~~~~~" */
 #define ITOK_INPUT_DATA         0xF2    /**< Input data embedded in program */
+#define ITOK_ARG_NUMBER         0xF3    /**< Argument number @1 to @9 */
+#define ITOK_ARG_LIST           0xF4    /**< Call argument list */
+#define ITOK_ROUTINE_NAME       0xF5    /**< Name of a routine as a keyword */
 
 /* Token type flags */
 /** Token can start a section of the preliminary statements */
@@ -228,6 +232,19 @@ typedef struct
 } ip_loc_t;
 
 /**
+ * @brief Name of a registered routine.
+ */
+typedef struct ip_routine_name_s ip_routine_name_t;
+struct ip_routine_name_s
+{
+    /** Next routine name in the registration list */
+    ip_routine_name_t *next;
+
+    /** Start of the storage for the name */
+    char name[1];
+};
+
+/**
  * @brief Control structure for tokenising an input stream.
  */
 typedef struct
@@ -295,6 +312,9 @@ typedef struct
 
     /** Space for information about variable names and numeric tokens */
     ip_token_info_t token_space;
+
+    /** Registered routine names */
+    ip_routine_name_t *routines;
 
 } ip_tokeniser_t;
 
@@ -394,6 +414,32 @@ void ip_tokeniser_skip_line(ip_tokeniser_t *tokeniser);
  * @return Non-zero if @a ch was found, or zero otherwise.
  */
 int ip_tokeniser_lookahead(ip_tokeniser_t *tokeniser, int ch);
+
+/**
+ * @brief Registers the name of a routine with a tokeniser for
+ * use as a pseudo-keyword.
+ *
+ * @param[in,out] tokeniser The tokeniser.
+ * @param[in] name Name of the routine to register in upper case.
+ *
+ * The @a name will be ignored if it is not multi-word.  Single-word
+ * routine names are reported as ITOK_VAR_NAME by the tokeniser.
+ */
+void ip_tokeniser_register_routine_name
+    (ip_tokeniser_t *tokeniser, const char *name);
+
+/**
+ * @brief Determine if a name is a registered routine name.
+ *
+ * @param[in] tokeniser The tokeniser.
+ * @param[in] name Points to the name to look for.
+ * @param[in] len Length of the name to look for.
+ *
+ * @return The normalised uppercase version of the routine name,
+ * or NULL if @a name is not the name of a registered routine.
+ */
+const char *ip_tokeniser_is_routine_name
+    (const ip_tokeniser_t *tokeniser, const char *name, size_t len);
 
 #ifdef __cplusplus
 }

@@ -18,6 +18,7 @@ syn match   ipBoundary          "\<EXIT INTERPROGRAM\>"
 
 syn match   ipType              "\<SYMBOLS FOR INTEGERS\>"
 syn match   ipType              "\<SYMBOLS FOR STRINGS\>"
+syn match   ipType              "\<SYMBOLS FOR ROUTINES\>"
 syn match   ipType              "\<MAXIMUM SUBSCRIPTS\>"
 syn match   ipType              "\<NONE\>"
 
@@ -112,6 +113,7 @@ syn match   ipConstant          /[0-9][0-9]*/
 syn match   ipConstant          /[0-9][0-9]*[eE][0-9][0-9]*/
 syn match   ipConstant          /[0-9][0-9]*[eE][-+][0-9][0-9]*/
 syn region  ipConstant          start=/PUNCH THE FOLLOWING CHARACTERS/ end=/\~\~\~\~\~*/
+syn match   ipConstant          /@[1-9]/
 
 syn match   ipString            /'[^']*'/
 syn match   ipString            /"[^"]*"/

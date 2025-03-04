@@ -334,6 +334,17 @@ ip_ast_node_t *ip_ast_make_text
     return node;
 }
 
+ip_ast_node_t *ip_ast_make_argument
+    (unsigned char type, ip_int_t num, ip_ast_node_t *expr,
+     const ip_loc_t *loc)
+{
+    ip_ast_node_t *node = ip_ast_make_standalone(type, loc);
+    node->has_children = 1;
+    node->children.left = ip_ast_make_int_constant(num, loc);
+    node->children.right = expr;
+    return node;
+}
+
 void ip_ast_list_init(ip_ast_list_t *list)
 {
     list->first = 0;

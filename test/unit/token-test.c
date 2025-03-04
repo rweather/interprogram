@@ -174,6 +174,7 @@ static int check_identifiers(void)
     KEYWORD("ROUND NEAREST",                        ITOK_ROUND_NEAREST);
     KEYWORD("ROUND UP",                             ITOK_ROUND_UP);
     KEYWORD("ROUND DOWN",                           ITOK_ROUND_DOWN);
+    KEYWORD("SYMBOLS FOR ROUTINES",                 ITOK_SYMBOLS_ROUTINES);
 
     /* Check that we have tested all of the keywords */
     for (index = ITOK_FIRST_KEYWORD; index <= ITOK_LAST_KEYWORD; ++index) {

@@ -126,6 +126,7 @@ static ip_token_info_t const tokens[] = {
     {"ROUND NEAREST",                       ITOK_ROUND_NEAREST,     ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"ROUND UP",                            ITOK_ROUND_UP,          ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"ROUND DOWN",                          ITOK_ROUND_DOWN,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"SYMBOLS FOR ROUTINES",                ITOK_SYMBOLS_ROUTINES,  ITOK_TYPE_PRELIM_2 | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
 
@@ -243,6 +244,13 @@ void ip_tokeniser_init(ip_tokeniser_t *tokeniser)
 
 void ip_tokeniser_free(ip_tokeniser_t *tokeniser)
 {
+    ip_routine_name_t *current, *next;
+    current = tokeniser->routines;
+    while (current != 0) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
     if (tokeniser->buffer) {
         free(tokeniser->buffer);
     }
@@ -437,11 +445,13 @@ static void ip_tokeniser_get_number(ip_tokeniser_t *tokeniser, unsigned context)
 static void ip_tokeniser_get_identifier
     (ip_tokeniser_t *tokeniser, unsigned context)
 {
-    const ip_token_info_t *found = 0;
+    const char *found_routine = 0;
+    const ip_token_info_t *found_info = 0;
     const ip_token_info_t *info;
     size_t posn = tokeniser->buffer_posn - 1;
     size_t end_var = posn;
     size_t end_keyword = posn;
+    size_t found_len = 0;
     int ch;
     for (;;) {
         /* Skip forward to the next non-alphabetic character */
@@ -464,8 +474,21 @@ static void ip_tokeniser_get_identifier
         if (info) {
             /* Full keyword found.  Keep looking because we may find a
              * longer keyword later in the token table. */
-            if (!found || strlen(info->name) > strlen(found->name)) {
-                found = info;
+            if (strlen(info->name) > found_len) {
+                found_info = info;
+                found_len = strlen(info->name);
+                found_routine = 0;
+                end_keyword = tokeniser->buffer_posn;
+            }
+        } else {
+            /* Try looking for a registered routine with the name */
+            const char *routine = ip_tokeniser_is_routine_name
+                (tokeniser, tokeniser->buffer + posn,
+                 tokeniser->buffer_posn - posn);
+            if (routine && strlen(routine) > found_len) {
+                found_info = 0;
+                found_len = strlen(routine);
+                found_routine = routine;
                 end_keyword = tokeniser->buffer_posn;
             }
         }
@@ -495,9 +518,18 @@ static void ip_tokeniser_get_identifier
     }
 
     /* Did we find a suitable keyword? */
-    if (found) {
+    if (found_info) {
+        /* Built-in keyword */
         tokeniser->buffer_posn = end_keyword;
-        ip_tokeniser_set_token_info(tokeniser, found);
+        ip_tokeniser_set_token_info(tokeniser, found_info);
+        return;
+    } else if (found_routine) {
+        /* User-defined multi-word routine name */
+        tokeniser->buffer_posn = end_keyword;
+        tokeniser->name_len = 0;
+        ip_tokeniser_add_name_chars
+            (tokeniser, found_routine, strlen(found_routine));
+        ip_tokeniser_set_token(tokeniser, ITOK_ROUTINE_NAME);
         return;
     }
 
@@ -818,6 +850,23 @@ int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
         }
         break;
 
+    case '@':
+        /* Subroutine argument number in the extension syntax: "@n" */
+        if (tokeniser->buffer_posn < tokeniser->buffer_len) {
+            ch = tokeniser->buffer[tokeniser->buffer_posn];
+        } else {
+            ch = '\0';
+        }
+        if ((context & ITOK_TYPE_EXTENSION) != 0 && ch >= '1' && ch <= '9') {
+            ip_tokeniser_add_name(tokeniser, ch);
+            tokeniser->ivalue = ch - '1';
+            ++(tokeniser->buffer_posn);
+            ip_tokeniser_set_token(tokeniser, ITOK_ARG_NUMBER);
+        } else {
+            ip_tokeniser_set_token(tokeniser, ITOK_ERROR);
+        }
+        break;
+
     default:
         /* Unknown character, so report it as an error */
         ip_tokeniser_set_token(tokeniser, ITOK_ERROR);
@@ -1035,6 +1084,42 @@ int ip_tokeniser_lookahead(ip_tokeniser_t *tokeniser, int ch)
         if (!ip_tokeniser_is_space(lookahead)) {
             break;
         }
+    }
+    return 0;
+}
+
+void ip_tokeniser_register_routine_name
+    (ip_tokeniser_t *tokeniser, const char *name)
+{
+    ip_routine_name_t *routine;
+    size_t len;
+
+    /* Single-word routine names do not need to be registered */
+    if (strchr(name, ' ') == 0) {
+        return;
+    }
+
+    /* Register the routine */
+    len = strlen(name);
+    routine = calloc(1, sizeof(ip_routine_name_t) + len);
+    if (!routine) {
+        ip_out_of_memory();
+    }
+    routine->next = tokeniser->routines;
+    memcpy(routine->name, name, len);
+    routine->name[len] = '\0';
+    tokeniser->routines = routine;
+}
+
+const char *ip_tokeniser_is_routine_name
+    (const ip_tokeniser_t *tokeniser, const char *name, size_t len)
+{
+    const ip_routine_name_t *routine = tokeniser->routines;
+    while (routine != 0) {
+        if (ip_tokeniser_match_keyword(name, len, routine->name)) {
+            return routine->name;
+        }
+        routine = routine->next;
     }
     return 0;
 }

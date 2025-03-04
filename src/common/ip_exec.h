@@ -42,7 +42,8 @@ extern "C" {
 #define IP_EXEC_BAD_RETURN      7   /**< Attempt to return from top-level */
 #define IP_EXEC_BAD_LABEL       8   /**< Could not find "GO TO" label */
 #define IP_EXEC_BAD_INPUT       9   /**< Invalid input data */
-#define IP_EXEC_FALSE           10  /**< Condition is false */
+#define IP_EXEC_BAD_LOCAL       10  /**< Reference to local at global scope */
+#define IP_EXEC_FALSE           11  /**< Condition is false */
 
 /**
  * @brief Item on the execution stack for subroutine calls.
@@ -52,6 +53,9 @@ struct ip_exec_stack_item_s
 {
     /** Node for control to return back to at the end of a subroutine */
     ip_ast_node_t *return_node;
+
+    /** Local variables for this subroutine */
+    ip_value_t locals[IP_MAX_LOCALS];
 
     /** Next lower item on the stack */
     ip_exec_stack_item_t *next;
