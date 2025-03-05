@@ -24,6 +24,7 @@
 #define INTERPROGRAM_LABELS_H
 
 #include "ip_ast.h"
+#include "ip_symbols.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,30 +42,11 @@ extern "C" {
  */
 struct ip_label_s
 {
-    /** Name of the label if it is alphabetic, or NULL if numeric */
-    char *name;
-
-    /** Number for the label if it is numeric, or -1 if alphabetic */
-    ip_int_t num;
-
-    /** Non-zero if this node is "red" in the label lookup red-black tree */
-    unsigned char red;
-
-    /** Non-zero if this label is defined */
-    unsigned char is_defined;
-
-    /** Non-zero if this label has been declared as a routine so that it
-     *  can be called without using the "CALL" keyword. */
-    unsigned char is_routine;
+    /** Base class information */
+    ip_symbol_t base;
 
     /** Points to the node in the program corresponding to the label */
     ip_ast_node_t *node;
-
-    /** Left sub-tree in the label lookup red-black tree */
-    ip_label_t *left;
-
-    /** Right sub-tree in the label lookup red-black tree */
-    ip_label_t *right;
 };
 
 /**
@@ -72,11 +54,7 @@ struct ip_label_s
  */
 typedef struct
 {
-    /** Root of the red-black tree */
-    ip_label_t root;
-
-    /** Sentinel node that represents a leaf */
-    ip_label_t nil;
+    ip_symbol_table_t symbols;  /**< Embedded symbol table */
 
 } ip_label_table_t;
 
@@ -141,6 +119,60 @@ ip_label_t *ip_label_create_by_name
  */
 ip_label_t *ip_label_create_by_number
     (ip_label_table_t *labels, ip_int_t num);
+
+/**
+ * @brief Gets the name of a label.
+ *
+ * @param[in] label The label.
+ *
+ * @return A pointer to the name of the label or NULL if the label is numeric.
+ */
+#define ip_label_get_name(labell) ((label)->base.name)
+
+/**
+ * @brief Gets the number of a label.
+ *
+ * @param[in] label The label.
+ *
+ * @return The number of the label or -1 if the label is alphabetic.
+ */
+#define ip_label_get_number(labell) ((label)->base.num)
+
+/**
+ * @brief Determine if a label is defined.
+ *
+ * @param[in] label The label.
+ *
+ * @return Non-zero if the label is defined, zero if not.
+ */
+#define ip_label_is_defined(label) \
+    (((label)->base.flags & IP_SYMBOL_DEFINED) != 0)
+
+/**
+ * @brief Marks a label as defined.
+ *
+ * @param[in] label The label.
+ */
+#define ip_label_mark_as_defined(label) \
+    ((label)->base.flags |= IP_SYMBOL_DEFINED)
+
+/**
+ * @brief Callback function for ip_label_table_visit().
+ *
+ * @param[in] label The label that is being visited.
+ * @param[in] user_data Context for the visit operation.
+ */
+typedef void (*ip_label_visitor_t)(ip_label_t *label, void *user_data);
+
+/**
+ * @brief Visits all labels in a table in order.
+ *
+ * @param[in] labels The label table.
+ * @param[in] visitor The function to call for each label.
+ * @param[in] user_data Context for the visit operation.
+ */
+void ip_label_table_visit
+    (ip_label_table_t *labels, ip_label_visitor_t visitor, void *user_data);
 
 #ifdef __cplusplus
 }

@@ -24,217 +24,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Reference for red-black trees: Algorithms in C++, Robert Sedgwick, 1992 */
-
 void ip_label_table_init(ip_label_table_t *labels)
 {
-    memset(labels, 0, sizeof(ip_label_table_t));
-    labels->nil.left = &(labels->nil);
-    labels->nil.right = &(labels->nil);
-    labels->nil.num = -1;
-    labels->root.right = &(labels->nil);
-}
-
-static void ip_label_free(ip_label_table_t *labels, ip_label_t *label)
-{
-    if (label && label != &(labels->nil)) {
-        if (label->name) {
-            free(label->name);
-        }
-        ip_label_free(labels, label->left);
-        ip_label_free(labels, label->right);
-        free(label);
-    }
+    ip_symbol_table_init(&(labels->symbols));
 }
 
 void ip_label_table_free(ip_label_table_t *labels)
 {
-    ip_label_free(labels, labels->root.right);
-    memset(labels, 0, sizeof(ip_label_table_t));
-}
-
-/* Numbers always sort less than names */
-
-static int ip_label_compare_name(const char *name, const ip_label_t *label)
-{
-    if (!(label->name)) {
-        return 1;
-    } else {
-        return strcmp(name, label->name);
-    }
-}
-
-static int ip_label_compare_number(ip_int_t num, const ip_label_t *label)
-{
-    if (label->name) {
-        return -1;
-    } else if (num < label->num) {
-        return -1;
-    } else if (num > label->num) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-static int ip_label_compare(const ip_label_t *label1, const ip_label_t *label2)
-{
-    if (label1->name && label2->name) {
-        return strcmp(label1->name, label2->name);
-    } else if (label1->name) {
-        return 1;
-    } else if (label2->name) {
-        return -1;
-    } else if (label1->num < label2->num) {
-        return -1;
-    } else if (label1->num > label2->num) {
-        return 1;
-    } else {
-        return 0;
-    }
+    ip_symbol_table_free(&(labels->symbols));
 }
 
 ip_label_t *ip_label_lookup_by_name
     (const ip_label_table_t *labels, const char *name)
 {
-    ip_label_t *label = labels->root.right;
-    int cmp;
-    while (label != &(labels->nil)) {
-        cmp = ip_label_compare_name(name, label);
-        if (cmp == 0) {
-            return label;
-        } else if (cmp < 0) {
-            label = label->left;
-        } else {
-            label = label->right;
-        }
-    }
-    return 0;
+    return (ip_label_t *)ip_symbol_lookup_by_name(&(labels->symbols), name);
 }
 
 ip_label_t *ip_label_lookup_by_number
     (const ip_label_table_t *labels, ip_int_t num)
 {
-    ip_label_t *label = labels->root.right;
-    int cmp;
-    while (label != &(labels->nil)) {
-        cmp = ip_label_compare_number(num, label);
-        if (cmp == 0) {
-            return label;
-        } else if (cmp < 0) {
-            label = label->left;
-        } else {
-            label = label->right;
-        }
-    }
-    return 0;
-}
-
-/**
- * @brief Rotates the nodes in a red-black tree to rebalance it.
- *
- * @param[in] node The node that is being inserted into the tree.
- * @param[in] y The node to rotate around.
- */
-static ip_label_t *ip_label_rotate(ip_label_t *node, ip_label_t *y)
-{
-    ip_label_t *c;
-    ip_label_t *gc;
-    int cmp, cmp2;
-    cmp = ip_label_compare(node, y);
-    if (cmp < 0) {
-        c = y->left;
-    } else {
-        c = y->right;
-    }
-    cmp2 = ip_label_compare(node, c);
-    if (cmp2 < 0) {
-        gc = c->left;
-        c->left = gc->right;
-        gc->right = c;
-    } else {
-        gc = c->right;
-        c->right = gc->left;
-        gc->left = c;
-    }
-    if (cmp < 0) {
-        y->left = gc;
-    } else {
-        y->right = gc;
-    }
-    return gc;
-}
-
-/**
- * @brief Insert a node into a red-black tree.
- *
- * @param[in,out] labels The red-black tree to insert into.
- * @param[in] node The node to insert.  The name must not already be
- * present in the tree.
- */
-static void ip_label_insert(ip_label_table_t *labels, ip_label_t *node)
-{
-    ip_label_t *x = &(labels->root);
-    ip_label_t *p = x;
-    ip_label_t *g = x;
-    ip_label_t *gg = &(labels->nil);
-    int cmp, cmp2;
-
-    /* Prepare the node for insertion */
-    node->red = 1;
-    node->left = &(labels->nil);
-    node->right = &(labels->nil);
-
-    /* Find the place to insert the node, rearranging the tree as needed */
-    while (x != &(labels->nil)) {
-        gg = g;
-        g = p;
-        p = x;
-        cmp = ip_label_compare(node, x);
-        if (cmp < 0) {
-            x = x->left;
-        } else {
-            x = x->right;
-        }
-        if (x->left->red && x->right->red) {
-            x->red = 1;
-            x->left->red = 0;
-            x->right->red = 0;
-            if (p->red) {
-                g->red = 1;
-                cmp  = ip_label_compare(node, g);
-                cmp2 = ip_label_compare(node, p);
-                if (cmp != cmp2) {
-                    p = ip_label_rotate(node, g);
-                }
-                x = ip_label_rotate(node, gg);
-                x->red = 0;
-            }
-        }
-    }
-
-    /* Insert the node into the tree */
-    x = node;
-    cmp = ip_label_compare(x, p);
-    if (cmp < 0) {
-        p->left = x;
-    } else {
-        p->right = x;
-    }
-    x->red = 1;
-    x->left->red = 0;
-    x->right->red = 0;
-    if (p->red) {
-        g->red = 1;
-        cmp  = ip_label_compare(node, g);
-        cmp2 = ip_label_compare(node, p);
-        if (cmp != cmp2) {
-            p = ip_label_rotate(node, g);
-        }
-        x = ip_label_rotate(node, gg);
-        x->red = 0;
-    }
-    labels->root.right->red = 0;
+    return (ip_label_t *)ip_symbol_lookup_by_number(&(labels->symbols), num);
 }
 
 ip_label_t *ip_label_create_by_name(ip_label_table_t *labels, const char *name)
@@ -250,16 +59,17 @@ ip_label_t *ip_label_create_by_name(ip_label_table_t *labels, const char *name)
     /* Construct a new label node and give it a name */
     label = calloc(1, sizeof(ip_label_t));
     if (label) {
-        label->name = strdup(name);
-        label->num = -1;
-    }
-    if (!label || !(label->name)) {
-        ip_label_free(labels, label);
+        label->base.name = strdup(name);
+        if (!(label->base.name)) {
+            ip_out_of_memory();
+        }
+        label->base.num = -1;
+    } else {
         ip_out_of_memory();
     }
 
     /* Insert the new label into the red-black tree */
-    ip_label_insert(labels, label);
+    ip_symbol_insert(&(labels->symbols), &(label->base));
     return label;
 }
 
@@ -276,13 +86,33 @@ ip_label_t *ip_label_create_by_number(ip_label_table_t *labels, ip_int_t num)
     /* Construct a new label node and give it a number */
     label = calloc(1, sizeof(ip_label_t));
     if (label) {
-        label->name = 0;
-        label->num = num;
+        label->base.name = 0;
+        label->base.num = num;
     } else {
         ip_out_of_memory();
     }
 
     /* Insert the new label into the red-black tree */
-    ip_label_insert(labels, label);
+    ip_symbol_insert(&(labels->symbols), &(label->base));
     return label;
+}
+
+static void ip_label_walk_and_visit
+    (ip_label_table_t *labels, ip_label_t *label,
+     ip_label_visitor_t visitor, void *user_data)
+{
+    if (&(label->base) != &(labels->symbols.nil)) {
+        ip_label_walk_and_visit
+            (labels, (ip_label_t *)(label->base.left), visitor, user_data);
+        (*visitor)(label, user_data);
+        ip_label_walk_and_visit
+            (labels, (ip_label_t *)(label->base.right), visitor, user_data);
+    }
+}
+
+void ip_label_table_visit
+    (ip_label_table_t *table, ip_label_visitor_t visitor, void *user_data)
+{
+    ip_label_walk_and_visit
+        (table, (ip_label_t *)(table->symbols.root.right), visitor, user_data);
 }

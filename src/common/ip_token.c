@@ -240,17 +240,12 @@ void ip_tokeniser_init(ip_tokeniser_t *tokeniser)
     tokeniser->unget_char = -1;
     tokeniser->integer_precision = sizeof(ip_uint_t) * 8;
     ip_tokeniser_set_token(tokeniser, ITOK_ERROR);
+    ip_symbol_table_init(&(tokeniser->routines));
 }
 
 void ip_tokeniser_free(ip_tokeniser_t *tokeniser)
 {
-    ip_routine_name_t *current, *next;
-    current = tokeniser->routines;
-    while (current != 0) {
-        next = current->next;
-        free(current);
-        current = next;
-    }
+    ip_symbol_table_free(&(tokeniser->routines));
     if (tokeniser->buffer) {
         free(tokeniser->buffer);
     }
@@ -1091,8 +1086,7 @@ int ip_tokeniser_lookahead(ip_tokeniser_t *tokeniser, int ch)
 void ip_tokeniser_register_routine_name
     (ip_tokeniser_t *tokeniser, const char *name)
 {
-    ip_routine_name_t *routine;
-    size_t len;
+    ip_symbol_t *routine;
 
     /* Single-word routine names do not need to be registered */
     if (strchr(name, ' ') == 0) {
@@ -1100,26 +1094,40 @@ void ip_tokeniser_register_routine_name
     }
 
     /* Register the routine */
-    len = strlen(name);
-    routine = calloc(1, sizeof(ip_routine_name_t) + len);
+    routine = calloc(1, sizeof(ip_symbol_t));
     if (!routine) {
         ip_out_of_memory();
     }
-    routine->next = tokeniser->routines;
-    memcpy(routine->name, name, len);
-    routine->name[len] = '\0';
-    tokeniser->routines = routine;
+    routine->name = strdup(name);
+    if (!(routine->name)) {
+        ip_out_of_memory();
+    }
+    ip_symbol_insert(&(tokeniser->routines), routine);
+}
+
+static const char *ip_tokeniser_find_routine_name
+    (const ip_tokeniser_t *tokeniser, const char *name, size_t len,
+     ip_symbol_t *routine)
+{
+    const char *result;
+    if (routine && routine != &(tokeniser->routines.nil)) {
+        if (ip_tokeniser_match_keyword(name, len, routine->name)) {
+            return routine->name;
+        }
+        result = ip_tokeniser_find_routine_name
+            (tokeniser, name, len, routine->left);
+        if (result) {
+            return result;
+        }
+        return ip_tokeniser_find_routine_name
+            (tokeniser, name, len, routine->right);
+    }
+    return 0;
 }
 
 const char *ip_tokeniser_is_routine_name
     (const ip_tokeniser_t *tokeniser, const char *name, size_t len)
 {
-    const ip_routine_name_t *routine = tokeniser->routines;
-    while (routine != 0) {
-        if (ip_tokeniser_match_keyword(name, len, routine->name)) {
-            return routine->name;
-        }
-        routine = routine->next;
-    }
-    return 0;
+    return ip_tokeniser_find_routine_name
+        (tokeniser, name, len, tokeniser->routines.root.right);
 }

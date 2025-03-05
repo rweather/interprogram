@@ -241,7 +241,8 @@ ip_ast_node_t *ip_ast_make_this_unary
 ip_ast_node_t *ip_ast_make_variable(ip_var_t *var, const ip_loc_t *loc)
 {
     if (var) {
-        ip_ast_node_t *node = ip_ast_make_node(ITOK_VAR_NAME, var->type, loc);
+        ip_ast_node_t *node;
+        node = ip_ast_make_node(ITOK_VAR_NAME, ip_var_get_type(var), loc);
         node->var = var;
         return node;
     } else {
@@ -254,20 +255,22 @@ ip_ast_node_t *ip_ast_make_array_access
 {
     ip_ast_node_t *var_node = ip_ast_make_variable(var, loc);
     ip_ast_node_t *node;
+    unsigned char type;
     if (!var_node || !index) {
         ip_ast_node_free(var_node);
         ip_ast_node_free(index);
         return 0;
     }
     index = ip_ast_make_cast(IP_TYPE_INT, index);
-    if (var->type == IP_TYPE_ARRAY_OF_INT) {
+    type = ip_var_get_type(var);
+    if (type == IP_TYPE_ARRAY_OF_INT) {
         /* Index into an array of integers */
         node = ip_ast_make_node(ITOK_INDEX_INT, IP_TYPE_INT, loc);
         node->has_children = 1;
         node->children.left = var_node;
         node->children.right = index;
-    } else if (var->type == IP_TYPE_ARRAY_OF_STRING ||
-               var->type == IP_TYPE_STRING) {
+    } else if (type == IP_TYPE_ARRAY_OF_STRING ||
+               type == IP_TYPE_STRING) {
         /* Index into an array of strings or into a single string */
         node = ip_ast_make_node(ITOK_INDEX_STRING, IP_TYPE_STRING, loc);
         node->has_children = 1;

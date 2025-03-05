@@ -23,7 +23,7 @@
 #ifndef INTERPROGRAM_VARS_H
 #define INTERPROGRAM_VARS_H
 
-#include "ip_types.h"
+#include "ip_symbols.h"
 #include "ip_string.h"
 
 #ifdef __cplusplus
@@ -31,27 +31,12 @@ extern "C" {
 #endif
 
 /**
- * @brief Information about a variable that is stored in the global
- * symbol lookup red-black tree.
+ * @brief Information about a variable that is stored in the variable table.
  */
-typedef struct ip_var_s ip_var_t;
-struct ip_var_s
+typedef struct
 {
-    /** Name of the variable */
-    char *name;
-
-    /** Type of the variable */
-    unsigned char type;
-
-    /** Non-zero once the variable has been assigned for the first time,
-     *  which is used to detect when an uninitialised variable is accessed. */
-    unsigned char initialised;
-
-    /** Non-zero if this node is "red" in the name lookup red-black tree */
-    unsigned char red;
-
-    /** Non-zero if the variable is not reset by ip_var_table_reset() */
-    unsigned char not_resettable;
+    /** Base class information */
+    ip_symbol_t base;
 
     /** Minimum array subscript if the type is an array */
     ip_int_t min_subscript;
@@ -79,23 +64,14 @@ struct ip_var_s
         ip_string_t **sarray;
     };
 
-    /** Left sub-tree in the name lookup red-black tree */
-    ip_var_t *left;
-
-    /** Right sub-tree in the name lookup red-black tree */
-    ip_var_t *right;
-};
+} ip_var_t;
 
 /**
  * @brief Table of all variables in the program.
  */
 typedef struct
 {
-    /** Root of the red-black tree */
-    ip_var_t root;
-
-    /** Sentinel node that represents a leaf */
-    ip_var_t nil;
+    ip_symbol_table_t symbols;  /**< Embedded symbol table */
 
 } ip_var_table_t;
 
@@ -168,6 +144,50 @@ void ip_var_dimension_array
  * @return Non-zero if @a var is an array, zero if not.
  */
 int ip_var_is_array(const ip_var_t *var);
+
+/**
+ * @brief Gets the name of a variable.
+ *
+ * @param[in] var The variable.
+ *
+ * @return The variable's name.
+ */
+#define ip_var_get_name(var) ((var)->base.name)
+
+/**
+ * @brief Gets the type of a variable.
+ *
+ * @param[in] var The variable.
+ *
+ * @return The variable's type.
+ */
+#define ip_var_get_type(var) ((var)->base.type)
+
+/**
+ * @brief Determine if a variable has been initialised.
+ *
+ * @param[in] var The variable.
+ *
+ * @return Non-zero if the variable is initialised, zero if not.
+ */
+#define ip_var_is_initialised(var) \
+    (((var)->base.flags & IP_SYMBOL_DEFINED) != 0)
+
+/**
+ * @brief Marks a variable as initialised.
+ *
+ * @param[in] var The variable.
+ */
+#define ip_var_mark_as_initialised(var) \
+    ((var)->base.flags |= IP_SYMBOL_DEFINED)
+
+/**
+ * @brief Marks a variable as uninitialised.
+ *
+ * @param[in] var The variable.
+ */
+#define ip_var_mark_as_uninitialised(var) \
+    ((var)->base.flags &= ~IP_SYMBOL_DEFINED)
 
 #ifdef __cplusplus
 }

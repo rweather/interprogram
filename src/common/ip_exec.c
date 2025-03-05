@@ -1631,7 +1631,7 @@ static int ip_exec_jump_to_label(ip_exec_t *exec, ip_ast_node_t *node)
 static int ip_exec_repeat_from(ip_exec_t *exec, ip_ast_node_t *node)
 {
     ip_var_t *var = node->children.right->var;
-    if (var->type != IP_TYPE_INT) {
+    if (ip_var_get_type(var) != IP_TYPE_INT) {
         /* Loop variable must be an integer */
         return IP_EXEC_BAD_TYPE;
     }

@@ -151,14 +151,15 @@ static ip_ast_node_t *ip_parse_variable_expression
     ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
 
     /* Create the variable node */
-    switch (var->type) {
+    switch (ip_var_get_type(var)) {
     case IP_TYPE_INT:
     case IP_TYPE_FLOAT:
         node = ip_ast_make_variable(var, &(parser->tokeniser.loc));
         if ((allowed & IP_VAR_ALLOW_ARRAYS) != 0 &&
                 parser->tokeniser.token == ITOK_LPAREN) {
             /* We cannot use an index with this variable, but parse it anyway */
-            ip_error(parser, "variable '%s' is not an array", var->name);
+            ip_error(parser, "variable '%s' is not an array",
+                     ip_var_get_name(var));
             ip_ast_node_free(ip_parse_expression(parser));
         }
         break;
@@ -204,14 +205,15 @@ static ip_ast_node_t *ip_parse_variable_expression
         } else if ((allowed & IP_VAR_ALLOW_ARRAYS) == 0) {
             ip_error_near
                 (parser, "array variable '%s' is not permitted here",
-                 var->name);
+                 ip_var_get_name(var));
         } else {
-            ip_error_near(parser, "array index expected", var->name);
+            ip_error_near(parser, "array index expected", ip_var_get_name(var));
         }
         break;
 
     default:
-        ip_error(parser, "variable '%s' is not permitted here", var->name);
+        ip_error(parser, "variable '%s' is not permitted here",
+                 ip_var_get_name(var));
         break;
     }
     return node;
@@ -1301,7 +1303,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
          * "SYMBOLS FOR ROUTINES".  We can skip the "CALL" if it is. */
         label = ip_label_lookup_by_name
             (&(parser->program->labels), parser->tokeniser.name);
-        if (label && label->is_routine) {
+        if (label && label->base.type == IP_TYPE_ROUTINE) {
             node = ip_parse_label_name(parser);
             node = ip_ast_make_unary_statement
                 (ITOK_CALL, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
@@ -1535,18 +1537,18 @@ static void ip_parse_statement_label(ip_parser_t *parser)
         }
         label = ip_label_lookup_by_number(&(parser->program->labels), num);
         if (label) {
-            if (label->is_defined) {
+            if (ip_label_is_defined(label)) {
                 ip_error(parser, "label %u is already defined", (unsigned)num);
                 ip_error_at(parser, &(label->node->loc),
                             "previous definition here");
                 label = 0;
             } else {
                 /* Forward reference to this label that is now defined */
-                label->is_defined = 1;
+                ip_label_mark_as_defined(label);
             }
         } else {
             label = ip_label_create_by_number(&(parser->program->labels), num);
-            label->is_defined = 1;
+            ip_label_mark_as_defined(label);
         }
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
     } else if ((parser->tokeniser.token == ITOK_VAR_NAME ||
@@ -1556,18 +1558,18 @@ static void ip_parse_statement_label(ip_parser_t *parser)
         name = parser->tokeniser.token_info->name;
         label = ip_label_lookup_by_name(&(parser->program->labels), name);
         if (label) {
-            if (label->is_defined) {
+            if (ip_label_is_defined(label)) {
                 ip_error(parser, "label '%s' is already defined", name);
                 ip_error_at(parser, &(label->node->loc),
                             "previous definition here");
                 label = 0;
             } else {
                 /* Forward reference to this label that is now defined */
-                label->is_defined = 1;
+                ip_label_mark_as_defined(label);
             }
         } else {
             label = ip_label_create_by_name(&(parser->program->labels), name);
-            label->is_defined = 1;
+            ip_label_mark_as_defined(label);
         }
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
     } else if (parser->tokeniser.token == ITOK_STR_VALUE &&
@@ -1577,19 +1579,19 @@ static void ip_parse_statement_label(ip_parser_t *parser)
             name = parser->tokeniser.token_info->name;
             label = ip_label_lookup_by_name(&(parser->program->labels), name);
             if (label) {
-                if (label->is_defined) {
+                if (ip_label_is_defined(label)) {
                     ip_error(parser, "label '%s' is already defined", name);
                     ip_error_at(parser, &(label->node->loc),
                                 "previous definition here");
                     label = 0;
                 } else {
                     /* Forward reference to this label that is now defined */
-                    label->is_defined = 1;
+                    ip_label_mark_as_defined(label);
                 }
             } else {
                 label = ip_label_create_by_name
                     (&(parser->program->labels), name);
-                label->is_defined = 1;
+                ip_label_mark_as_defined(label);
             }
         } else {
             ip_error(parser, "invalid label string");
@@ -1737,7 +1739,7 @@ static void ip_parse_symbols(ip_parser_t *parser)
                     label = ip_label_create_by_name
                         (&(parser->program->labels), name);
                 }
-                label->is_routine = 1;
+                label->base.type = IP_TYPE_ROUTINE;
                 ip_tokeniser_register_routine_name(&(parser->tokeniser), name);
             }
             ip_parse_get_next(parser, ITOK_TYPE_PRELIM_2);
@@ -2003,25 +2005,24 @@ void ip_parse_preliminary_statements(ip_parser_t *parser)
     }
 }
 
-static void ip_parse_check_labels(ip_parser_t *parser, ip_label_t *label)
+static void ip_parse_check_label(ip_label_t *label, void *user_data)
 {
-    /* Walk the tree in alphanumeric order and print the undefined labels */
-    if (label != &(parser->program->labels.nil)) {
-        ip_parse_check_labels(parser, label->left);
-        if (!(label->is_defined)) {
-            if (label->name) {
-                ip_error(parser, "undefined label '%s'", label->name);
-            } else {
-                ip_error(parser, "undefined label %u", (unsigned)(label->num));
-            }
+    ip_parser_t *parser = (ip_parser_t *)user_data;
+    if (!ip_label_is_defined(label)) {
+        if (ip_label_get_name(label)) {
+            ip_error(parser, "undefined label '%s'",
+                     ip_label_get_name(label));
+        } else {
+            ip_error(parser, "undefined label %u",
+                     (unsigned)(ip_label_get_number(label)));
         }
-        ip_parse_check_labels(parser, label->right);
     }
 }
 
 void ip_parse_check_undefined_labels(ip_parser_t *parser)
 {
-    ip_parse_check_labels(parser, parser->program->labels.root.right);
+    ip_label_table_visit
+        (&(parser->program->labels), ip_parse_check_label, parser);
 }
 
 void ip_parse_check_open_blocks(ip_parser_t *parser)
@@ -2059,7 +2060,7 @@ unsigned long ip_parse_program_file
         ip_var_t *var = ip_var_create
             (&((*program)->vars), "ARGV", IP_TYPE_STRING);
         ip_var_dimension_array(var, 0, argc - 1);
-        var->not_resettable = 1;
+        var->base.flags |= IP_SYMBOL_NO_RESET;
         for (index = 0; index < argc; ++index) {
             ip_string_t *str = ip_string_create(argv[index]);
             ip_value_t value;

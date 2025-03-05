@@ -23,7 +23,7 @@
 #ifndef INTERPROGRAM_TOKEN_H
 #define INTERPROGRAM_TOKEN_H
 
-#include "ip_types.h"
+#include "ip_symbols.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -314,7 +314,7 @@ typedef struct
     ip_token_info_t token_space;
 
     /** Registered routine names */
-    ip_routine_name_t *routines;
+    ip_symbol_table_t routines;
 
 } ip_tokeniser_t;
 

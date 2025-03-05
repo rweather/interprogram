@@ -136,7 +136,7 @@ int ip_value_from_var(ip_value_t *dest, const ip_var_t *src)
 {
     ip_value_release(dest);
 
-    switch (src->type) {
+    switch (ip_var_get_type(src)) {
     case IP_TYPE_INT:
         dest->type = IP_TYPE_INT;
         dest->ivalue = src->ivalue;
@@ -169,7 +169,7 @@ int ip_value_from_var(ip_value_t *dest, const ip_var_t *src)
         dest->svalue = ip_string_create_empty();
         return IP_EXEC_BAD_TYPE;
     }
-    if (src->initialised) {
+    if (ip_var_is_initialised(src)) {
         return IP_EXEC_OK;
     } else {
         return IP_EXEC_UNINIT;
@@ -178,14 +178,14 @@ int ip_value_from_var(ip_value_t *dest, const ip_var_t *src)
 
 int ip_value_to_var(ip_var_t *dest, const ip_value_t *src)
 {
-    switch (dest->type) {
+    switch (ip_var_get_type(dest)) {
     case IP_TYPE_INT:
         if (src->type == IP_TYPE_INT) {
             dest->ivalue = src->ivalue;
-            dest->initialised = 1;
+            ip_var_mark_as_initialised(dest);
         } else if (src->type == IP_TYPE_FLOAT) {
             dest->ivalue = (ip_int_t)(src->fvalue);
-            dest->initialised = 1;
+            ip_var_mark_as_initialised(dest);
         } else {
             return IP_EXEC_BAD_TYPE;
         }
@@ -194,10 +194,10 @@ int ip_value_to_var(ip_var_t *dest, const ip_value_t *src)
     case IP_TYPE_FLOAT:
         if (src->type == IP_TYPE_FLOAT) {
             dest->fvalue = src->fvalue;
-            dest->initialised = 1;
+            ip_var_mark_as_initialised(dest);
         } else if (src->type == IP_TYPE_INT) {
             dest->fvalue = (ip_float_t)(src->ivalue);
-            dest->initialised = 1;
+            ip_var_mark_as_initialised(dest);
         } else {
             return IP_EXEC_BAD_TYPE;
         }
@@ -208,7 +208,7 @@ int ip_value_to_var(ip_var_t *dest, const ip_value_t *src)
             ip_string_ref(src->svalue);
             ip_string_deref(dest->svalue);
             dest->svalue = src->svalue;
-            dest->initialised = 1;
+            ip_var_mark_as_initialised(dest);
         } else {
             return IP_EXEC_BAD_TYPE;
         }
@@ -229,7 +229,7 @@ int ip_value_from_array(ip_value_t *dest, const ip_var_t *src, ip_int_t index)
 {
     ip_value_release(dest);
 
-    switch (src->type) {
+    switch (ip_var_get_type(src)) {
     case IP_TYPE_INT:
     default:
         dest->type = IP_TYPE_INT;
@@ -290,7 +290,7 @@ int ip_value_from_array(ip_value_t *dest, const ip_var_t *src, ip_int_t index)
 
 int ip_value_to_array(ip_var_t *dest, ip_int_t index, const ip_value_t *src)
 {
-    switch (dest->type) {
+    switch (ip_var_get_type(dest)) {
     case IP_TYPE_ARRAY_OF_INT:
         if (!ip_value_validate_index(dest, index)) {
             return IP_EXEC_BAD_INDEX;

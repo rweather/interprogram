@@ -12,6 +12,8 @@ list(APPEND COMMON_SOURCES
     ip_program.h
     ip_string.c
     ip_string.h
+    ip_symbols.c
+    ip_symbols.h
     ip_token.c
     ip_token.h
     ip_types.h
