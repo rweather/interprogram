@@ -914,7 +914,7 @@ static ip_ast_node_t *ip_parse_label_name(ip_parser_t *parser)
                     (&(parser->program->labels), name);
             }
         } else {
-            ip_error(parser, "invalid label string");
+            ip_error(parser, "invalid label name");
         }
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
     } else if ((parser->flags & ITOK_TYPE_EXTENSION) != 0) {
@@ -974,6 +974,39 @@ static ip_ast_node_t *ip_parse_call_arguments
     return call;
 }
 
+/**
+ * @brief Determine if a token terminates the current line.
+ *
+ * @param[in] token The token to test.
+ *
+ * @return Non-zero if @a token terminates the current line.
+ */
+static int ip_parse_token_is_terminator(int token)
+{
+    return token == ITOK_EOF || token == ITOK_EOL || token == ITOK_INPUT_DATA;
+}
+
+/*
+ * CallStatement ::=
+ *      "EXECUTE PROCESS" LabelName [CallArguments]
+ *    | "CALL" LabelName [CallArguments]
+ *    | VAR-NAME [CallArguments]        # If VAR-NAME is a declared routine.
+ *    | ROUTINE-NAME [CallArguments]    # Multi-word routine names.
+ */
+static ip_ast_node_t *ip_parse_call_statement(ip_parser_t *parser)
+{
+    ip_ast_node_t *node = ip_parse_label_name(parser);
+    node = ip_ast_make_unary_statement
+        (ITOK_CALL, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
+    if (!ip_parse_token_is_terminator(parser->tokeniser.token) &&
+            parser->tokeniser.token != ITOK_COMMA &&
+            (parser->flags & ITOK_TYPE_EXTENSION) != 0) {
+        /* Statement is followed by colon-separated arguments */
+        node = ip_parse_call_arguments(parser, node);
+    }
+    return node;
+}
+
 static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
 {
     ip_ast_node_t *from;
@@ -995,18 +1028,6 @@ static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
              &(parser->tokeniser.loc));
     }
     return node;
-}
-
-/**
- * @brief Determine if a token terminates the current line.
- *
- * @param[in] token The token to test.
- *
- * @return Non-zero if @a token terminates the current line.
- */
-static int ip_parse_token_is_terminator(int token)
-{
-    return token == ITOK_EOF || token == ITOK_EOL || token == ITOK_INPUT_DATA;
 }
 
 /*
@@ -1068,13 +1089,12 @@ static int ip_parse_token_is_terminator(int token)
  *
  * ControlFlowStatement ::=
  *      "GO TO" LabelName
- *    | "EXECUTE PROCESS" LabelName [CallArguments]
  *    | "REPEAT FROM" LabelName VAR-NAME "TIMES"
  *    | "END OF PROCESS DEFINITION"
  *    | "END OF INTERPROGRAM"
  *    | "PAUSE" Expression
- *    | "CALL" LabelName [CallArguments]    # Extensions
- *    | "RETURN"
+ *    | CallStatement
+ *    | "RETURN"                # Extensions
  *    | "RETURN" Expression
  *    | "EXIT INTERPROGRAM"
  *    | WhileStatement
@@ -1286,15 +1306,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_CALL:
         /* CALL label [arguments] */
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        node = ip_parse_label_name(parser);
-        node = ip_ast_make_unary_statement
-            (ITOK_CALL, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
-        if (!ip_parse_token_is_terminator(parser->tokeniser.token) &&
-                parser->tokeniser.token != ITOK_COMMA &&
-                (parser->flags & ITOK_TYPE_EXTENSION) != 0) {
-            /* Statement is followed by a set of colon-separated arguments */
-            node = ip_parse_call_arguments(parser, node);
-        }
+        node = ip_parse_call_statement(parser);
         break;
 
     case ITOK_VAR_NAME:
@@ -1304,15 +1316,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
         label = ip_label_lookup_by_name
             (&(parser->program->labels), parser->tokeniser.name);
         if (label && label->base.type == IP_TYPE_ROUTINE) {
-            node = ip_parse_label_name(parser);
-            node = ip_ast_make_unary_statement
-                (ITOK_CALL, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
-            if (!ip_parse_token_is_terminator(parser->tokeniser.token) &&
-                    parser->tokeniser.token != ITOK_COMMA &&
-                    (parser->flags & ITOK_TYPE_EXTENSION) != 0) {
-                /* Statement is followed by colon-separated arguments */
-                node = ip_parse_call_arguments(parser, node);
-            }
+            node = ip_parse_call_statement(parser);
         } else {
             ip_error_near(parser, 0);
         }
@@ -1552,6 +1556,7 @@ static void ip_parse_statement_label(ip_parser_t *parser)
         }
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
     } else if ((parser->tokeniser.token == ITOK_VAR_NAME ||
+                parser->tokeniser.token == ITOK_STR_VALUE ||
                 parser->tokeniser.token == ITOK_ROUTINE_NAME) &&
                (parser->flags & ITOK_TYPE_EXTENSION) != 0) {
         /* Label that is referred to by name */
@@ -1567,34 +1572,12 @@ static void ip_parse_statement_label(ip_parser_t *parser)
                 /* Forward reference to this label that is now defined */
                 ip_label_mark_as_defined(label);
             }
-        } else {
+        } else if (parser->tokeniser.token != ITOK_STR_VALUE ||
+                   ip_parse_verify_label_string(parser)) {
             label = ip_label_create_by_name(&(parser->program->labels), name);
             ip_label_mark_as_defined(label);
-        }
-        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-    } else if (parser->tokeniser.token == ITOK_STR_VALUE &&
-               (parser->flags & ITOK_TYPE_EXTENSION) != 0) {
-        /* Named label using a string */
-        if (ip_parse_verify_label_string(parser)) {
-            name = parser->tokeniser.token_info->name;
-            label = ip_label_lookup_by_name(&(parser->program->labels), name);
-            if (label) {
-                if (ip_label_is_defined(label)) {
-                    ip_error(parser, "label '%s' is already defined", name);
-                    ip_error_at(parser, &(label->node->loc),
-                                "previous definition here");
-                    label = 0;
-                } else {
-                    /* Forward reference to this label that is now defined */
-                    ip_label_mark_as_defined(label);
-                }
-            } else {
-                label = ip_label_create_by_name
-                    (&(parser->program->labels), name);
-                ip_label_mark_as_defined(label);
-            }
         } else {
-            ip_error(parser, "invalid label string");
+            ip_error(parser, "invalid label name");
         }
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
     } else if ((parser->flags & ITOK_TYPE_EXTENSION) != 0) {
