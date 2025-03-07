@@ -24,7 +24,6 @@
 #define INTERPROGRAM_EXEC_H
 
 #include "ip_program.h"
-#include "ip_value.h"
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -64,7 +63,7 @@ struct ip_exec_stack_item_s
 /**
  * @brief Execution context for an INTERPROGRAM.
  */
-typedef struct
+struct ip_exec_s
 {
     /** Points to the parsed program image */
     ip_program_t *program;
@@ -86,8 +85,7 @@ typedef struct
 
     /** Stream to write output to (default is stdout) */
     FILE *output;
-
-} ip_exec_t;
+};
 
 /**
  * @brief Initialises an execution context.

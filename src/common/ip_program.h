@@ -25,10 +25,61 @@
 
 #include "ip_ast.h"
 #include "ip_labels.h"
+#include "ip_value.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief Execution context for an INTERPROGRAM.
+ */
+typedef struct ip_exec_s ip_exec_t;
+
+/**
+ * @brief Function prototype for built-in statements.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments (0 to IP_MAX_LOCALS-1).
+ *
+ * @return IP_EXEC_OK or an error code.
+ *
+ * The argument array pointed to by @a args has IP_MAX_LOCALS entries.
+ * These can be used for temporary local variable storage by the built-in.
+ */
+typedef int (*ip_builtin_handler_t)
+    (ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
+ * @brief Registered built-in statement in the interpreter.
+ */
+typedef struct
+{
+    /** Base class information */
+    ip_symbol_t base;
+
+    /** Pointer to the built-in handler */
+    ip_builtin_handler_t handler;
+
+} ip_builtin_t;
+
+/**
+ * @brief Information about a built-in statement in the interpreter,
+ * for registering multiple built-ins in bulk;
+ */
+typedef struct
+{
+    /** Name of the built-in, must be in uppercase; NULL at end of the list. */
+    const char *name;
+
+    /** Pointer to the built-in handler */
+    ip_builtin_handler_t handler;
+
+    /** Number of allowable arguments, or -1 for arbitrary */
+    int num_args;
+
+} ip_builtin_info_t;
 
 /**
  * @brief Structure of a program in memory after it has been parsed.
@@ -43,6 +94,9 @@ typedef struct
 
     /** List of all statements in the program */
     ip_ast_list_t statements;
+
+    /** Table containing the registered built-in statements */
+    ip_symbol_table_t builtins;
 
     /** Name of the file that the program was loaded from */
     char *filename;
@@ -83,6 +137,51 @@ void ip_program_reset_variables(ip_program_t *program);
  * @param[in] input The input to be embedded.
  */
 void ip_program_set_input(ip_program_t *program, const char *input);
+
+/**
+ * @brief Registers a built-in statement with the program.
+ *
+ * @param[in,out] program The program state.
+ * @param[in] name The name of the built-in statement in uppercase.
+ * @param[in] handler Handler for the built-in.
+ * @param[in] num_args Number of allowable arguments, or -1 for arbitrary.
+ *
+ * This function will update the handler and number of arguments if the
+ * built-in has already been registered.  This allows pre-defined built-ins
+ * to be overridden by the application.
+ */
+void ip_program_register_builtin
+    (ip_program_t *program, const char *name,
+     ip_builtin_handler_t handler, int num_args);
+
+/**
+ * @brief Registers a list of built-in statements with the program.
+ *
+ * @param[in,out] program The program state.
+ * @param[in] builtins Points to the list of built-in statements to register.
+ */
+void ip_program_register_builtins
+    (ip_program_t *program, const ip_builtin_info_t *builtins);
+
+/**
+ * @brief Looks ip a built-in statement by name.
+ *
+ * @param[in] program The program state.
+ * @param[in] name The name of the built-in statement.
+ *
+ * @return A pointer to the built-in statement or NULL if not found.
+ */
+ip_builtin_t *ip_program_lookup_builtin
+    (const ip_program_t *program, const char *name);
+
+/**
+ * @brief Gets the number of allowable arguments to a built-in statement.
+ *
+ * @param[in] builtin The built-in statement.
+ *
+ * @return The number of allowable arguments, or -1 if arbitrary.
+ */
+int ip_builtin_get_num_args(ip_builtin_t *builtin);
 
 #ifdef __cplusplus
 }

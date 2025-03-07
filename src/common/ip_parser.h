@@ -142,6 +142,13 @@ void ip_parse_check_undefined_labels(ip_parser_t *parser);
 void ip_parse_check_open_blocks(ip_parser_t *parser);
 
 /**
+ * @brief Registers built-in statements from the program with the parser.
+ *
+ * @param[in,out] parser The parser state.
+ */
+void ip_parse_register_builtins(ip_parser_t *parser);
+
+/**
  * @brief Parse a program file and return the program image.
  *
  * @param[out] program Returns a reference to the program that was loaded,

@@ -159,6 +159,7 @@ ip_var_t *ip_var_create
         if (!(var->base.name)) {
             ip_out_of_memory();
         }
+        var->base.num = -1;
     } else {
         ip_out_of_memory();
     }

@@ -1584,15 +1584,34 @@ static void ip_exec_copy_tape(ip_exec_t *exec, FILE *output, FILE *input)
  *
  * @param[in,out] exec The execution context.
  * @param[in] node The node representing the label.
+ * @param[in] call Non-zero if this is a "CALL"; zero for "GO TO".
+ * @param[in] num_args Number of arguments that were passed to the call.
  *
  * @return IP_EXEC_OK or an error code.
  */
-static int ip_exec_jump_to_label(ip_exec_t *exec, ip_ast_node_t *node)
+static int ip_exec_jump_to_label
+    (ip_exec_t *exec, ip_ast_node_t *node, int call, int num_args)
 {
     int status = IP_EXEC_OK;
+    ip_exec_stack_item_t *stack_item;
     if (node->type == ITOK_LABEL) {
-        /* Fetch the destination node direct from the label */
-        exec->pc = node->label->node;
+        if (node->label->node) {
+            /* Fetch the destination node direct from the label */
+            exec->pc = node->label->node;
+        } else if (node->label->builtin && call) {
+            /* Calling a built-in statement */
+            ip_builtin_handler_t handler;
+            handler = (ip_builtin_handler_t)(node->label->builtin);
+            status = (*handler)(exec, exec->stack->locals, num_args);
+
+            /* Pop the top-most stack frame which we don't need any more */
+            stack_item = exec->stack;
+            exec->stack = stack_item->next;
+            ip_exec_free_stack_item(stack_item);
+        } else {
+            /* Cannot use "GO TO" with a built-in statement */
+            status = IP_EXEC_BAD_LABEL;
+        }
     } else {
         /* Need to evaluate the expression (computed goto) */
         ip_value_t value;
@@ -1645,7 +1664,7 @@ static int ip_exec_repeat_from(ip_exec_t *exec, ip_ast_node_t *node)
         /* Increment the loop variable towards zero */
         ++(var->ivalue);
     }
-    return ip_exec_jump_to_label(exec, node->children.left);
+    return ip_exec_jump_to_label(exec, node->children.left, 0, 0);
 }
 
 /**
@@ -2082,12 +2101,15 @@ static int ip_exec_seed_random(ip_exec_t *exec, ip_ast_node_t *node)
  *
  * @param[in,out] exec The execution context.
  * @param[in] stack The new stack frame for passing the arguments.
- * @param[in] node The node representing the arguments to the "CALL" statement.
+ * @param[in] arg The node representing the arguments to the "CALL" statement.
+ * @param[in,out] num_args Number of arguments in the @a arg list.  Must be
+ * zero on first entry.
  *
  * @return IP_EXEC_OK or an error code.
  */
 static int ip_exec_eval_call_arguments
-    (ip_exec_t *exec, ip_exec_stack_item_t *stack, ip_ast_node_t *arg)
+    (ip_exec_t *exec, ip_exec_stack_item_t *stack,
+     ip_ast_node_t *arg, int *num_args)
 {
     int status;
     if (!arg) {
@@ -2101,11 +2123,13 @@ static int ip_exec_eval_call_arguments
                 (&(stack->locals[arg->children.left->ivalue]), &value);
         }
         ip_value_release(&value);
+        ++(*num_args);
     } else if (arg->type == ITOK_ARG_LIST) {
-        status = ip_exec_eval_call_arguments(exec, stack, arg->children.left);
+        status = ip_exec_eval_call_arguments
+            (exec, stack, arg->children.left, num_args);
         if (status == IP_EXEC_OK) {
             status = ip_exec_eval_call_arguments
-                (exec, stack, arg->children.right);
+                (exec, stack, arg->children.right, num_args);
         }
     } else {
         status = IP_EXEC_BAD_STATEMENT;
@@ -2118,6 +2142,7 @@ int ip_exec_step(ip_exec_t *exec)
     ip_exec_stack_item_t *stack_item;
     ip_ast_node_t *node = exec->pc;
     int status;
+    int num_args;
 
     /* Have we fallen off the end of the program? */
     if (!node) {
@@ -2291,7 +2316,7 @@ int ip_exec_step(ip_exec_t *exec)
 
     case ITOK_GO_TO:
         /* Jump to a specific label */
-        return ip_exec_jump_to_label(exec, node->children.left);
+        return ip_exec_jump_to_label(exec, node->children.left, 0, 0);
 
     case ITOK_EXECUTE_PROCESS:
     case ITOK_CALL:
@@ -2300,11 +2325,12 @@ int ip_exec_step(ip_exec_t *exec)
         if (!stack_item) {
             ip_out_of_memory();
         }
+        num_args = 0;
         if (node->children.right) {
             /* Evaluate the arguments to the call and populate the
              * local variables within the new stack frame. */
             status = ip_exec_eval_call_arguments
-                (exec, stack_item, node->children.right);
+                (exec, stack_item, node->children.right, &num_args);
             if (status != IP_EXEC_OK) {
                 ip_exec_free_stack_item(stack_item);
                 return status;
@@ -2313,7 +2339,7 @@ int ip_exec_step(ip_exec_t *exec)
         stack_item->return_node = exec->pc;
         stack_item->next = exec->stack;
         exec->stack = stack_item;
-        return ip_exec_jump_to_label(exec, node->children.left);
+        return ip_exec_jump_to_label(exec, node->children.left, 1, num_args);
 
     case ITOK_REPEAT_FROM:
         /* Repeat from a specific label if the loop variable is non-zero */

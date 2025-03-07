@@ -970,6 +970,22 @@ static ip_ast_node_t *ip_parse_call_arguments
         ip_ast_node_free(call);
         return 0;
     }
+    if (call->children.left->type == ITOK_LABEL) {
+        /* If this call refers to a built-in statement, we need to
+         * check the number of allowable arguments */
+        ip_label_t *label = call->children.left->label;
+        if (label->base.type == IP_TYPE_ROUTINE && label->builtin) {
+            ip_builtin_t *builtin = ip_program_lookup_builtin
+                (parser->program, ip_label_get_name(label));
+            int num_args = ip_builtin_get_num_args(builtin);
+            if (num_args >= 0 && num_args != count) {
+                ip_error_at
+                    (parser, &(call->loc),
+                     "invalid number of arguments to '%s'; was %d, should be %d",
+                     ip_label_get_name(label), (int)count, num_args);
+            }
+        }
+    }
     call->children.right = list;
     return call;
 }
@@ -1543,8 +1559,10 @@ static void ip_parse_statement_label(ip_parser_t *parser)
         if (label) {
             if (ip_label_is_defined(label)) {
                 ip_error(parser, "label %u is already defined", (unsigned)num);
-                ip_error_at(parser, &(label->node->loc),
-                            "previous definition here");
+                if (label->node) {
+                    ip_error_at(parser, &(label->node->loc),
+                                "previous definition here");
+                }
                 label = 0;
             } else {
                 /* Forward reference to this label that is now defined */
@@ -1565,8 +1583,10 @@ static void ip_parse_statement_label(ip_parser_t *parser)
         if (label) {
             if (ip_label_is_defined(label)) {
                 ip_error(parser, "label '%s' is already defined", name);
-                ip_error_at(parser, &(label->node->loc),
-                            "previous definition here");
+                if (label->node) {
+                    ip_error_at(parser, &(label->node->loc),
+                                "previous definition here");
+                }
                 label = 0;
             } else {
                 /* Forward reference to this label that is now defined */
@@ -2021,6 +2041,20 @@ void ip_parse_check_open_blocks(ip_parser_t *parser)
     }
 }
 
+static void ip_parse_register_builtin(ip_parser_t *parser, ip_symbol_t *symbol)
+{
+    if (symbol && symbol != &(parser->program->builtins.nil)) {
+        ip_parse_register_builtin(parser, symbol->left);
+        ip_tokeniser_register_routine_name(&(parser->tokeniser), symbol->name);
+        ip_parse_register_builtin(parser, symbol->right);
+    }
+}
+
+void ip_parse_register_builtins(ip_parser_t *parser)
+{
+    ip_parse_register_builtin(parser, parser->program->builtins.root.right);
+}
+
 static int ip_parse_read_stdio(FILE *input)
 {
     return getc(input);
@@ -2078,6 +2112,7 @@ unsigned long ip_parse_program_file
     }
 
     /* Parse the contents of the program file */
+    ip_parse_register_builtins(&parser);
     ip_parse_preliminary_statements(&parser);
     ip_parse_statements(&parser);
     ip_parse_check_undefined_labels(&parser);

@@ -47,6 +47,9 @@ struct ip_label_s
 
     /** Points to the node in the program corresponding to the label */
     ip_ast_node_t *node;
+
+    /** Points to the handler for a built-in routine with this label */
+    void *builtin;
 };
 
 /**

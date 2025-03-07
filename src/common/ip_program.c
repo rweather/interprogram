@@ -33,6 +33,7 @@ ip_program_t *ip_program_new(const char *filename)
     ip_var_table_init(&(program->vars));
     ip_label_table_init(&(program->labels));
     ip_ast_list_init(&(program->statements));
+    ip_symbol_table_init(&(program->builtins));
     program->filename = strdup(filename);
     if (!(program->filename)) {
         ip_program_free(program);
@@ -47,6 +48,7 @@ void ip_program_free(ip_program_t *program)
         ip_var_table_free(&(program->vars));
         ip_label_table_free(&(program->labels));
         ip_ast_list_free(&(program->statements));
+        ip_symbol_table_free(&(program->builtins));
         free(program->filename);
         if (program->embedded_input) {
             free(program->embedded_input);
@@ -77,4 +79,72 @@ void ip_program_set_input(ip_program_t *program, const char *input)
     }
     program->embedded_input = temp;
     program->next_input = temp;
+}
+
+void ip_program_register_builtin
+    (ip_program_t *program, const char *name,
+     ip_builtin_handler_t handler, int num_args)
+{
+    ip_builtin_t *builtin;
+    ip_label_t *label;
+
+    /* Do we already have this built-in? */
+    builtin = (ip_builtin_t *)ip_symbol_lookup_by_name
+        (&(program->builtins), name);
+    if (builtin) {
+        builtin->handler = handler;
+        builtin->base.type = (unsigned char)num_args;
+        return;
+    }
+
+    /* Create a new built-in */
+    builtin = calloc(1, sizeof(ip_builtin_t));
+    if (!builtin) {
+        ip_out_of_memory();
+    }
+    builtin->base.name = strdup(name);
+    if (!(builtin->base.name)) {
+        ip_out_of_memory();
+    }
+    builtin->base.num = -1;
+    builtin->base.type = (unsigned char)num_args;
+    builtin->handler = handler;
+    ip_symbol_insert(&(program->builtins), &(builtin->base));
+
+    /* Create the corresponding routine label and variable so that the
+     * parser will recognise this name for implicit "CALL"'s */
+    label = ip_label_create_by_name(&(program->labels), name);
+    label->base.type = IP_TYPE_ROUTINE;
+    label->builtin = (void *)handler;
+    ip_label_mark_as_defined(label);
+    ip_var_create(&(program->vars), name, IP_TYPE_ROUTINE);
+}
+
+void ip_program_register_builtins
+    (ip_program_t *program, const ip_builtin_info_t *builtins)
+{
+    while (builtins && builtins->name) {
+        ip_program_register_builtin
+            (program, builtins->name, builtins->handler, builtins->num_args);
+        ++builtins;
+    }
+}
+
+ip_builtin_t *ip_program_lookup_builtin
+    (const ip_program_t *program, const char *name)
+{
+    return (ip_builtin_t *)ip_symbol_lookup_by_name(&(program->builtins), name);
+}
+
+int ip_builtin_get_num_args(ip_builtin_t *builtin)
+{
+    if (builtin) {
+        if (builtin->base.type == 0xFF) {
+            return -1;
+        } else {
+            return builtin->base.type;
+        }
+    } else {
+        return 0;
+    }
 }
