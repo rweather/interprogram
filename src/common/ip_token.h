@@ -287,6 +287,15 @@ typedef struct
     /** Registered routine names */
     ip_symbol_table_t routines;
 
+    /** Saved token information */
+    ip_token_info_t saved_token;
+
+    /** Buffer for storing the saved token name */
+    char *saved_name;
+
+    /** Maximum length of the saved token name buffer */
+    size_t saved_name_max;
+
 } ip_tokeniser_t;
 
 /**
@@ -411,6 +420,29 @@ void ip_tokeniser_register_routine_name
  */
 const char *ip_tokeniser_is_routine_name
     (const ip_tokeniser_t *tokeniser, const char *name, size_t len);
+
+/**
+ * @brief Saves the current token so that it can be restored when "&" is seen.
+ *
+ * @param[in,out] tokeniser The tokeniser.
+ */
+void ip_tokeniser_save_token(ip_tokeniser_t *tokeniser);
+
+/**
+ * @brief Clears the saved token as "&" is no longer relevant (usually at EOL).
+ *
+ * @param[in,out] tokeniser The tokeniser.
+ */
+void ip_tokeniser_clear_saved_token(ip_tokeniser_t *tokeniser);
+
+/**
+ * @brief Restores the saved token for "&".
+ *
+ * @param[in,out] tokeniser The tokeniser.
+ *
+ * @return Non-zero if the token was restored, or zero if it was cleared.
+ */
+int ip_tokeniser_restore_token(ip_tokeniser_t *tokeniser);
 
 #ifdef __cplusplus
 }

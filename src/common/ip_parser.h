@@ -65,9 +65,6 @@ typedef struct
     /** Inferred type of the "THIS" variable, or IP_TYPE_UNKNOWN */
     unsigned char this_type;
 
-    /** Token code for the last statement, for "&" repetition */
-    int last_statement;
-
     /** Number of errors that were reported during the parsing process */
     unsigned long num_errors;
 

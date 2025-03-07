@@ -6,9 +6,7 @@
     # from the classic language.
 
     # Loop that calculates the Fibonacci sequence for 21 (20 + 1) iterations.
-    set X = 1
-    set Y = 1
-    set J = 20
+    set X = 1, & Y = 1, & J = 20
 *1
     take X + Y
     set X = Y

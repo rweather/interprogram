@@ -34,7 +34,6 @@ void ip_parse_init(ip_parser_t *parser)
     memset(parser, 0, sizeof(ip_parser_t));
     ip_tokeniser_init(&(parser->tokeniser));
     parser->this_type = IP_TYPE_DYNAMIC;
-    parser->last_statement = -1;
 }
 
 static void ip_parse_create_block
@@ -1098,13 +1097,14 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
 
     /* Handle the "&" repetition construct */
     if (token == ITOK_AMPERSAND) {
-        if (parser->last_statement == -1) {
+        if (!ip_tokeniser_restore_token(&(parser->tokeniser))) {
             ip_error(parser, "no statement to repeat with '&'");
             return 0;
         }
-        token = parser->last_statement;
+        token = parser->tokeniser.token;
+    } else {
+        ip_tokeniser_save_token(&(parser->tokeniser));
     }
-    parser->last_statement = -1;
 
     /* Figure out what kind of statement we have */
     switch (token) {
@@ -1221,7 +1221,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
         /* This might be the name of a routine that was declared with
          * "SYMBOLS FOR ROUTINES".  We can skip the "CALL" if it is. */
         label = ip_label_lookup_by_name
-            (&(parser->program->labels), parser->tokeniser.name);
+            (&(parser->program->labels), parser->tokeniser.token_info->name);
         if (label && label->base.type == IP_TYPE_ROUTINE) {
             node = ip_parse_call_statement(parser);
         } else {
@@ -1416,9 +1416,9 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     if (node && node->this_type != IP_TYPE_UNKNOWN) {
         parser->this_type = node->this_type;
     }
-    if (node) {
-        /* Remember the statement type for '&' repetition */
-        parser->last_statement = node->type;
+    if (!node) {
+        /* Invalid node, so do not use it for '&' repetition */
+        ip_tokeniser_clear_saved_token(&(parser->tokeniser));
     }
     return node;
 }
@@ -1564,7 +1564,7 @@ void ip_parse_statements(ip_parser_t *parser)
             ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
 
             /* "&" stops repeating when the end of the line is reached */
-            parser->last_statement = -1;
+            ip_tokeniser_clear_saved_token(&(parser->tokeniser));
         }
     }
     if (parser->tokeniser.token == ITOK_INPUT_DATA) {

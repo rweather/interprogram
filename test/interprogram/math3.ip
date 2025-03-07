@@ -52,6 +52,14 @@
     form absolute
     if this is greater than 0.000001, go to FAIL
 
+    # 2.1^0 333^1.5 = 1.44860018964...
+    # Tests repetition of a built-in library function using "&".
+    take 2.1
+    raise to the power of 0.333, & 1.5
+    subtract 1.44860018964
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
     # If we get here, then all tests have passed.
     end of interprogram
 

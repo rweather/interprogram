@@ -210,6 +210,7 @@ void ip_tokeniser_init(ip_tokeniser_t *tokeniser)
     tokeniser->read_char = ip_tokeniser_read_default;
     tokeniser->unget_char = -1;
     tokeniser->integer_precision = sizeof(ip_uint_t) * 8;
+    tokeniser->saved_token.code = ITOK_EOF;
     ip_tokeniser_set_token(tokeniser, ITOK_ERROR);
     ip_symbol_table_init(&(tokeniser->routines));
 }
@@ -1101,4 +1102,38 @@ const char *ip_tokeniser_is_routine_name
 {
     return ip_tokeniser_find_routine_name
         (tokeniser, name, len, tokeniser->routines.root.right);
+}
+
+void ip_tokeniser_save_token(ip_tokeniser_t *tokeniser)
+{
+    size_t len = strlen(tokeniser->token_info->name);
+    if (len >= tokeniser->saved_name_max) {
+        len = (len + 1024) & ~1023;
+        tokeniser->saved_name = realloc(tokeniser->saved_name, len);
+        if (!(tokeniser->saved_name)) {
+            ip_out_of_memory();
+        }
+        strcpy(tokeniser->saved_name, tokeniser->token_info->name);
+    }
+    tokeniser->saved_token = *(tokeniser->token_info);
+    tokeniser->saved_token.name = tokeniser->saved_name;
+}
+
+void ip_tokeniser_clear_saved_token(ip_tokeniser_t *tokeniser)
+{
+    tokeniser->saved_token.code = ITOK_EOF;
+}
+
+int ip_tokeniser_restore_token(ip_tokeniser_t *tokeniser)
+{
+    if (tokeniser->saved_token.code != ITOK_EOF) {
+        tokeniser->token_info = &(tokeniser->saved_token);
+        tokeniser->token = tokeniser->saved_token.code;
+        tokeniser->name_len = 0;
+        ip_tokeniser_add_name_chars
+            (tokeniser, tokeniser->saved_token.name,
+             strlen(tokeniser->saved_token.name));
+        return 1;
+    }
+    return 0;
 }

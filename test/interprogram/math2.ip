@@ -25,6 +25,14 @@
     form absolute
     if this is greater than 0.000001, go to FAIL
 
+    # sin(sin(2 radians) = 0.78907234357...
+    # Tests repetition of a built-in library function using "&".
+    take 2
+    form sine radians, &
+    subtract 0.78907234357
+    form absolute
+    if this is greater than 0.000001, go to FAIL
+
     # cos(-0.5 pi) = 0
     take -0.5
     form cosine
