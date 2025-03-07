@@ -120,22 +120,6 @@ static int check_identifiers(void)
     KEYWORD("PUNCH THE FOLLOWING CHARACTERS",       ITOK_PUNCH);
     KEYWORD("COPY TAPE",                            ITOK_COPY_TAPE);
     KEYWORD("IGNORE TAPE",                          ITOK_IGNORE_TAPE);
-    KEYWORD("FORM SQUARE ROOT",                     ITOK_SQRT);
-    KEYWORD("FORM SINE",                            ITOK_SIN);
-    KEYWORD("FORM COSINE",                          ITOK_COS);
-    KEYWORD("FORM TANGENT",                         ITOK_TAN);
-    KEYWORD("FORM ARCTAN",                          ITOK_ATAN);
-    KEYWORD("FORM NATURAL LOG",                     ITOK_LOG);
-    KEYWORD("FORM EXPONENTIAL",                     ITOK_EXP);
-    KEYWORD("FORM ABSOLUTE",                        ITOK_ABS);
-    KEYWORD("FORM SINE RADIANS",                    ITOK_SIN_RADIANS);
-    KEYWORD("FORM COSINE RADIANS",                  ITOK_COS_RADIANS);
-    KEYWORD("FORM TANGENT RADIANS",                 ITOK_TAN_RADIANS);
-    KEYWORD("FORM ARCTAN RADIANS",                  ITOK_ATAN_RADIANS);
-    KEYWORD("FORM SINE DEGREES",                    ITOK_SIN_DEGREES);
-    KEYWORD("FORM COSINE DEGREES",                  ITOK_COS_DEGREES);
-    KEYWORD("FORM TANGENT DEGREES",                 ITOK_TAN_DEGREES);
-    KEYWORD("FORM ARCTAN DEGREES",                  ITOK_ATAN_DEGREES);
     KEYWORD("IS NOT",                               ITOK_IS_NOT);
     KEYWORD("EQUAL TO",                             ITOK_EQUAL_TO);
     KEYWORD("GREATER THAN OR EQUAL TO",             ITOK_GREATER_OR_EQUAL);
@@ -144,16 +128,8 @@ static int check_identifiers(void)
     KEYWORD("INFINITE",                             ITOK_INFINITE);
     KEYWORD("A NUMBER",                             ITOK_A_NUMBER);
     KEYWORD("MODULO",                               ITOK_MODULO);
-    KEYWORD("BITWISE AND WITH NOT",                 ITOK_BITWISE_AND_NOT);
-    KEYWORD("BITWISE AND WITH",                     ITOK_BITWISE_AND);
-    KEYWORD("BITWISE OR WITH",                      ITOK_BITWISE_OR);
-    KEYWORD("BITWISE XOR WITH",                     ITOK_BITWISE_XOR);
-    KEYWORD("BITWISE NOT",                          ITOK_BITWISE_NOT);
-    KEYWORD("SHIFT LEFT BY",                        ITOK_SHIFT_LEFT);
-    KEYWORD("SHIFT RIGHT BY",                       ITOK_SHIFT_RIGHT);
     KEYWORD("*",                                    ITOK_MUL);
     KEYWORD("/",                                    ITOK_DIV);
-    KEYWORD("RAISE TO THE POWER OF",                ITOK_RAISE);
     KEYWORD("CALL",                                 ITOK_CALL);
     KEYWORD("RETURN",                               ITOK_RETURN);
     KEYWORD(":",                                    ITOK_COLON);
@@ -163,17 +139,12 @@ static int check_identifiers(void)
     KEYWORD("TO",                                   ITOK_TO);
     KEYWORD("SYMBOLS FOR STRINGS",                  ITOK_SYMBOLS_STR);
     KEYWORD("EXIT INTERPROGRAM",                    ITOK_EXIT_PROGRAM);
-    KEYWORD("RANDOM NUMBER",                        ITOK_RANDOM);
-    KEYWORD("SEED RANDOM",                          ITOK_SEED_RANDOM);
     KEYWORD("THEN",                                 ITOK_THEN);
     KEYWORD("ELSE",                                 ITOK_ELSE);
     KEYWORD("ELSE IF",                              ITOK_ELSE_IF);
     KEYWORD("END IF",                               ITOK_END_IF);
     KEYWORD("REPEAT WHILE",                         ITOK_REPEAT_WHILE);
     KEYWORD("END REPEAT",                           ITOK_END_REPEAT);
-    KEYWORD("ROUND NEAREST",                        ITOK_ROUND_NEAREST);
-    KEYWORD("ROUND UP",                             ITOK_ROUND_UP);
-    KEYWORD("ROUND DOWN",                           ITOK_ROUND_DOWN);
     KEYWORD("SYMBOLS FOR ROUTINES",                 ITOK_SYMBOLS_ROUTINES);
 
     /* Check that we have tested all of the keywords */
@@ -273,7 +244,7 @@ int main(int argc, char **argv)
     RUN_TEST(check_identifiers);
 
     RUN_LEXER_TEST("var", ITOK_VAR_NAME, ITOK_TYPE_EXPRESSION);
-    RUN_LEXER_TEST("FORM SQUARE ROOT", ITOK_SQRT, ITOK_TYPE_STATEMENT);
+    RUN_LEXER_TEST("DIVIDE BY", ITOK_DIVIDE, ITOK_TYPE_STATEMENT);
     RUN_LEXER_TEST("FORM", ITOK_VAR_NAME, ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION);
     RUN_LEXER_TEST("FORMY", ITOK_VAR_NAME, ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION);
     RUN_LEXER_TEST("THIS", ITOK_THIS, ITOK_TYPE_EXPRESSION);

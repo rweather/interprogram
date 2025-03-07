@@ -569,12 +569,6 @@ static ip_ast_node_t *ip_parse_next_integer_expression(ip_parser_t *parser)
     return ip_ast_make_cast(IP_TYPE_INT, node);
 }
 
-static ip_ast_node_t *ip_parse_next_float_expression(ip_parser_t *parser)
-{
-    ip_ast_node_t *node = ip_parse_next_expression(parser);
-    return ip_ast_make_cast(IP_TYPE_FLOAT, node);
-}
-
 /*
  * Condition ::=
  *      Expression BinaryConditionOperator Expression
@@ -1050,8 +1044,6 @@ static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
  * Statement ::=
  *      AssignmentStatement
  *    | ArithmeticStatement
- *    | BitwiseStatement
- *    | MathFunctionStatement
  *    | IfStatement
  *    | ControlFlowStatement
  *    | InputOutputStatement
@@ -1069,39 +1061,6 @@ static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
  *    | "MULTIPLY BY" Expression
  *    | "DIVIDE BY" Expression
  *    | "MODULO" Expression             # Extension
- *
- * BitwiseStatement ::=                 # Extensions
- *      "BITWISE AND WITH" Expression
- *    | "BITWISE AND WITH NOT" Expression
- *    | "BITWISE OR WITH" Expression
- *    | "BITWISE XOR WITH" Expression
- *    | "BITWISE NOT"
- *    | "SHIFT LEFT BY" Expression
- *    | "SHIFT RIGHT BY" Expression
- *
- * MathFunctionStatement ::=
- *      "FORM SQUARE ROOT"
- *    | "FORM SINE"
- *    | "FORM COSINE"
- *    | "FORM TANGENT"
- *    | "FORM ARCTAN"
- *    | "FORM NATURAL LOG"
- *    | "FORM EXPONENTIAL"
- *    | "FORM ABSOLUTE"                 # Extensions
- *    | "RAISE TO THE POWER OF" Expression
- *    | "FORM SINE RADIANS"
- *    | "FORM COSINE RADIANS"
- *    | "FORM TANGENT RADIANS"
- *    | "FORM ARCTAN RADIANS"
- *    | "FORM SINE DEGREES"
- *    | "FORM COSINE DEGREES"
- *    | "FORM TANGENT DEGREES"
- *    | "FORM ARCTAN DEGREES"
- *    | "RANDOM NUMBER"
- *    | "SEED RANDOM" Expression
- *    | "ROUND NEAREST"
- *    | "ROUND UP"
- *    | "ROUND DOWN"
  *
  * ControlFlowStatement ::=
  *      "GO TO" LabelName
@@ -1220,74 +1179,6 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
             (token, parser->this_type, IP_TYPE_UNKNOWN,
              ip_parse_next_expression(parser),
              &(parser->tokeniser.loc));
-        break;
-
-    /* ------------- Bitwise statements ------------- */
-
-    case ITOK_BITWISE_AND:
-    case ITOK_BITWISE_AND_NOT:
-    case ITOK_BITWISE_OR:
-    case ITOK_BITWISE_XOR:
-    case ITOK_SHIFT_LEFT:
-    case ITOK_SHIFT_RIGHT:
-        node = ip_ast_make_this_binary
-            (token, parser->this_type, IP_TYPE_INT,
-             ip_parse_next_integer_expression(parser),
-             &(parser->tokeniser.loc));
-        break;
-
-    case ITOK_BITWISE_NOT:
-        node = ip_ast_make_this_unary
-            (token, parser->this_type, IP_TYPE_INT, &(parser->tokeniser.loc));
-        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        break;
-
-    /* ------------- Mathematical function statements ------------- */
-
-    case ITOK_SQRT:
-    case ITOK_SIN:
-    case ITOK_COS:
-    case ITOK_TAN:
-    case ITOK_ATAN:
-    case ITOK_SIN_RADIANS:
-    case ITOK_COS_RADIANS:
-    case ITOK_TAN_RADIANS:
-    case ITOK_ATAN_RADIANS:
-    case ITOK_SIN_DEGREES:
-    case ITOK_COS_DEGREES:
-    case ITOK_TAN_DEGREES:
-    case ITOK_ATAN_DEGREES:
-    case ITOK_LOG:
-    case ITOK_EXP:
-    case ITOK_ABS:
-    case ITOK_ROUND_NEAREST:
-    case ITOK_ROUND_UP:
-    case ITOK_ROUND_DOWN:
-        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        node = ip_ast_make_this_unary
-            (token, parser->this_type, IP_TYPE_FLOAT,
-             &(parser->tokeniser.loc));
-        break;
-
-    case ITOK_RAISE:
-        node = ip_ast_make_this_binary
-            (token, parser->this_type, IP_TYPE_FLOAT,
-             ip_parse_next_float_expression(parser),
-             &(parser->tokeniser.loc));
-        break;
-
-    case ITOK_RANDOM:
-        node = ip_ast_make_standalone(token, &(parser->tokeniser.loc));
-        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        break;
-
-    case ITOK_SEED_RANDOM:
-        /* SEED RANDOM expression */
-        node = ip_parse_next_expression(parser);
-        if (node) {
-            node = ip_ast_make_unary_statement
-                (token, IP_TYPE_UNKNOWN, node, &(parser->tokeniser.loc));
-        }
         break;
 
     /* ------------- Conditional statements ------------- */
@@ -2061,7 +1952,7 @@ static int ip_parse_read_stdio(FILE *input)
 }
 
 unsigned long ip_parse_program_file
-    (ip_program_t **program, const char *filename, unsigned options,
+    (ip_program_t *program, const char *filename, unsigned options,
      int argc, char **argv)
 {
     FILE *input;
@@ -2069,13 +1960,10 @@ unsigned long ip_parse_program_file
     unsigned long num_errors;
     int index;
 
-    /* Construct the program image */
-    *program = ip_program_new(filename ? filename : "-");
-
     /* Create the "ARGV" variable if necessary */
     if (argc > 0) {
         ip_var_t *var = ip_var_create
-            (&((*program)->vars), "ARGV", IP_TYPE_STRING);
+            (&(program->vars), "ARGV", IP_TYPE_STRING);
         ip_var_dimension_array(var, 0, argc - 1);
         var->base.flags |= IP_SYMBOL_NO_RESET;
         for (index = 0; index < argc; ++index) {
@@ -2104,11 +1992,11 @@ unsigned long ip_parse_program_file
     parser.flags = options;
     parser.tokeniser.read_char = (ip_token_read_char)ip_parse_read_stdio;
     parser.tokeniser.user_data = input;
-    parser.program = *program;
+    parser.program = program;
     if (filename) {
         /* Use the permanent version of the filename for setting the
          * locations of nodes in the abstract syntax tree. */
-        parser.tokeniser.filename = (*program)->filename;
+        parser.tokeniser.filename = program->filename;
     }
 
     /* Parse the contents of the program file */
