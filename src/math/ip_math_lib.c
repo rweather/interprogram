@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "ip_math.h"
+#include "ip_math_lib.h"
 #include <stdlib.h>
 #include <time.h>
 

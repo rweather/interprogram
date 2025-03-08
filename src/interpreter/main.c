@@ -22,7 +22,8 @@
 
 #include "ip_parser.h"
 #include "ip_exec.h"
-#include "ip_math.h"
+#include "ip_math_lib.h"
+#include "ip_string_lib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -104,6 +105,7 @@ int main(int argc, char **argv)
     /* Create the program object and register built-in statements */
     program = ip_program_new(program_filename);
     ip_register_math_builtins(program, options);
+    ip_register_string_builtins(program, options);
 
     /* Load the program into memory */
     if (ip_parse_program_file

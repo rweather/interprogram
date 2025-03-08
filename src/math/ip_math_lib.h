@@ -20,8 +20,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef INTERPROGRAM_MATH_H
-#define INTERPROGRAM_MATH_H
+#ifndef INTERPROGRAM_MATH_LIB_H
+#define INTERPROGRAM_MATH_LIB_H
 
 #include "ip_exec.h"
 

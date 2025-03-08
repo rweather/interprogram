@@ -129,3 +129,47 @@ ip_string_t *ip_string_substring(ip_string_t *str, size_t start, size_t len)
     }
     return ip_string_create_with_length(str->data + start, len);
 }
+
+int ip_char_is_whitespace(int ch)
+{
+    return ch == ' '  || ch == '\t' || ch == '\r' || ch == '\n' ||
+           ch == '\f' || ch == '\v';
+}
+
+ip_string_t *ip_string_pad_left(ip_string_t *str, size_t spaces)
+{
+    ip_string_t *nstr;
+    if (spaces == 0) {
+        ip_string_ref(str);
+        return str;
+    }
+    nstr = malloc(sizeof(ip_string_t) + spaces + str->len);
+    if (!nstr) {
+        ip_out_of_memory();
+    }
+    nstr->ref = 1;
+    nstr->len = spaces + str->len;
+    memset(nstr->data, ' ', spaces);
+    memcpy(nstr->data + spaces, str->data, str->len);
+    nstr->data[spaces + str->len] = '\0';
+    return nstr;
+}
+
+ip_string_t *ip_string_pad_right(ip_string_t *str, size_t spaces)
+{
+    ip_string_t *nstr;
+    if (spaces == 0) {
+        ip_string_ref(str);
+        return str;
+    }
+    nstr = malloc(sizeof(ip_string_t) + spaces + str->len);
+    if (!nstr) {
+        ip_out_of_memory();
+    }
+    nstr->ref = 1;
+    nstr->len = spaces + str->len;
+    memcpy(nstr->data, str->data, str->len);
+    memset(nstr->data + str->len, ' ', spaces);
+    nstr->data[spaces + str->len] = '\0';
+    return nstr;
+}

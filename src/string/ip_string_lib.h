@@ -20,44 +20,28 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "ip_math_lib.h"
-#include <math.h>
+#ifndef INTERPROGRAM_STRING_LIB_H
+#define INTERPROGRAM_STRING_LIB_H
 
-int ip_round_nearest(ip_exec_t *exec, ip_value_t *args, size_t num_args)
-{
-    int status;
-    (void)args;
-    (void)num_args;
-    status = ip_value_to_float(&(exec->this_value));
-    if (status == IP_EXEC_OK) {
-        ip_value_set_float
-            (&(exec->this_value), round(exec->this_value.fvalue));
-    }
-    return status;
-}
+#include "ip_exec.h"
 
-int ip_round_down(ip_exec_t *exec, ip_value_t *args, size_t num_args)
-{
-    int status;
-    (void)args;
-    (void)num_args;
-    status = ip_value_to_float(&(exec->this_value));
-    if (status == IP_EXEC_OK) {
-        ip_value_set_float
-            (&(exec->this_value), floor(exec->this_value.fvalue));
-    }
-    return status;
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int ip_round_up(ip_exec_t *exec, ip_value_t *args, size_t num_args)
-{
-    int status;
-    (void)args;
-    (void)num_args;
-    status = ip_value_to_float(&(exec->this_value));
-    if (status == IP_EXEC_OK) {
-        ip_value_set_float
-            (&(exec->this_value), ceil(exec->this_value.fvalue));
-    }
-    return status;
+/**
+ * @brief Registers the string built-ins in this library with a program.
+ *
+ * @param[in,out] program The program state.
+ * @param[in] options Options that indicate if classic or extension
+ * built-ins are required.
+ *
+ * @note All string built-ins are extensions.
+ */
+void ip_register_string_builtins(ip_program_t *program, unsigned options);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif

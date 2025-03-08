@@ -118,6 +118,35 @@ ip_string_t *ip_string_concat(ip_string_t *str1, ip_string_t *str2);
  */
 ip_string_t *ip_string_substring(ip_string_t *str, size_t start, size_t len);
 
+/**
+ * @brief Determine if a character is whitespace.
+ *
+ * @param[in] ch The character to test.
+ *
+ * @return Non-zero if @a ch is whitespace, zero if not.
+ */
+int ip_char_is_whitespace(int ch);
+
+/**
+ * @brief Pads a string on the left with extra spaces.
+ *
+ * @param[in] str The string to pad.
+ * @param[in] spaces The number of spaces to add on the left.
+ *
+ * @return The new padded string.
+ */
+ip_string_t *ip_string_pad_left(ip_string_t *str, size_t spaces);
+
+/**
+ * @brief Pads a string on the right with extra spaces.
+ *
+ * @param[in] str The string to pad.
+ * @param[in] spaces The number of spaces to add on the right.
+ *
+ * @return The new padded string.
+ */
+ip_string_t *ip_string_pad_right(ip_string_t *str, size_t spaces);
+
 #ifdef __cplusplus
 }
 #endif

@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "ip_math.h"
+#include "ip_math_lib.h"
 #include <math.h>
 
 /* Classic INTERPROGRAM specifies angles in multiplies of pi, which is the

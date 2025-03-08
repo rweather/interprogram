@@ -626,6 +626,8 @@ static void ip_tokeniser_get_string(ip_tokeniser_t *tokeniser, int quote)
             case 'v':   ip_tokeniser_add_name(tokeniser, '\v'); break;
             default:    ip_tokeniser_add_name(tokeniser, ch); break;
             }
+            ++(tokeniser->buffer_posn);
+            continue;
         }
         ip_tokeniser_add_name(tokeniser, ch);
         ++(tokeniser->buffer_posn);
@@ -753,8 +755,8 @@ int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
     IP_SIMPLE_TOKEN(')', ITOK_RPAREN,       ITOK_TYPE_ANY)
     IP_SIMPLE_TOKEN('=', ITOK_EQUAL,        ITOK_TYPE_ANY)
     IP_SIMPLE_TOKEN('&', ITOK_AMPERSAND,    ITOK_TYPE_STATEMENT)
-    IP_SIMPLE_TOKEN('+', ITOK_PLUS,         ITOK_TYPE_EXPRESSION)
-    IP_SIMPLE_TOKEN('-', ITOK_MINUS,        ITOK_TYPE_EXPRESSION)
+    IP_SIMPLE_TOKEN('+', ITOK_PLUS,         ITOK_TYPE_ANY)
+    IP_SIMPLE_TOKEN('-', ITOK_MINUS,        ITOK_TYPE_ANY)
     IP_SIMPLE_TOKEN('/', ITOK_DIV,          ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION)
     IP_SIMPLE_TOKEN(':', ITOK_COLON,        ITOK_TYPE_ANY | ITOK_TYPE_EXTENSION)
 

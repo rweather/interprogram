@@ -18,7 +18,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
 # Add the subdirectories.
-include_directories(src/common src/math)
+include_directories(src/common)
 add_subdirectory(src)
 add_subdirectory(test)
 

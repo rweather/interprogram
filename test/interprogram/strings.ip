@@ -41,6 +41,80 @@
     if S is not equal to "abc'def", go to FAIL
     if T is not equal to 'xyz"pqr', go to FAIL
 
+    take '  \tHello,   World!\n  '
+    trim string
+    if this is not equal to 'Hello,   World!', go to FAIL
+
+    take ''
+    pad string on left 8
+    if this is not equal to '        ', go to FAIL
+    take 'abc '
+    pad string on left 8
+    if this is not equal to '    abc ', go to FAIL
+    take '12345678'
+    pad string on left 8
+    if this is not equal to '12345678', go to FAIL
+    take '123456789'
+    pad string on left 8
+    if this is not equal to '123456789', go to FAIL
+    take 'abc'
+    pad string on right -1
+    if this is not equal to 'abc', go to FAIL
+
+    take ''
+    pad string on right 8
+    if this is not equal to '        ', go to FAIL
+    take 'abc '
+    pad string on right 8
+    if this is not equal to 'abc     ', go to FAIL
+    take '12345678'
+    pad string on right 8
+    if this is not equal to '12345678', go to FAIL
+    take '123456789'
+    pad string on right 8
+    if this is not equal to '123456789', go to FAIL
+    take 'abc'
+    pad string on right -1
+    if this is not equal to 'abc', go to FAIL
+
+    take 1024
+    number to string
+    if this is not equal to '1024', go to FAIL
+    take -42.75
+    number to string
+    if this is not equal to '-42.75', go to FAIL
+    take 42.75e20
+    number to string
+    if this is not equal to '4.275e+21', go to FAIL
+
+    take '-42.75'
+    string to number
+    if this is not equal to -42.75, go to FAIL
+    take '  \r1024  \n\t '
+    string to number
+    if this is not equal to 1024, go to FAIL
+    take '42'
+    string to integer
+    if this is not equal to 42, go to FAIL
+    take '42'
+    string to integer 16
+    if this is not equal to 66, go to FAIL
+    take '10101010'
+    string to integer 2
+    if this is not equal to 170, go to FAIL
+    take '-ZA0'
+    string to integer 36
+    if this is not equal to -45720, go to FAIL
+    take '42'
+    string to integer 0
+    if this is not equal to 42, go to FAIL
+    take '042'
+    string to integer 0
+    if this is not equal to 34, go to FAIL
+    take '0x42'
+    string to integer 0:1   # second argument is ignored.
+    if this is not equal to 66, go to FAIL
+
     # If we get here, then all tests have passed.
     end of interprogram
 

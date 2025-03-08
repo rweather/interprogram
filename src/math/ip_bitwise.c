@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "ip_math.h"
+#include "ip_math_lib.h"
 #include <math.h>
 
 int ip_bitwise_and(ip_exec_t *exec, ip_value_t *args, size_t num_args)
