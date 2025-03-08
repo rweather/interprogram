@@ -76,8 +76,11 @@ typedef struct
     /** Pointer to the built-in handler */
     ip_builtin_handler_t handler;
 
-    /** Number of allowable arguments, or -1 for arbitrary */
-    int num_args;
+    /** Minimum number of allowable arguments (0 to 9) */
+    unsigned char min_args;
+
+    /** Maximum number of allowable arguments (0 to 9) */
+    unsigned char max_args;
 
 } ip_builtin_info_t;
 
@@ -144,7 +147,8 @@ void ip_program_set_input(ip_program_t *program, const char *input);
  * @param[in,out] program The program state.
  * @param[in] name The name of the built-in statement in uppercase.
  * @param[in] handler Handler for the built-in.
- * @param[in] num_args Number of allowable arguments, or -1 for arbitrary.
+ * @param[in] min_args Minimum number of allowable arguments (0 to 9).
+ * @param[in] max_args Maximum number of allowable arguments (0 to 9).
  *
  * This function will update the handler and number of arguments if the
  * built-in has already been registered.  This allows pre-defined built-ins
@@ -152,7 +156,8 @@ void ip_program_set_input(ip_program_t *program, const char *input);
  */
 void ip_program_register_builtin
     (ip_program_t *program, const char *name,
-     ip_builtin_handler_t handler, int num_args);
+     ip_builtin_handler_t handler, unsigned char min_args,
+     unsigned char max_args);
 
 /**
  * @brief Registers a list of built-in statements with the program.
@@ -175,13 +180,14 @@ ip_builtin_t *ip_program_lookup_builtin
     (const ip_program_t *program, const char *name);
 
 /**
- * @brief Gets the number of allowable arguments to a built-in statement.
+ * @brief Validates the number of arguments to a built-in statement.
  *
  * @param[in] builtin The built-in statement.
+ * @param[in] num_args The number of arguments to validate.
  *
- * @return The number of allowable arguments, or -1 if arbitrary.
+ * @return Non-zero if @a num_args is in range, or zero otherwise.
  */
-int ip_builtin_get_num_args(ip_builtin_t *builtin);
+int ip_builtin_validate_num_args(ip_builtin_t *builtin, int num_args);
 
 #ifdef __cplusplus
 }

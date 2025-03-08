@@ -83,7 +83,8 @@ void ip_program_set_input(ip_program_t *program, const char *input)
 
 void ip_program_register_builtin
     (ip_program_t *program, const char *name,
-     ip_builtin_handler_t handler, int num_args)
+     ip_builtin_handler_t handler, unsigned char min_args,
+     unsigned char max_args)
 {
     ip_builtin_t *builtin;
     ip_label_t *label;
@@ -93,7 +94,7 @@ void ip_program_register_builtin
         (&(program->builtins), name);
     if (builtin) {
         builtin->handler = handler;
-        builtin->base.type = (unsigned char)num_args;
+        builtin->base.type = (unsigned char)(min_args | (max_args << 4));
         return;
     }
 
@@ -107,7 +108,7 @@ void ip_program_register_builtin
         ip_out_of_memory();
     }
     builtin->base.num = -1;
-    builtin->base.type = (unsigned char)num_args;
+    builtin->base.type = (unsigned char)(min_args | (max_args << 4));
     builtin->handler = handler;
     ip_symbol_insert(&(program->builtins), &(builtin->base));
 
@@ -125,7 +126,8 @@ void ip_program_register_builtins
 {
     while (builtins && builtins->name) {
         ip_program_register_builtin
-            (program, builtins->name, builtins->handler, builtins->num_args);
+            (program, builtins->name, builtins->handler,
+             builtins->min_args, builtins->max_args);
         ++builtins;
     }
 }
@@ -136,14 +138,12 @@ ip_builtin_t *ip_program_lookup_builtin
     return (ip_builtin_t *)ip_symbol_lookup_by_name(&(program->builtins), name);
 }
 
-int ip_builtin_get_num_args(ip_builtin_t *builtin)
+int ip_builtin_validate_num_args(ip_builtin_t *builtin, int num_args)
 {
     if (builtin) {
-        if (builtin->base.type == 0xFF) {
-            return -1;
-        } else {
-            return builtin->base.type;
-        }
+        int min_args = builtin->base.type & 0x0F;
+        int max_args = (builtin->base.type >> 4) & 0x0F;
+        return num_args >= min_args && num_args <= max_args;
     } else {
         return 0;
     }

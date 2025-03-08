@@ -970,12 +970,11 @@ static ip_ast_node_t *ip_parse_call_arguments
         if (label->base.type == IP_TYPE_ROUTINE && label->builtin) {
             ip_builtin_t *builtin = ip_program_lookup_builtin
                 (parser->program, ip_label_get_name(label));
-            int num_args = ip_builtin_get_num_args(builtin);
-            if (num_args >= 0 && num_args != count) {
+            if (!ip_builtin_validate_num_args(builtin, count)) {
                 ip_error_at
                     (parser, &(call->loc),
-                     "invalid number of arguments to '%s'; was %d, should be %d",
-                     ip_label_get_name(label), (int)count, num_args);
+                     "invalid number of arguments to '%s'",
+                     ip_label_get_name(label));
             }
         }
     }

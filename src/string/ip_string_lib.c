@@ -220,13 +220,13 @@ static int ip_string_to_integer
 }
 
 static ip_builtin_info_t const string_builtins[] = {
-    {"TRIM STRING",                 ip_trim_string,         0},
-    {"PAD STRING ON LEFT",          ip_pad_left,            1},
-    {"PAD STRING ON RIGHT",         ip_pad_right,           1},
-    {"NUMBER TO STRING",            ip_number_to_string,    0},
-    {"STRING TO NUMBER",            ip_string_to_number,    0},
-    {"STRING TO INTEGER",           ip_string_to_integer,  -1},
-    {0,                             0,                      0}
+    {"TRIM STRING",                 ip_trim_string,         0,  0},
+    {"PAD STRING ON LEFT",          ip_pad_left,            1,  1},
+    {"PAD STRING ON RIGHT",         ip_pad_right,           1,  1},
+    {"NUMBER TO STRING",            ip_number_to_string,    0,  0},
+    {"STRING TO NUMBER",            ip_string_to_number,    0,  0},
+    {"STRING TO INTEGER",           ip_string_to_integer,   0,  1},
+    {0,                             0,                      0,  0}
 };
 
 void ip_register_string_builtins(ip_program_t *program, unsigned options)
