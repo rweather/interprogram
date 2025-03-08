@@ -173,3 +173,39 @@ ip_string_t *ip_string_pad_right(ip_string_t *str, size_t spaces)
     nstr->data[spaces + str->len] = '\0';
     return nstr;
 }
+
+ip_string_t *ip_string_to_uppercase(ip_string_t *str)
+{
+    size_t posn;
+    if (str && str->len > 0) {
+        str = ip_string_create_with_length(str->data, str->len);
+        for (posn = 0; posn < str->len; ++posn) {
+            char ch = str->data[posn];
+            if (ch >= 'a' && ch <= 'z') {
+                ch = ch - 'a' + 'A';
+                str->data[posn] = ch;
+            }
+        }
+        return str;
+    } else {
+        return ip_string_create_empty();
+    }
+}
+
+ip_string_t *ip_string_to_lowercase(ip_string_t *str)
+{
+    size_t posn;
+    if (str && str->len > 0) {
+        str = ip_string_create_with_length(str->data, str->len);
+        for (posn = 0; posn < str->len; ++posn) {
+            char ch = str->data[posn];
+            if (ch >= 'A' && ch <= 'Z') {
+                ch = ch - 'A' + 'a';
+                str->data[posn] = ch;
+            }
+        }
+        return str;
+    } else {
+        return ip_string_create_empty();
+    }
+}

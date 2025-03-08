@@ -219,6 +219,112 @@ static int ip_string_to_integer
     return status;
 }
 
+/**
+ * @brief Converts the string in "THIS" into uppercase.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_string_to_upper
+    (ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    (void)args;
+    (void)num_args;
+    if (exec->this_value.type == IP_TYPE_STRING) {
+        ip_string_t *result = ip_string_to_uppercase(exec->this_value.svalue);
+        ip_value_set_string(&(exec->this_value), result);
+        ip_string_deref(result);
+        return IP_EXEC_OK;
+    } else {
+        return IP_EXEC_BAD_TYPE;
+    }
+}
+
+/**
+ * @brief Converts the string in "THIS" into lowercase.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_string_to_lower
+    (ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    (void)args;
+    (void)num_args;
+    if (exec->this_value.type == IP_TYPE_STRING) {
+        ip_string_t *result = ip_string_to_lowercase(exec->this_value.svalue);
+        ip_value_set_string(&(exec->this_value), result);
+        ip_string_deref(result);
+        return IP_EXEC_OK;
+    } else {
+        return IP_EXEC_BAD_TYPE;
+    }
+}
+
+/**
+ * @brief Converts the first character of the string in "THIS" into a
+ * character code.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_string_to_char
+    (ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    (void)args;
+    (void)num_args;
+    if (exec->this_value.type == IP_TYPE_STRING) {
+        ip_string_t *str = exec->this_value.svalue;
+        if (str->len > 0) {
+            ip_value_set_int(&(exec->this_value), str->data[0] & 0xFF);
+        } else {
+            ip_value_set_int(&(exec->this_value), 0);
+        }
+        return IP_EXEC_OK;
+    } else {
+        return IP_EXEC_BAD_TYPE;
+    }
+}
+
+/**
+ * @brief Converts the character code in "THIS" into a string.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_char_to_string
+    (ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    int status;
+    ip_string_t *str;
+    (void)args;
+    (void)num_args;
+    status = ip_value_to_int(&(exec->this_value));
+    if (status == IP_EXEC_OK) {
+        char ch = (char)(exec->this_value.ivalue);
+        if (ch != '\0') {
+            str = ip_string_create_with_length(&ch, 1);
+        } else {
+            str = ip_string_create_empty();
+        }
+        ip_value_set_string(&(exec->this_value), str);
+        ip_string_deref(str);
+    }
+    return status;
+}
+
 static ip_builtin_info_t const string_builtins[] = {
     {"TRIM STRING",                 ip_trim_string,         0,  0},
     {"PAD STRING ON LEFT",          ip_pad_left,            1,  1},
@@ -226,6 +332,10 @@ static ip_builtin_info_t const string_builtins[] = {
     {"NUMBER TO STRING",            ip_number_to_string,    0,  0},
     {"STRING TO NUMBER",            ip_string_to_number,    0,  0},
     {"STRING TO INTEGER",           ip_string_to_integer,   0,  1},
+    {"STRING TO UPPERCASE",         ip_string_to_upper,     0,  0},
+    {"STRING TO LOWERCASE",         ip_string_to_lower,     0,  0},
+    {"STRING TO CHARACTER CODE",    ip_string_to_char,      0,  0},
+    {"CHARACTER CODE TO STRING",    ip_char_to_string,      0,  0},
     {0,                             0,                      0,  0}
 };
 

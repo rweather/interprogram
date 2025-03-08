@@ -147,6 +147,24 @@ ip_string_t *ip_string_pad_left(ip_string_t *str, size_t spaces);
  */
 ip_string_t *ip_string_pad_right(ip_string_t *str, size_t spaces);
 
+/**
+ * @brief Converts a string into uppercase.
+ *
+ * @param[in] str The string to convert.
+ *
+ * @return The new converted string.
+ */
+ip_string_t *ip_string_to_uppercase(ip_string_t *str);
+
+/**
+ * @brief Converts a string into lowercase.
+ *
+ * @param[in] str The string to convert.
+ *
+ * @return The new converted string.
+ */
+ip_string_t *ip_string_to_lowercase(ip_string_t *str);
+
 #ifdef __cplusplus
 }
 #endif

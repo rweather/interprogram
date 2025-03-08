@@ -115,6 +115,29 @@
     string to integer 0
     if this is not equal to 66, go to FAIL
 
+    take 65
+    character code to string
+    if this is not equal to 'A', go to FAIL
+    take 0
+    character code to string
+    if this is not equal to '', go to FAIL
+
+    take 'Hello'
+    string to character code
+    if this is not equal to 72, go to FAIL
+    take '0'
+    string to character code
+    if this is not equal to 48, go to FAIL
+    take ''
+    string to character code
+    if this is not zero, go to FAIL
+
+    take ' Hello, World! 0123'
+    string to uppercase
+    if this is not equal to ' HELLO, WORLD! 0123', go to FAIL
+    string to lowercase
+    if this is not equal to ' hello, world! 0123', go to FAIL
+
     # If we get here, then all tests have passed.
     end of interprogram
 
