@@ -1,0 +1,82 @@
+# Ported from the "3-D Plot" program from "BASIC Computer Games",
+# Creative Computing Press, 1978.
+#
+# The "FN A" subroutine below can be modified to plot different functions.
+
+(1) title 3D PLOT
+(2) symbols for integers l, z
+(2) symbols for routines 'FN A'
+
+# Outer loop over x.
+set x = -30
+repeat while x is smaller than or equal to 30
+    # Last column that was used to display a point.
+    set l = 0
+
+    # Calculate the extent of the y range.
+    take 900 - x * x
+    form square root
+    divide by 5
+    round down
+    multiply by 5
+    replace yextent
+
+    # Inner loop over y.
+    set y = yextent
+    repeat while y is greater than or equal to -yextent
+        # Determine the column that should contain the next point.
+        take x * x + y * y
+        form square root
+        FN A
+        add 25
+        subtract 0.7 * y
+        replace z
+
+        # Pad with spaces over to the required column and display the point.
+        if z is greater than l then
+            repeat while l is smaller than z
+                output ' ',
+                set l = l + 1
+            end repeat
+            output '*',
+        end if
+
+        # Move on to the next y value.
+        set y = y - 5
+    end repeat
+
+    # End the current line.
+    output ''
+
+    # Move on to the next x value.
+    set x = x + 1.5
+end repeat
+end of interprogram
+
+# Definition of the function A(Z) = 30 * exp(-Z*Z/100)
+*'FN A'
+    multiply by this
+    divide by -100
+    form exponential
+    multiply by 30
+    return
+
+# Here is the original BASIC code for comparison:
+#
+#   1 PRINT TAB(32);"3D PLOT"
+#   2 PRINT TAB(15);"CREATIVE COMPUTING  MORRISTOWN, NEW JERSEY"
+#   3 PRINT:PRINT:PRINT
+#   5 DEF FNA(Z)=30*EXP(-Z*Z/100)
+#   100 PRINT
+#   110 FOR X=-30 TO 30 STEP 1.5
+#   120 L=0
+#   130 Y1=5*INT(SQR(900-X*X)/5)
+#   140 FOR Y=Y1 TO -Y1 STEP -5
+#   150 Z=INT(25+FNA(SQR(X*X+Y*Y))-.7*Y)
+#   160 IF Z<=L THEN 190
+#   170 L=Z
+#   180 PRINT TAB(Z);'*';
+#   190 NEXT Y
+#   200 PRINT
+#   210 NEXT X
+#   300 END

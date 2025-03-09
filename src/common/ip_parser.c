@@ -863,7 +863,7 @@ static int ip_parse_verify_label_string(ip_parser_t *parser)
  *    | VAR-NAME                        # Extensions
  *    | STRING
  */
-static ip_ast_node_t *ip_parse_label_name(ip_parser_t *parser)
+static ip_ast_node_t *ip_parse_label_name(ip_parser_t *parser, int routine_call)
 {
     ip_ast_node_t *node = 0;
     ip_label_t *label = 0;
@@ -885,8 +885,16 @@ static ip_ast_node_t *ip_parse_label_name(ip_parser_t *parser)
                     (&(parser->program->labels), num);
             }
         }
-    } else if ((parser->tokeniser.token == ITOK_VAR_NAME ||
-                parser->tokeniser.token == ITOK_ROUTINE_NAME) &&
+    } else if (parser->tokeniser.token == ITOK_ROUTINE_NAME && routine_call) {
+        /* Registered routine name */
+        name = parser->tokeniser.token_info->name;
+        label = ip_label_lookup_by_name(&(parser->program->labels), name);
+        if (!label) {
+            label = ip_label_create_by_name
+                (&(parser->program->labels), name);
+        }
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    } else if (parser->tokeniser.token == ITOK_VAR_NAME &&
                (parser->flags & ITOK_TYPE_EXTENSION) != 0) {
         /* Named label */
         name = parser->tokeniser.token_info->name;
@@ -1001,9 +1009,10 @@ static int ip_parse_token_is_terminator(int token)
  *    | VAR-NAME [CallArguments]        # If VAR-NAME is a declared routine.
  *    | ROUTINE-NAME [CallArguments]    # Multi-word routine names.
  */
-static ip_ast_node_t *ip_parse_call_statement(ip_parser_t *parser)
+static ip_ast_node_t *ip_parse_call_statement
+    (ip_parser_t *parser, int routine_call)
 {
-    ip_ast_node_t *node = ip_parse_label_name(parser);
+    ip_ast_node_t *node = ip_parse_label_name(parser, routine_call);
     node = ip_ast_make_unary_statement
         (ITOK_CALL, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
     if (!ip_parse_token_is_terminator(parser->tokeniser.token) &&
@@ -1203,7 +1212,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_GO_TO:
         /* GO TO label */
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        node = ip_parse_label_name(parser);
+        node = ip_parse_label_name(parser, 0);
         node = ip_ast_make_unary_statement
             (token, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
         break;
@@ -1212,7 +1221,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_CALL:
         /* CALL label [arguments] */
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        node = ip_parse_call_statement(parser);
+        node = ip_parse_call_statement(parser, 0);
         break;
 
     case ITOK_VAR_NAME:
@@ -1222,7 +1231,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
         label = ip_label_lookup_by_name
             (&(parser->program->labels), parser->tokeniser.token_info->name);
         if (label && label->base.type == IP_TYPE_ROUTINE) {
-            node = ip_parse_call_statement(parser);
+            node = ip_parse_call_statement(parser, 1);
         } else {
             ip_error_near(parser, 0);
         }
@@ -1231,7 +1240,7 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_REPEAT_FROM:
         /* REPEAT FROM *expression variable TIMES */
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        node = ip_parse_label_name(parser);
+        node = ip_parse_label_name(parser, 0);
         var = ip_parse_variable_expression(parser, 0);
         if (var && var->value_type != IP_TYPE_INT) {
             ip_error_at
