@@ -1,4 +1,4 @@
-(1) TITLE Math test 2 - Trigonometric functions
+TITLE Math test 2 - Trigonometric functions
 
     # Classic INTERPROGRAM expresses angles to sin, cos, etc, in units of pi.
     # For example, 0.25 is 45 degrees, 1.0 is 180 degrees, etc.

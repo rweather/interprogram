@@ -77,6 +77,15 @@ typedef struct
 } ip_parser_t;
 
 /**
+ * @brief Callback function for registering the built-in library.
+ *
+ * @param[in] parser The parser state.
+ * @param[in] options Options for the built-ins to register.
+ */
+typedef void (*ip_parse_register_builtins_t)
+    (ip_parser_t *parser, unsigned options);
+
+/**
  * @brief Initialises a parser state.
  *
  * @param[out] parser The parser state to initialise.
@@ -122,7 +131,8 @@ void ip_parse_statements(ip_parser_t *parser);
  * On exit from this function, the tokeniser will be positioned at the
  * end of the preliminary statements and the start of the main program code.
  */
-void ip_parse_preliminary_statements(ip_parser_t *parser);
+void ip_parse_preliminary_statements
+    (ip_parser_t *parser, ip_parse_register_builtins_t register_builtins);
 
 /**
  * @brief Checks for undefined labels and prints error messages for them.
@@ -142,6 +152,8 @@ void ip_parse_check_open_blocks(ip_parser_t *parser);
  * @brief Registers built-in statements from the program with the parser.
  *
  * @param[in,out] parser The parser state.
+ * @param[in] register_builtins Callback function to register the
+ * built-in library when the "TITLE" preliminary statement is encountered.
  */
 void ip_parse_register_builtins(ip_parser_t *parser);
 
@@ -155,12 +167,14 @@ void ip_parse_register_builtins(ip_parser_t *parser);
  * @param[in] argc Number of arguments to write into the "ARGV" variable,
  * or zero for no "ARGV" variable.
  * @param[in] argv Array of arguments for the "ARGV" variable.
+ * @param[in] register_builtins Callback function to register the
+ * built-in library.
  *
  * @return Zero on success or the number of errors that occured.
  */
 unsigned long ip_parse_program_file
     (ip_program_t *program, const char *filename, unsigned options,
-     int argc, char **argv);
+     int argc, char **argv, ip_parse_register_builtins_t register_builtins);
 
 /**
  * @brief Prints an error message for the current line.

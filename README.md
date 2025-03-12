@@ -99,7 +99,8 @@ have looked like after several decades of improvement?
 
 Yes, I extended the language but I have tried to keep the original
 design philosophy as much as possible.  If you want a purer experience,
-then pass the <tt>--classic</tt> option to the interpreter.
+then pass the <tt>--classic</tt> option to the interpreter to force the
+use of the original syntax.
 
 ## Manual
 

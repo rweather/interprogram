@@ -1,5 +1,5 @@
-(1) TITLE Control flow structured statements test
-(2) symbols for integers J
+TITLE Control flow structured statements test
+symbols for integers J
 
     # Tests the structured 'IF ... THEN ...' construct.
     set J = 42

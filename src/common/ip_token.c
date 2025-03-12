@@ -38,10 +38,10 @@ static ip_token_info_t const tokens[] = {
     {"(2)",                                 ITOK_PRELIM_2,          ITOK_TYPE_PRELIM_START},
     {"(3)",                                 ITOK_PRELIM_3,          ITOK_TYPE_PRELIM_START},
     {"(4)",                                 ITOK_PRELIM_4,          ITOK_TYPE_PRELIM_START},
-    {"TITLE",                               ITOK_TITLE,             ITOK_TYPE_PRELIM_1},
-    {"SYMBOLS FOR INTEGERS",                ITOK_SYMBOLS_INT,       ITOK_TYPE_PRELIM_2},
-    {"MAXIMUM SUBSCRIPTS",                  ITOK_MAX_SUBSCRIPTS,    ITOK_TYPE_PRELIM_3},
-    {"COMPILE THE FOLLOWING INTERPROGRAM",  ITOK_COMPILE_PROGRAM,   ITOK_TYPE_PRELIM_4},
+    {"TITLE",                               ITOK_TITLE,             ITOK_TYPE_PRELIM_1 | ITOK_TYPE_PRELIM_START},
+    {"SYMBOLS FOR INTEGERS",                ITOK_SYMBOLS_INT,       ITOK_TYPE_PRELIM_2 | ITOK_TYPE_PRELIM_START},
+    {"MAXIMUM SUBSCRIPTS",                  ITOK_MAX_SUBSCRIPTS,    ITOK_TYPE_PRELIM_3 | ITOK_TYPE_PRELIM_START},
+    {"COMPILE THE FOLLOWING INTERPROGRAM",  ITOK_COMPILE_PROGRAM,   ITOK_TYPE_PRELIM_4 | ITOK_TYPE_PRELIM_START},
     {"NONE",                                ITOK_NONE,              ITOK_TYPE_SYMBOL_NAME},
     {"END OF INTERPROGRAM",                 ITOK_END_PROGRAM,       ITOK_TYPE_STATEMENT},
     {"END OF PROCESS DEFINITION",           ITOK_END_PROCESS,       ITOK_TYPE_STATEMENT},
@@ -89,7 +89,7 @@ static ip_token_info_t const tokens[] = {
     {"LENGTH OF",                           ITOK_LENGTH_OF,         ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"SUBSTRING FROM",                      ITOK_SUBSTRING,         ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"TO",                                  ITOK_TO,                ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
-    {"SYMBOLS FOR STRINGS",                 ITOK_SYMBOLS_STR,       ITOK_TYPE_PRELIM_2 | ITOK_TYPE_EXTENSION},
+    {"SYMBOLS FOR STRINGS",                 ITOK_SYMBOLS_STR,       ITOK_TYPE_PRELIM_2 | ITOK_TYPE_PRELIM_START | ITOK_TYPE_EXTENSION},
     {"EXIT INTERPROGRAM",                   ITOK_EXIT_PROGRAM,      ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"THEN",                                ITOK_THEN,              ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"ELSE",                                ITOK_ELSE,              ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
@@ -99,7 +99,7 @@ static ip_token_info_t const tokens[] = {
     {"REPEAT FOR",                          ITOK_REPEAT_FOR,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"END REPEAT",                          ITOK_END_REPEAT,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"BY",                                  ITOK_BY,                ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
-    {"SYMBOLS FOR ROUTINES",                ITOK_SYMBOLS_ROUTINES,  ITOK_TYPE_PRELIM_2 | ITOK_TYPE_EXTENSION},
+    {"SYMBOLS FOR ROUTINES",                ITOK_SYMBOLS_ROUTINES,  ITOK_TYPE_PRELIM_2 | ITOK_TYPE_PRELIM_START | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
 

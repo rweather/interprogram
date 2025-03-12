@@ -1,7 +1,7 @@
-(1) TITLE Testing of embedded input data
-(2) symbols for integers J
-(2) symbols for strings S
-(3) maximum subscripts A(3)
+TITLE Testing of embedded input data
+symbols for integers J
+symbols for strings S
+maximum subscripts A(3)
 
     # Read the values from the embedded input.
     ignore tape

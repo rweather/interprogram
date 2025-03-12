@@ -1,2 +1,2 @@
-(1) TITLE "Hello World" example
+TITLE "Hello World" example
 output 'Hello, World!'

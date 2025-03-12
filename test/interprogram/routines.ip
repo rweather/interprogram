@@ -1,6 +1,6 @@
-(1) TITLE Tests for subroutines
-(2) symbols for integers J
-(2) symbols for routines FACTORIAL, 'FORM ARCCOS'
+TITLE Tests for subroutines
+symbols for integers J
+symbols for routines FACTORIAL, 'FORM ARCCOS'
 
     # Call a subroutine; or "routine process" as Classic INTERPROGRAM called it.
     take 0.5

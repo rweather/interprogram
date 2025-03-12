@@ -1,7 +1,7 @@
-(1) TITLE Array testing
-(2) symbols for integers J, K
-(2) symbols for strings S
-(3) maximum subscripts K(99), A(5), B(-5:+3), S(3)
+TITLE Array testing
+symbols for integers J, K
+symbols for strings S
+maximum subscripts K(99), A(5), B(-5:+3), S(3)
 
     # Check the lengths of the arrays.
     if length of K is not equal to 100, go to FAIL

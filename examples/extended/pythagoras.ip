@@ -1,4 +1,4 @@
-(1) TITLE Calculate the hypotenuse of a right-angled triangle
+TITLE Calculate the hypotenuse of a right-angled triangle
 
     output '              A                B            HYPOT'
     output '--------------------------------------------------------'

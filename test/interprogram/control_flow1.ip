@@ -1,5 +1,5 @@
-(1) TITLE Control flow statements test
-(2) symbols for integers J
+TITLE Control flow statements test
+symbols for integers J
 
     # "IF" and "GO TO" are pretty heavily tested by other tests.
     # This file focuses on the remaining control flow statements

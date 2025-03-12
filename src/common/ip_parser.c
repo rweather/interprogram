@@ -1878,14 +1878,45 @@ static void ip_parse_arrays(ip_parser_t *parser)
     }
 }
 
+/**
+ * @brief Determine if a token can start a preliminary statement.
+ *
+ * @param[in] token The token to test.
+ *
+ * @return Non-zero if @a token can start a preliminary statement,
+ * or zero if it cannot.
+ */
+static int ip_parse_token_is_prelim(int token)
+{
+    switch (token) {
+    case ITOK_PRELIM_1:
+    case ITOK_PRELIM_2:
+    case ITOK_PRELIM_3:
+    case ITOK_PRELIM_4:
+    case ITOK_TITLE:
+    case ITOK_SYMBOLS_INT:
+    case ITOK_SYMBOLS_STR:
+    case ITOK_SYMBOLS_ROUTINES:
+    case ITOK_MAX_SUBSCRIPTS:
+    case ITOK_COMPILE_PROGRAM:
+        return 1;
+
+    default:
+        return 0;
+    }
+}
+
 /*
  * Classic INTERPROGRAM requires (1), (2), and (4), with (3) optional.
  * Classic INTERPROGRAM limits the number of integer variables to 8,
  * which we don't do here.  It also allows (3) to be repeated multiple times.
  *
- * Extended INTERPROGRAM allows everything to be optional but they must
- * be in the order (1), (2), (3), (4) when they are provided, with
- * repetition of (2) allowed in addition to (3).
+ * Extended INTERPROGRAM allows everything to be optional except (1)
+ * but they must be in the order (1), (2), (3), (4) when they are provided,
+ * with repetition of (2) allowed in addition to (3).
+ *
+ * Extended INTERPROGRAM can be detected automatically by omitting the (1)
+ * from the "TITLE" statement.  It is mandatory for Classic INTERPROGRAM.
  *
  * ClassicPreliminaryStatements ::=
  *      Title SymbolDeclarations { ArrayDeclarations } Compile
@@ -1894,26 +1925,34 @@ static void ip_parse_arrays(ip_parser_t *parser)
  *      [ Title ] { SymbolDeclarations } { ArrayDeclarations } [ Compile ]
  *
  * Title ::=
- *      "(1)" "TITLE" TEXT EOL
+ *      [ "(1)" ] "TITLE" TEXT EOL
  *
  * SymbolDeclarations ::=
- *      "(2)" "SYMBOLS FOR INTEGERS" Symbols EOL
+ *      [ "(2)" ] "SYMBOLS FOR INTEGERS" Symbols EOL
+ *    | [ "(2)" ] "SYMBOLS FOR STRINGS" Symbols EOL
+ *    | [ "(2)" ] "SYMBOLS FOR ROUTINES" RoutineSymbols EOL
  * Symbols ::=
  *      VAR-NAME { [ "," ] VAR-NAME }
  *    | "NONE"
+ * RoutineSymbols ::=
+ *      RoutineSymbol { [ "," ] RoutineSymbol }
+ *    | "NONE"
+ * RoutineSymbol ::= VAR-NAME | STRING
  *
  * ArrayDeclarations ::=
- *      "(3)" "MAXIMUM SUBSCRIPTS" Arrays EOL
+ *      [ "(3)" ] "MAXIMUM SUBSCRIPTS" Arrays EOL
  * Arrays ::=
  *      ArrayDeclaration { [ "," ] ArrayDeclaration }
  * ArrayDeclaration ::=
  *      VAR-NAME "(" INTEGER ")"
  *    | VAR-NAME "(" "-" INTEGER ")"
+ *    | VAR-NAME "(" INTEGER ":" INTEGER ")"
  *
  * Compile ::=
- *      "(4)" "COMPILE THE FOLLOWING INTERPROGRAM" EOL
+ *      [ "(4)" ] "COMPILE THE FOLLOWING INTERPROGRAM" EOL
  */
-void ip_parse_preliminary_statements(ip_parser_t *parser)
+void ip_parse_preliminary_statements
+    (ip_parser_t *parser, ip_parse_register_builtins_t register_builtins)
 {
     ip_ast_node_t *stmt;
     char *title;
@@ -1923,25 +1962,35 @@ void ip_parse_preliminary_statements(ip_parser_t *parser)
     /* Parse the numbered preliminary statements */
     ip_parse_get_next(parser, ITOK_TYPE_PRELIM_START);
     token = parser->tokeniser.token;
-    while ((token >= ITOK_PRELIM_1 && token <= ITOK_PRELIM_4) ||
-                token == ITOK_EOL) {
-        /* Skip the (n) token */
-        ip_parse_get_next(parser, ITOK_TYPE_PRELIM_START);
+    while (ip_parse_token_is_prelim(token) || token == ITOK_EOL) {
+        /* Handle end of line in the preliminary statements */
         if (token == ITOK_EOL) {
+            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_START);
             token = parser->tokeniser.token;
             continue;
+        }
+
+        /* Skip the (n) token if present.  Otherwise we have a
+         * preliminary statement like 'TITLE' or 'SYMBOLS FOR INTEGERS'
+         * that does not have a (n) prefix.  If that happens, then we
+         * assume that we are parsing an extended INTERPROGRAM. */
+        if (token >= ITOK_PRELIM_1 && token <= ITOK_PRELIM_4) {
+            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_START);
+        } else if ((parser->flags & ITOK_TYPE_CLASSIC) == 0) {
+            parser->flags |= ITOK_TYPE_EXTENSION;
         }
 
         /* Determine what kind of preliminary statement we have */
         switch (token) {
         case ITOK_PRELIM_1:
+        case ITOK_TITLE:
             /* Title for the program */
             if ((sections & 0x0001) != 0) {
                 ip_error(parser, "multiple title statements (1)");
                 break;
             }
             if ((sections & 0xFFFE) != 0) {
-                ip_error(parser, "preliminary statement (1) is out of order");
+                ip_error(parser, "title statement (1) is out of order");
             }
             if (parser->tokeniser.token != ITOK_TITLE) {
                 ip_error(parser, "'TITLE' expected");
@@ -1951,9 +2000,18 @@ void ip_parse_preliminary_statements(ip_parser_t *parser)
                 (ITOK_TITLE, title, &(parser->tokeniser.loc));
             ip_ast_list_add(&(parser->program->statements), stmt);
             sections |= 0x0001;
+
+            /* Once we see the title line we know if we are using the
+             * Classic or Extended INTERPROGRAM syntax.  Register built-ins. */
+            if (register_builtins) {
+                (*register_builtins)(parser, parser->flags);
+            }
             break;
 
         case ITOK_PRELIM_2:
+        case ITOK_SYMBOLS_INT:
+        case ITOK_SYMBOLS_STR:
+        case ITOK_SYMBOLS_ROUTINES:
             /* Declaration of non floating-point symbols */
             if ((sections & 0x0002) != 0 &&
                     (parser->flags & ITOK_TYPE_EXTENSION) == 0) {
@@ -1961,22 +2019,26 @@ void ip_parse_preliminary_statements(ip_parser_t *parser)
                 ip_error(parser, "multiple symbol declaration statements (2)");
             }
             if ((sections & 0xFFFC) != 0) {
-                ip_error(parser, "preliminary statement (2) is out of order");
+                ip_error
+                    (parser, "symbol declaration statement (2) is out of order");
             }
             ip_parse_symbols(parser);
             sections |= 0x0002;
             break;
 
         case ITOK_PRELIM_3:
+        case ITOK_MAX_SUBSCRIPTS:
             /* Declaration of array variables */
             if ((sections & 0xFFF8) != 0) {
-                ip_error(parser, "preliminary statement (3) is out of order");
+                ip_error
+                    (parser, "maximum subscript statement (3) is out of order");
             }
             ip_parse_arrays(parser);
             sections |= 0x0004;
             break;
 
         case ITOK_PRELIM_4:
+        case ITOK_COMPILE_PROGRAM:
             /* End of the preliminary statements */
             if (parser->tokeniser.token != ITOK_COMPILE_PROGRAM) {
                 ip_error
@@ -2014,6 +2076,11 @@ void ip_parse_preliminary_statements(ip_parser_t *parser)
         }
         if ((sections & 0x0008) == 0) {
             ip_error(parser, "missing compilation statement (4)");
+        }
+    } else {
+        /* Must have a title, but everything else is optional */
+        if ((sections & 0x0001) == 0) {
+            ip_error(parser, "missing title statement (1)");
         }
     }
 }
@@ -2072,7 +2139,7 @@ static int ip_parse_read_stdio(FILE *input)
 
 unsigned long ip_parse_program_file
     (ip_program_t *program, const char *filename, unsigned options,
-     int argc, char **argv)
+     int argc, char **argv, ip_parse_register_builtins_t register_builtins)
 {
     FILE *input;
     ip_parser_t parser;
@@ -2119,8 +2186,8 @@ unsigned long ip_parse_program_file
     }
 
     /* Parse the contents of the program file */
+    ip_parse_preliminary_statements(&parser, register_builtins);
     ip_parse_register_builtins(&parser);
-    ip_parse_preliminary_statements(&parser);
     ip_parse_statements(&parser);
     ip_parse_check_undefined_labels(&parser);
     ip_parse_check_open_blocks(&parser);

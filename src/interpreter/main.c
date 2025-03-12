@@ -49,16 +49,22 @@ static void usage(const char *progname)
     fprintf(stderr, "    Set the input file (default is standard input).\n\n");
 
     fprintf(stderr, "--classic, -c\n");
-    fprintf(stderr, "    Use the classic INTERPROGRAM syntax.\n\n");
+    fprintf(stderr, "    Force the use of the classic INTERPROGRAM syntax.\n\n");
 
     fprintf(stderr, "--extended, -e\n");
-    fprintf(stderr, "    Use the extended INTERPROGRAM syntax (default).\n\n");
+    fprintf(stderr, "    Force the use of the extended INTERPROGRAM syntax.\n\n");
+}
+
+static void register_builtins(ip_parser_t *parser, unsigned options)
+{
+    ip_register_math_builtins(parser->program, options);
+    ip_register_string_builtins(parser->program, options);
 }
 
 int main(int argc, char **argv)
 {
     const char *progname = argv[0];
-    unsigned options = ITOK_TYPE_EXTENSION;
+    unsigned options = 0;
     const char *program_filename = 0;
     const char *input_filename = 0;
     const char *output_filename = 0;
@@ -83,9 +89,11 @@ int main(int argc, char **argv)
 
         case 'c':
             options &= ~ITOK_TYPE_EXTENSION;
+            options |= ITOK_TYPE_CLASSIC;
             break;
 
         case 'e':
+            options &= ~ITOK_TYPE_CLASSIC;
             options |= ITOK_TYPE_EXTENSION;
             break;
 
@@ -104,13 +112,11 @@ int main(int argc, char **argv)
 
     /* Create the program object and register built-in statements */
     program = ip_program_new(program_filename);
-    ip_register_math_builtins(program, options);
-    ip_register_string_builtins(program, options);
 
     /* Load the program into memory */
     if (ip_parse_program_file
             (program, program_filename, options,
-             argc - optind, argv + optind) != 0) {
+             argc - optind, argv + optind, register_builtins) != 0) {
         ip_program_free(program);
         return 1;
     }

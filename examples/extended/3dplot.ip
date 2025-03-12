@@ -3,9 +3,9 @@
 #
 # The "FN A" subroutine below can be modified to plot different functions.
 
-(1) title 3D PLOT
-(2) symbols for integers l, z
-(2) symbols for routines 'FN A'
+title 3D PLOT
+symbols for integers l, z
+symbols for routines 'FN A'
 
 # Outer loop over x.
 repeat for x = -30 to 30 by 1.5

@@ -1,6 +1,6 @@
-(1) TITLE String testing
-(2) symbols for integers J
-(2) symbols for strings S, T
+TITLE String testing
+symbols for integers J
+symbols for strings S, T
 
     take 'Hello, World!'
     replace S

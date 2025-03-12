@@ -167,7 +167,9 @@ extern "C" {
 /** Token is part of a constant expression (no variables) */
 #define ITOK_TYPE_CONSTANT      0x2000
 /** Token can appear in any context */
-#define ITOK_TYPE_ANY           0x7FFF
+#define ITOK_TYPE_ANY           0x3FFF
+/** Force the use of the original / classic INTERPROGRAM language */
+#define ITOK_TYPE_CLASSIC       0x4000
 /** Token is an extension, not in the original INTERPROGRAM language */
 #define ITOK_TYPE_EXTENSION     0x8000
 

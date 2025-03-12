@@ -1,4 +1,4 @@
-(1) TITLE Math test 4 - Bitwise logical and shift operations
+TITLE Math test 4 - Bitwise logical and shift operations
 
     # While we write hexadecimal numbers below, the language doesn't
     # support them.  We have to convert into decimal.

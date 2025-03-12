@@ -1,4 +1,4 @@
-(1) TITLE Conditional statement testing
+TITLE Conditional statement testing
 
     # Numeric comparisons.
 *1  if 23 is greater than 23, go to FAIL
