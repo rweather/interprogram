@@ -172,6 +172,28 @@ ip_ast_node_t *ip_ast_make_binary
     return node;
 }
 
+ip_ast_node_t *ip_ast_make_binary_no_cast
+    (unsigned char type, ip_ast_node_t *left, ip_ast_node_t *right,
+     const ip_loc_t *loc)
+{
+    ip_ast_node_t *node;
+
+    /* If either sub-tree is in error, free the other one and return NULL */
+    if (!left || !right) {
+        ip_ast_node_free(left);
+        ip_ast_node_free(right);
+        return 0;
+    }
+
+    /* Construct the binary expression node */
+    node = ip_ast_make_node(type, IP_TYPE_UNKNOWN, loc);
+    node->this_type = left->this_type;
+    node->has_children = 1;
+    node->children.left = left;
+    node->children.right = right;
+    return node;
+}
+
 ip_ast_node_t *ip_ast_make_unary
     (unsigned char type, ip_ast_node_t *expr, const ip_loc_t *loc)
 {

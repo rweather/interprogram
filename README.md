@@ -133,10 +133,10 @@ automated tests:
 
 Then to run some examples:
 
-    interprogram examples/hello_world.ip
-    interprogram examples/3dplot.ip
-    interprogram examples/matches1.ip
-    interprogram examples/matches2.ip
+    interprogram examples/classic/hello_world.ip
+    interprogram examples/classic/3dplot.ip
+    interprogram examples/classic/matches.ip
+    interprogram examples/extended/matches.ip
 
 ## Was it used back in the day?
 

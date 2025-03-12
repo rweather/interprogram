@@ -787,6 +787,109 @@ static ip_ast_node_t *ip_parse_while_statement(ip_parser_t *parser)
 }
 
 /*
+ * ForStatement ::=
+ *      "REPEAT FOR" VAR-NAME "=" Expression "TO" Expression
+ *      [ "BY" Expression ]
+ */
+static ip_ast_node_t *ip_parse_for_statement(ip_parser_t *parser)
+{
+    ip_ast_node_t *node;
+    ip_ast_node_t *var;
+    ip_ast_node_t *start;
+    ip_ast_node_t *end;
+    ip_ast_node_t *step;
+    ip_loc_t loc;
+    unsigned char var_type;
+
+    /* Skip the "REPEAT FOR" keyword */
+    loc = parser->tokeniser.loc;
+    ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+
+    /* Get the variable, which must be integer, floating-point, or a
+     * local variable that we can set the type on dynamically. */
+    var = ip_parse_variable_expression(parser, IP_VAR_ALLOW_LOCALS);
+    if (!var) {
+        return 0;
+    }
+    if (var->type == ITOK_ARG_NUMBER) {
+        /* Assume that local variables used in for loops are floating-point */
+        var_type = IP_TYPE_FLOAT;
+    } else {
+        if (var->value_type != IP_TYPE_INT &&
+                var->value_type != IP_TYPE_FLOAT) {
+            ip_error_at(parser, &(var->loc),
+                        "loop variable must be integer or floating-point");
+        } else {
+            var_type = var->value_type;
+        }
+    }
+
+    /* We expect to see "=" next */
+    if (parser->tokeniser.token != ITOK_EQUAL) {
+        ip_error_near(parser, "'=' expected");
+        ip_ast_node_free(var);
+        return 0;
+    }
+
+    /* Parse the expression for the starting value */
+    start = ip_parse_next_expression(parser);
+    if (!start) {
+        ip_ast_node_free(var);
+        return 0;
+    }
+    start = ip_ast_make_cast(var_type, start);
+
+    /* We expect to see "TO" next */
+    if (parser->tokeniser.token != ITOK_TO) {
+        ip_error_near(parser, "'TO' expected");
+        ip_ast_node_free(var);
+        ip_ast_node_free(start);
+        return 0;
+    }
+
+    /* Parse the expression for the ending value */
+    end = ip_parse_next_expression(parser);
+    if (!end) {
+        ip_ast_node_free(var);
+        ip_ast_node_free(start);
+        return 0;
+    }
+    end = ip_ast_make_cast(var_type, end);
+
+    /* If we have a "BY" token, then also parse the step expression */
+    if (parser->tokeniser.token == ITOK_BY) {
+        step = ip_parse_next_expression(parser);
+        if (!step) {
+            ip_ast_node_free(var);
+            ip_ast_node_free(start);
+            ip_ast_node_free(end);
+            return 0;
+        }
+        step = ip_ast_make_cast(var_type, step);
+    } else {
+        /* No step specified, so default to 1 */
+        if (var_type == IP_TYPE_INT) {
+            step = ip_ast_make_int_constant(1, &(parser->tokeniser.loc));
+        } else {
+            step = ip_ast_make_float_constant(1, &(parser->tokeniser.loc));
+        }
+    }
+
+    /* Build the "REPEAT FOR" node:
+     *
+     *      REPEAT FOR (((SET var = start : end) : step)
+     */
+    node = ip_ast_make_binary_statement
+        (ITOK_SET, IP_TYPE_UNKNOWN, var, start, &loc);
+    node = ip_ast_make_binary_no_cast(ITOK_COLON, node, end, &loc);
+    node = ip_ast_make_binary_no_cast(ITOK_COLON, node, step, &loc);
+    node = ip_ast_make_unary_statement
+        (ITOK_REPEAT_FOR, IP_TYPE_UNKNOWN, node, &loc);
+    ip_parse_create_block(parser, ITOK_REPEAT_FOR, node);
+    return node;
+}
+
+/*
  * EndRepeatStatement ::= "END REPEAT"
  */
 static ip_ast_node_t *ip_parse_end_repeat_statement(ip_parser_t *parser)
@@ -794,11 +897,13 @@ static ip_ast_node_t *ip_parse_end_repeat_statement(ip_parser_t *parser)
     ip_ast_node_t *node;
     ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
     node = ip_ast_make_standalone(ITOK_END_REPEAT, &(parser->tokeniser.loc));
-    if (!parser->blocks || parser->blocks->type != ITOK_REPEAT_WHILE) {
+    if (!parser->blocks ||
+            (parser->blocks->type != ITOK_REPEAT_WHILE &&
+             parser->blocks->type != ITOK_REPEAT_FOR)) {
         ip_error(parser, "'END REPEAT' without a matching 'REPEAT'");
     } else {
-        /* Backpatch the 'REPEAT WHILE' to point at the 'END REPEAT'
-         * node and point the 'END REPEAT' node at the 'REPEAT WHILE'. */
+        /* Backpatch the 'REPEAT WHILE/FOR' to point at the 'END REPEAT'
+         * node and point the 'END REPEAT' node at the 'REPEAT WHILE/FOR'. */
         ip_ast_node_t *repeat = parser->blocks->patch;
         repeat->children.right = node;
         repeat->dont_free_right = 1;
@@ -806,7 +911,7 @@ static ip_ast_node_t *ip_parse_end_repeat_statement(ip_parser_t *parser)
         node->dont_free_right = 1;
         node->children.right = repeat;
 
-        /* Pop the 'REPEAT WHILE' block from the context stack */
+        /* Pop the 'REPEAT WHILE/FOR' block from the context stack */
         ip_parse_free_top_block(parser);
     }
     return node;
@@ -955,7 +1060,7 @@ static ip_ast_node_t *ip_parse_call_arguments
                      IP_MAX_LOCALS);
         }
         if (list) {
-            list = ip_ast_make_binary
+            list = ip_ast_make_binary_no_cast
                 (ITOK_ARG_LIST, list, arg, &(parser->tokeniser.loc));
         } else {
             list = arg;
@@ -1080,6 +1185,7 @@ static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
  *    | "RETURN" Expression
  *    | "EXIT INTERPROGRAM"
  *    | WhileStatement
+ *    | ForStatement
  *    | EndRepeatStatement
  *
  * InputOutputStatement ::=
@@ -1296,6 +1402,11 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
     case ITOK_REPEAT_WHILE:
         /* REPEAT WHILE Condition */
         node = ip_parse_while_statement(parser);
+        break;
+
+    case ITOK_REPEAT_FOR:
+        /* REPEAT FOR Var = Value1 TO Value2 [ BY Value3 ]  */
+        node = ip_parse_for_statement(parser);
         break;
 
     case ITOK_END_REPEAT:
@@ -1934,7 +2045,7 @@ void ip_parse_check_open_blocks(ip_parser_t *parser)
         if (parser->blocks->type == ITOK_IF) {
             ip_error_at(parser, &(node->loc), "unterminated 'IF'");
         } else {
-            ip_error_at(parser, &(node->loc), "unterminated 'REPEAT WHILE'");
+            ip_error_at(parser, &(node->loc), "unterminated 'REPEAT'");
         }
         ip_parse_free_top_block(parser);
     }

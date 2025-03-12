@@ -48,6 +48,72 @@
     if X is not equal to 10, go to FAIL
     if Y is not equal to 45, go to FAIL
 
+    # Test the structured 'REPEAT FOR' looping construct.
+    set Y = 0
+    repeat for X = 1 to 100
+        set Y = Y + X
+    end repeat
+    if Y is not equal to 5050, go to FAIL
+    if X is not equal to 101, go to FAIL
+
+    set Y = 0
+    repeat for X = 100 to 100
+        set Y = Y + X
+    end repeat
+    if Y is not equal to 100, go to FAIL
+    if X is not equal to 101, go to FAIL
+
+    set Y = 0
+    repeat for X = 1 to 100 by 2
+        set Y = Y + X
+    end repeat
+    if Y is not equal to 2500, go to FAIL
+    if X is not equal to 101, go to FAIL
+
+    set Y = 0
+    repeat for X = 1 to 100 by -2
+        set Y = Y + X
+    end repeat
+    if Y is not equal to 0, go to FAIL
+    if X is not equal to 1, go to FAIL
+
+    set Y = 0
+    repeat for X = 100 to 1 by -1
+        set Y = Y + X
+    end repeat
+    if Y is not equal to 5050, go to FAIL
+    if X is not equal to 0, go to FAIL
+
+    set Y = 0
+    repeat for X = 100 to 100 by -100
+        set Y = Y + X
+    end repeat
+    if Y is not equal to 100, go to FAIL
+    if X is not equal to 0, go to FAIL
+
+    set Y = 0
+    repeat for X = 1 to 100
+        repeat for J = 1 to 10
+            set Y = Y + X * J
+        end repeat
+    end repeat
+    if Y is not equal to 277750, go to FAIL
+    if X is not equal to 101, go to FAIL
+    if J is not equal to 11, go to FAIL
+
+    set Y = 0
+    repeat for X = 1 to 100
+        repeat for J = 1 to 11
+            # Perform a break on the last iteration.
+            if J is equal to 11, go to break
+            set Y = Y + X * J
+        end repeat
+*break
+    end repeat
+    if Y is not equal to 277750, go to FAIL
+    if X is not equal to 101, go to FAIL
+    if J is not equal to 11, go to FAIL
+
     # If we get here, then all tests have passed.
     end of interprogram
 

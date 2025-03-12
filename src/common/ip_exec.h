@@ -42,23 +42,59 @@ extern "C" {
 #define IP_EXEC_BAD_LABEL       8   /**< Could not find "GO TO" label */
 #define IP_EXEC_BAD_INPUT       9   /**< Invalid input data */
 #define IP_EXEC_BAD_LOCAL       10  /**< Reference to local at global scope */
-#define IP_EXEC_FALSE           11  /**< Condition is false */
+#define IP_EXEC_BAD_LOOP        11  /**< "END REPEAT" without matching "FOR" */
+#define IP_EXEC_FALSE           12  /**< Condition is false */
 
 /**
- * @brief Item on the execution stack for subroutine calls.
+ * @brief Item on the execution stack for subroutine calls and loops.
  */
 typedef struct ip_exec_stack_item_s ip_exec_stack_item_t;
 struct ip_exec_stack_item_s
 {
-    /** Node for control to return back to at the end of a subroutine */
+    /** Type of stack item: ITOK_CALL or ITOK_REPEAT_FOR */
+    int type;
+
+    /** Next lower item on the stack */
+    ip_exec_stack_item_t *next;
+};
+
+/**
+ * @brief Item on the execution stack for subroutine calls.
+ */
+typedef struct
+{
+    /** Base class fields */
+    ip_exec_stack_item_t base;
+
+    /** Node for control to return back to at the end of the subroutine */
     ip_ast_node_t *return_node;
 
     /** Local variables for this subroutine */
     ip_value_t locals[IP_MAX_LOCALS];
 
-    /** Next lower item on the stack */
-    ip_exec_stack_item_t *next;
-};
+} ip_exec_stack_call_t;
+
+/**
+ * @brief Item on the execution stack for "REPEAT FOR" loops.
+ */
+typedef struct
+{
+    /** Base class fields */
+    ip_exec_stack_item_t base;
+
+    /** "REPEAT FOR" node for the loop */
+    ip_ast_node_t *node;
+
+    /** Points to the iteration variable */
+    ip_ast_node_t *var;
+
+    /** End value for the iteration sequence */
+    ip_value_t end;
+
+    /** Step value for the iteration sequence */
+    ip_value_t step;
+
+} ip_exec_stack_loop_t;
 
 /**
  * @brief Execution context for an INTERPROGRAM.

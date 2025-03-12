@@ -335,13 +335,16 @@ The last preliminary statement must be `(4) COMPILE THE FOLLOWING INTERPROGRAM`.
 
 Reserved words are any that correspond to a single-word keyword:
 
-    ADD         INPUT       POSITIVE    TIMES
-    CALL        IS          REPLACE     TITLE
-    ELSE        MODULO      RETURN      TO
-    EMPTY       NEGATIVE    SET         ZERO
-    FINITE      NONE        SUBTRACT
-    IF          OUTPUT      THEN
-    INFINITE    PAUSE       THIS
+    ADD         INFINITE*   PAUSE       THIS
+    BY*         INPUT       POSITIVE    TIMES
+    CALL*       IS          REPLACE     TITLE
+    ELSE*       MODULO*     RETURN*     TO*
+    EMPTY*      NEGATIVE    SET         ZERO
+    FINITE*     NONE        SUBTRACT
+    IF          OUTPUT      THEN*
+
+Asterisks indicate reserved words that are part of Extended INTERPROGRAM,
+but not the Classic INTERPROGRAM syntax.
 
 Reserved words cannot be used as variable or label names.
 
@@ -743,6 +746,20 @@ While loops are accomplished with the <tt>REPEAT WHILE</tt> construct:
         ...
         SET X = X + 1
     END REPEAT
+
+In English, this can be read as "REPEAT the loop body WHILE the
+condition is true".
+
+For loops are also possible:
+
+    REPEAT FOR X = 0 TO 100 BY 5
+        ...
+    END REPEAT
+
+The step is given with the optional <tt>BY</tt> clause.  By default the
+step is 1.  The loop ends when the loop variable exceeds the end value
+(or goes below the end value if the step is negative).  There will be
+zero iterations if the starting value exceeds the ending value.
 
 Currently there is no equivalent of <tt>continue</tt> or <tt>break</tt>
 from C.  However, it is possible to get the same effect with <tt>GO TO</tt>:

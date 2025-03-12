@@ -144,7 +144,9 @@ static int check_identifiers(void)
     KEYWORD("ELSE IF",                              ITOK_ELSE_IF);
     KEYWORD("END IF",                               ITOK_END_IF);
     KEYWORD("REPEAT WHILE",                         ITOK_REPEAT_WHILE);
+    KEYWORD("REPEAT FOR",                           ITOK_REPEAT_FOR);
     KEYWORD("END REPEAT",                           ITOK_END_REPEAT);
+    KEYWORD("BY",                                   ITOK_BY);
     KEYWORD("SYMBOLS FOR ROUTINES",                 ITOK_SYMBOLS_ROUTINES);
 
     /* Check that we have tested all of the keywords */

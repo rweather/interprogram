@@ -102,8 +102,10 @@ extern "C" {
 #define ITOK_ELSE_IF            0xC3    /**< ELSE IF */
 #define ITOK_END_IF             0xC4    /**< END IF */
 #define ITOK_REPEAT_WHILE       0xC5    /**< REPEAT WHILE */
-#define ITOK_END_REPEAT         0xC6    /**< END REPEAT */
-#define ITOK_SYMBOLS_ROUTINES   0xC7    /**< SYMBOLS FOR ROUTINES */
+#define ITOK_REPEAT_FOR         0xC6    /**< REPEAT FOR */
+#define ITOK_END_REPEAT         0xC7    /**< END REPEAT */
+#define ITOK_BY                 0xC8    /**< BY */
+#define ITOK_SYMBOLS_ROUTINES   0xC9    /**< SYMBOLS FOR ROUTINES */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA

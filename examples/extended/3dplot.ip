@@ -8,8 +8,7 @@
 (2) symbols for routines 'FN A'
 
 # Outer loop over x.
-set x = -30
-repeat while x is smaller than or equal to 30
+repeat for x = -30 to 30 by 1.5
     # Last column that was used to display a point.
     set l = 0
 
@@ -22,14 +21,12 @@ repeat while x is smaller than or equal to 30
     replace yextent
 
     # Inner loop over y.
-    set y = yextent
-    repeat while y is greater than or equal to -yextent
+    repeat for y = yextent to -yextent by -5
         # Determine the column that should contain the next point.
         take x * x + y * y
         form square root
         FN A
-        add 25
-        subtract 0.7 * y
+        add 25 - 0.7 * y
         replace z
 
         # Pad with spaces over to the required column and display the point.
@@ -40,16 +37,10 @@ repeat while x is smaller than or equal to 30
             end repeat
             output '*',
         end if
-
-        # Move on to the next y value.
-        set y = y - 5
     end repeat
 
     # End the current line.
     output ''
-
-    # Move on to the next x value.
-    set x = x + 1.5
 end repeat
 end of interprogram
 

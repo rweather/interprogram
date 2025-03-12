@@ -172,6 +172,20 @@ ip_ast_node_t *ip_ast_make_binary
      const ip_loc_t *loc);
 
 /**
+ * @brief Makes a binary expression node without casting the arguments.
+ *
+ * @param[in] type The type of the binary expression.
+ * @param[in] left The left sub-tree for the expression.
+ * @param[in] right The right sub-tree for the expression.
+ * @param[in] loc Location of the expression in the original source file.
+ *
+ * @return The new node.
+ */
+ip_ast_node_t *ip_ast_make_binary_no_cast
+    (unsigned char type, ip_ast_node_t *left, ip_ast_node_t *right,
+     const ip_loc_t *loc);
+
+/**
  * @brief Makes a unary expression node.
  *
  * @param[in] type The type of the unary expression; e.g. ITOK_POSITIVE.

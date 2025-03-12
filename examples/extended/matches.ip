@@ -1,5 +1,5 @@
 (1) TITLE Game of 21 Matches
-(2) symbols for integers matches, guess
+(2) symbols for integers matches, count, guess
 (2) symbols for strings answer
 
 # This version of 21 Matches introduces some randomness to the computer's

@@ -40,13 +40,84 @@ void ip_exec_init(ip_exec_t *exec, ip_program_t *program)
     srand(time(0));
 }
 
+/**
+ * @brief Frees an item on the execution stack.
+ *
+ * @param[in] item The item to be freed.
+ */
 static void ip_exec_free_stack_item(ip_exec_stack_item_t *item)
 {
     unsigned index;
-    for (index = 0; index < IP_MAX_LOCALS; ++index) {
-        ip_value_release(&(item->locals[index]));
+    if (item->type == ITOK_CALL) {
+        ip_exec_stack_call_t *frame = (ip_exec_stack_call_t *)item;
+        for (index = 0; index < IP_MAX_LOCALS; ++index) {
+            ip_value_release(&(frame->locals[index]));
+        }
+    } else {
+        ip_exec_stack_loop_t *loop = (ip_exec_stack_loop_t *)item;
+        ip_value_release(&(loop->end));
+        ip_value_release(&(loop->step));
     }
     free(item);
+}
+
+/**
+ * @brief Pops the execution stack until a specific item is reached,
+ * or all items have been popped.
+ *
+ * @param[in] exec The execution context.
+ * @param[in] to The item to stop popping at.
+ */
+static void ip_exec_pop_stack_to(ip_exec_t *exec, ip_exec_stack_item_t *to)
+{
+    while (exec->stack && exec->stack != to) {
+        ip_exec_stack_item_t *next = exec->stack->next;
+        ip_exec_free_stack_item(exec->stack);
+        exec->stack = next;
+    }
+}
+
+/**
+ * @brief Find the execution stack item for the current subroutine call.
+ *
+ * @param[in] exec The execution context.
+ *
+ * @return A pointer to the call's execution stack item, or NULL if
+ * we are at the top-most level of the program.
+ */
+static ip_exec_stack_call_t *ip_exec_find_call(ip_exec_t *exec)
+{
+    ip_exec_stack_item_t *item = exec->stack;
+    while (item && item->type != ITOK_CALL) {
+        item = item->next;
+    }
+    return (ip_exec_stack_call_t *)item;
+}
+
+/**
+ * @brief Find the execution stack item for a "REPEAT FOR" loop.
+ *
+ * @param[in] exec The execution context.
+ * @param[in] node Points to the "REPEAT FOR" node in the abstract
+ * syntax tree.
+ *
+ * @return A pointer to the loop's execution stack item, or NULL if
+ * the loop does not exist in the current context.
+ */
+static ip_exec_stack_loop_t *ip_exec_find_loop
+    (ip_exec_t *exec, ip_ast_node_t *node)
+{
+    /* Walk up the stack items until we find the loop or a call.
+     * The call terminates the search because we cannot iterate
+     * loops that started outside of the current subroutine. */
+    ip_exec_stack_item_t *item = exec->stack;
+    while (item && item->type != ITOK_CALL) {
+        if (((ip_exec_stack_loop_t *)item)->node == node) {
+            return (ip_exec_stack_loop_t *)item;
+        }
+        item = item->next;
+    }
+    return 0;
 }
 
 void ip_exec_free(ip_exec_t *exec)
@@ -875,10 +946,11 @@ static int ip_exec_eval_expression
         EVAL_UNARY_STRING(length);
         break;
 
-    case ITOK_ARG_NUMBER:
+    case ITOK_ARG_NUMBER: {
         /* Reference to a local variable in the current subroutine */
-        if (exec->stack) {
-            ip_value_assign(result, &(exec->stack->locals[expr->ivalue]));
+        ip_exec_stack_call_t *frame = ip_exec_find_call(exec);
+        if (frame) {
+            ip_value_assign(result, &(frame->locals[expr->ivalue]));
             if (result->type == IP_TYPE_UNKNOWN) {
                 status = IP_EXEC_UNINIT;
             }
@@ -886,7 +958,7 @@ static int ip_exec_eval_expression
             /* Not currently within a subroutine */
             status = IP_EXEC_BAD_LOCAL;
         }
-        break;
+        break; }
 
     default:
         /* Don't know what kind of expression this is */
@@ -951,14 +1023,64 @@ static int ip_exec_eval_condition(ip_exec_t *exec, ip_ast_node_t *expr)
  * @brief Assigns a value to a variable.
  *
  * @param[in,out] exec The execution context.
+ * @param[in] node The node that corresponds to the variable.
+ * @param[in] value The value to assign to the variable.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_exec_assign_variable
+    (ip_exec_t *exec, ip_ast_node_t *node, ip_value_t *value)
+{
+    ip_value_t index;
+    int status;
+
+    /* Is this a variable or array assignment? */
+    if (node->type == ITOK_VAR_NAME) {
+        /* Assign to an ordinary variable */
+        status = ip_value_to_var(node->var, value);
+    } else if (node->type == ITOK_INDEX_INT ||
+               node->type == ITOK_INDEX_FLOAT ||
+               node->type == ITOK_INDEX_STRING) {
+        /* Assign to an array element; first evaluate the array index */
+        ip_value_init(&index);
+        status = ip_exec_eval_expression(exec, node->children.right, &index);
+        if (status == IP_EXEC_OK) {
+            status = ip_value_to_int(&index);
+            if (status == IP_EXEC_OK) {
+                /* Finally assign to the array element */
+                status = ip_value_to_array
+                    (node->children.left->var, index.ivalue, value);
+            }
+        }
+        ip_value_release(&index);
+    } else if (node->type == ITOK_ARG_NUMBER) {
+        /* Assign to a local variable in the current stack frame */
+        ip_exec_stack_call_t *frame = ip_exec_find_call(exec);
+        if (frame) {
+            ip_value_assign(&(frame->locals[node->ivalue]), value);
+            status = IP_EXEC_OK;
+        } else {
+            /* Cannot assign local variables at the global level */
+            status = IP_EXEC_BAD_LOCAL;
+        }
+    } else {
+        /* Cannot assign to this type of variable */
+        status = IP_EXEC_BAD_TYPE;
+    }
+    return status;
+}
+
+/**
+ * @brief Performs an assignment statement.
+ *
+ * @param[in,out] exec The execution context.
  * @param[in] node The assignment node.
  *
  * @return IP_EXEC_OK or an error code.
  */
-static int ip_exec_assign_variable(ip_exec_t *exec, ip_ast_node_t *node)
+static int ip_exec_assignment_statement(ip_exec_t *exec, ip_ast_node_t *node)
 {
     ip_value_t value;
-    ip_value_t index;
     int status;
 
     /* Get the value to be assigned to the variable */
@@ -975,42 +1097,8 @@ static int ip_exec_assign_variable(ip_exec_t *exec, ip_ast_node_t *node)
         ip_value_assign(&value, &(exec->this_value));
     }
 
-    /* Is this a variable or array assignment? */
-    node = node->children.left;
-    if (node->type == ITOK_VAR_NAME) {
-        /* Assign to an ordinary variable */
-        status = ip_value_to_var(node->var, &value);
-    } else if (node->type == ITOK_INDEX_INT ||
-               node->type == ITOK_INDEX_FLOAT ||
-               node->type == ITOK_INDEX_STRING) {
-        /* Assign to an array element; first evaluate the array index */
-        ip_value_init(&index);
-        status = ip_exec_eval_expression(exec, node->children.right, &index);
-        if (status == IP_EXEC_OK) {
-            status = ip_value_to_int(&index);
-            if (status == IP_EXEC_OK) {
-                /* Finally assign to the array element */
-                status = ip_value_to_array
-                    (node->children.left->var, index.ivalue, &value);
-            }
-        }
-        ip_value_release(&index);
-    } else if (node->type == ITOK_ARG_NUMBER) {
-        /* Assign to a local variable in the current stack frame */
-        if (exec->stack) {
-            ip_value_assign
-                (&(exec->stack->locals[node->ivalue]), &value);
-            status = IP_EXEC_OK;
-        } else {
-            /* Cannot assign local variables at the global level */
-            status = IP_EXEC_BAD_LOCAL;
-        }
-    } else {
-        /* Cannot assign to this type of variable */
-        status = IP_EXEC_BAD_TYPE;
-    }
-
-    /* Clean up and exit */
+    /* Assign the value to the variable */
+    status = ip_exec_assign_variable(exec, node->children.left, &value);
     ip_value_release(&value);
     return status;
 }
@@ -1137,21 +1225,19 @@ static int ip_exec_jump_to_label
     (ip_exec_t *exec, ip_ast_node_t *node, int call, int num_args)
 {
     int status = IP_EXEC_OK;
-    ip_exec_stack_item_t *stack_item;
     if (node->type == ITOK_LABEL) {
         if (node->label->node) {
             /* Fetch the destination node direct from the label */
             exec->pc = node->label->node;
         } else if (node->label->builtin && call) {
             /* Calling a built-in statement */
+            ip_exec_stack_call_t *frame = ip_exec_find_call(exec);
             ip_builtin_handler_t handler;
             handler = (ip_builtin_handler_t)(node->label->builtin);
-            status = (*handler)(exec, exec->stack->locals, num_args);
+            status = (*handler)(exec, frame->locals, num_args);
 
-            /* Pop the top-most stack frame which we don't need any more */
-            stack_item = exec->stack;
-            exec->stack = stack_item->next;
-            ip_exec_free_stack_item(stack_item);
+            /* Pop the top-most call frame which we don't need any more */
+            ip_exec_pop_stack_to(exec, frame->base.next);
         } else {
             /* Cannot use "GO TO" with a built-in statement */
             status = IP_EXEC_BAD_LABEL;
@@ -1231,6 +1317,179 @@ static int ip_exec_repeat_while(ip_exec_t *exec, ip_ast_node_t *node)
         }
         status = IP_EXEC_OK;
     }
+    return status;
+}
+
+/**
+ * @brief Determine if we have reached the end of the iteration sequence.
+ *
+ * @param[in] exec The execution context.
+ * @param[in] loop The loop.
+ *
+ * @return Non-zero if the loop is done, or zero for more iterations.
+ */
+static int ip_exec_is_loop_done(ip_exec_t *exec, ip_exec_stack_loop_t *loop)
+{
+    ip_value_t value;
+    int status;
+
+    /* Get the current value of the loop variable */
+    ip_value_init(&value);
+    status = ip_exec_eval_expression(exec, loop->var, &value);
+    if (status != IP_EXEC_OK || value.type != loop->end.type) {
+        /* Shouldn't happen, but end the loop anyway */
+        ip_value_release(&value);
+        return 1;
+    }
+
+    /* If the step is negative, then check if the variable's value is less
+     * than the end.  Otherwise check if it is greater than the end */
+    if (value.type == IP_TYPE_INT) {
+        if (loop->step.ivalue < 0) {
+            status = (value.ivalue < loop->end.ivalue);
+        } else {
+            status = (value.ivalue > loop->end.ivalue);
+        }
+    } else if (value.type == IP_TYPE_FLOAT) {
+        if (loop->step.fvalue < 0) {
+            status = (value.fvalue < loop->end.fvalue);
+        } else {
+            status = (value.fvalue > loop->end.fvalue);
+        }
+    } else {
+        /* Cannot iterate over strings!  End the loop immeditely */
+        status = 1;
+    }
+    ip_value_release(&value);
+    return status;
+}
+
+/**
+ * @brief Start of a "REPEAT FOR" loop construct.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] node The "REPEAT FOR" node in the program.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_exec_repeat_for(ip_exec_t *exec, ip_ast_node_t *node)
+{
+    ip_exec_stack_loop_t *loop;
+    ip_ast_node_t *assign;
+    ip_ast_node_t *var;
+    ip_ast_node_t *end;
+    ip_ast_node_t *step;
+    int status;
+
+    /* Break the "REPEAT FOR" node into individual pieces */
+    step = node->children.left->children.right;
+    end = node->children.left->children.left->children.right;
+    assign = node->children.left->children.left->children.left;
+    var = assign->children.left;
+
+    /* Construct an execution stack item for the loop */
+    loop = calloc(1, sizeof(ip_exec_stack_loop_t));
+    if (!loop) {
+        ip_out_of_memory();
+    }
+    loop->base.type = ITOK_REPEAT_FOR;
+    loop->node = node;
+    loop->var = var;
+
+    /* Evaluate the end expression and step expression.  We evaluate these
+     * before the variable assignment in case they involve the variable. */
+    status = ip_exec_eval_expression(exec, end, &(loop->end));
+    if (status == IP_EXEC_OK) {
+        status = ip_exec_eval_expression(exec, step, &(loop->step));
+    }
+    if (status != IP_EXEC_OK) {
+        ip_exec_free_stack_item(&(loop->base));
+        return status;
+    }
+    if (loop->end.type != loop->step.type) {
+        /* End and step values should be the same type */
+        ip_exec_free_stack_item(&(loop->base));
+        return IP_EXEC_BAD_TYPE;
+    }
+
+    /* Perform the assignment to the loop variable */
+    status = ip_exec_assignment_statement(exec, assign);
+    if (status != IP_EXEC_OK) {
+        ip_exec_free_stack_item(&(loop->base));
+        return status;
+    }
+
+    /* Check if the variable's original value is already past the end.
+     * If it is, then jump to the end of the loop and stop. */
+    if (ip_exec_is_loop_done(exec, loop)) {
+        ip_exec_free_stack_item(&(loop->base));
+        exec->pc = node->children.right->next;
+        return IP_EXEC_OK;
+    }
+
+    /* Push the loop onto the execution stack and return */
+    loop->base.next = exec->stack;
+    exec->stack = &(loop->base);
+    return IP_EXEC_OK;
+}
+
+/**
+ * @brief "END REPEAT" at the end of a "REPEAT WHILE" construct.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] loop Reference to the "REPEAT FOR" execution stack item.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+static int ip_exec_repeat_for_next(ip_exec_t *exec, ip_exec_stack_loop_t *loop)
+{
+    int status;
+    ip_value_t value;
+    ip_value_t step;
+
+    /* Initialise the values we will be using */
+    ip_value_init(&value);
+    ip_value_init(&step);
+
+    /* Add the step value to the loop variable */
+    status = ip_exec_eval_expression(exec, loop->var, &value);
+    if (status == IP_EXEC_OK) {
+        ip_value_assign(&step, &(loop->step));
+        if (value.type == IP_TYPE_INT) {
+            status = ip_value_to_int(&step);
+        } else if (value.type == IP_TYPE_FLOAT) {
+            status = ip_value_to_float(&step);
+        } else {
+            status = IP_EXEC_BAD_TYPE;
+        }
+        if (status == IP_EXEC_OK) {
+            if (value.type == IP_TYPE_INT) {
+                value.ivalue += step.ivalue;
+            } else {
+                value.fvalue += step.fvalue;
+            }
+            status = ip_exec_assign_variable(exec, loop->var, &value);
+            if (status == IP_EXEC_OK) {
+                /* Check if we have passed the end point for the loop */
+                if (!ip_exec_is_loop_done(exec, loop)) {
+                    /* Continue execution from the node after the
+                     * "REPEAT FOR" node for the loop. */
+                    ip_value_release(&value);
+                    ip_value_release(&step);
+                    exec->pc = loop->node->next;
+                    return IP_EXEC_OK;
+                }
+            }
+        }
+    }
+
+    /* Loop is finished, so pop the execution stack item and continue
+     * execution from the next statement after the "REPEAT FOR". */
+    ip_exec_pop_stack_to(exec, loop->base.next);
+
+    /* Clean up and exit */
+    ip_value_release(&value);
+    ip_value_release(&step);
     return status;
 }
 
@@ -1457,7 +1716,7 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
     /* Also assign the value to a variable if the destination is not "THIS" */
     if (node->children.left->type != ITOK_THIS) {
         /* Perform the equivalent of "REPLACE var" */
-        status = ip_exec_assign_variable(exec, node);
+        status = ip_exec_assignment_statement(exec, node);
     }
 
     /* Clean up and exit */
@@ -1610,7 +1869,7 @@ static int ip_exec_extract_substring(ip_exec_t *exec, ip_ast_node_t *node)
  * @brief Evaluates the arguments to a subroutine call.
  *
  * @param[in,out] exec The execution context.
- * @param[in] stack The new stack frame for passing the arguments.
+ * @param[in] frame The new stack frame for passing the arguments.
  * @param[in] arg The node representing the arguments to the "CALL" statement.
  * @param[in,out] num_args Number of arguments in the @a arg list.  Must be
  * zero on first entry.
@@ -1618,7 +1877,7 @@ static int ip_exec_extract_substring(ip_exec_t *exec, ip_ast_node_t *node)
  * @return IP_EXEC_OK or an error code.
  */
 static int ip_exec_eval_call_arguments
-    (ip_exec_t *exec, ip_exec_stack_item_t *stack,
+    (ip_exec_t *exec, ip_exec_stack_call_t *frame,
      ip_ast_node_t *arg, int *num_args)
 {
     int status;
@@ -1630,16 +1889,16 @@ static int ip_exec_eval_call_arguments
         status = ip_exec_eval_expression(exec, arg->children.right, &value);
         if (status == IP_EXEC_OK) {
             ip_value_assign
-                (&(stack->locals[arg->children.left->ivalue]), &value);
+                (&(frame->locals[arg->children.left->ivalue]), &value);
         }
         ip_value_release(&value);
         ++(*num_args);
     } else if (arg->type == ITOK_ARG_LIST) {
         status = ip_exec_eval_call_arguments
-            (exec, stack, arg->children.left, num_args);
+            (exec, frame, arg->children.left, num_args);
         if (status == IP_EXEC_OK) {
             status = ip_exec_eval_call_arguments
-                (exec, stack, arg->children.right, num_args);
+                (exec, frame, arg->children.right, num_args);
         }
     } else {
         status = IP_EXEC_BAD_STATEMENT;
@@ -1649,7 +1908,7 @@ static int ip_exec_eval_call_arguments
 
 int ip_exec_step(ip_exec_t *exec)
 {
-    ip_exec_stack_item_t *stack_item;
+    ip_exec_stack_call_t *frame;
     ip_ast_node_t *node = exec->pc;
     int status;
     int num_args;
@@ -1693,11 +1952,10 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_END_PROCESS:
     case ITOK_RETURN:
         /* Return from a subroutine */
-        if (exec->stack != 0) {
-            stack_item = exec->stack;
-            exec->pc = stack_item->return_node;
-            exec->stack = stack_item->next;
-            ip_exec_free_stack_item(stack_item);
+        frame = ip_exec_find_call(exec);
+        if (frame) {
+            exec->pc = frame->return_node;
+            ip_exec_pop_stack_to(exec, frame->base.next);
         } else {
             return IP_EXEC_BAD_RETURN;
         }
@@ -1720,7 +1978,7 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_REPLACE:
     case ITOK_SET:
         /* Set a variable to an expression value */
-        return ip_exec_assign_variable(exec, node);
+        return ip_exec_assignment_statement(exec, node);
 
     case ITOK_IF:
         /* Conditional statement */
@@ -1795,24 +2053,25 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_EXECUTE_PROCESS:
     case ITOK_CALL:
         /* Call a subroutine */
-        stack_item = calloc(1, sizeof(ip_exec_stack_item_t));
-        if (!stack_item) {
+        frame = calloc(1, sizeof(ip_exec_stack_call_t));
+        if (!frame) {
             ip_out_of_memory();
         }
+        frame->base.type = ITOK_CALL;
+        frame->return_node = exec->pc;
         num_args = 0;
         if (node->children.right) {
             /* Evaluate the arguments to the call and populate the
              * local variables within the new stack frame. */
             status = ip_exec_eval_call_arguments
-                (exec, stack_item, node->children.right, &num_args);
+                (exec, frame, node->children.right, &num_args);
             if (status != IP_EXEC_OK) {
-                ip_exec_free_stack_item(stack_item);
+                ip_exec_free_stack_item(&(frame->base));
                 return status;
             }
         }
-        stack_item->return_node = exec->pc;
-        stack_item->next = exec->stack;
-        exec->stack = stack_item;
+        frame->base.next = exec->stack;
+        exec->stack = &(frame->base);
         return ip_exec_jump_to_label(exec, node->children.left, 1, num_args);
 
     case ITOK_REPEAT_FROM:
@@ -1823,9 +2082,26 @@ int ip_exec_step(ip_exec_t *exec)
         /* Repeat while a condition is true */
         return ip_exec_repeat_while(exec, node);
 
+    case ITOK_REPEAT_FOR:
+        /* Iterate over a range of values */
+        return ip_exec_repeat_for(exec, node);
+
     case ITOK_END_REPEAT:
-        /* Jump back to the top of the loop and re-evaluate the condition */
-        exec->pc = node->children.right;
+        if (node->children.right->type == ITOK_REPEAT_WHILE) {
+            /* Jump back to the top of the loop and re-evaluate the condition */
+            exec->pc = node->children.right;
+        } else {
+            /* We are at the end of a "REPEAT FOR".  Find the loop context. */
+            ip_exec_stack_loop_t *loop;
+            loop = ip_exec_find_loop(exec, node->children.right);
+            if (loop) {
+                /* Step the loop variable and check for loop termination */
+                return ip_exec_repeat_for_next(exec, loop);
+            } else {
+                /* No matching "REPEAT FOR" for this "END REPEAT" */
+                return IP_EXEC_BAD_LOOP;
+            }
+        }
         break;
 
     case ITOK_PUNCH:
@@ -1910,6 +2186,7 @@ int ip_exec_run(ip_exec_t *exec)
     case IP_EXEC_BAD_LABEL:     error = "unknown label"; break;
     case IP_EXEC_BAD_INPUT:     error = "invalid input data"; break;
     case IP_EXEC_BAD_LOCAL:     error = "invalid local variable reference"; break;
+    case IP_EXEC_BAD_LOOP:      error = "'END REPEAT' without a matching 'REPEAT'"; break;
     case IP_EXEC_FALSE:         error = "condition is false"; break;
     default:                    error = "program failed"; break;
     }
