@@ -482,7 +482,7 @@ static ip_ast_node_t *ip_parse_classic_expression(ip_parser_t *parser)
     case ITOK_VAR_NAME:
         /* Variable name which may be followed by "+ N" or "- N" */
         node = ip_parse_variable_expression
-            (parser, IP_VAR_ALLOW_RVALUES);
+            (parser, IP_VAR_ALLOW_RVALUES | IP_VAR_ALLOW_ARRAYS);
         token = parser->tokeniser.token;
         if (token == ITOK_PLUS || token == ITOK_MINUS) {
             ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
