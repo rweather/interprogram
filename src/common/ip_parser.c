@@ -346,6 +346,7 @@ static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
         }
         node = ip_ast_make_unary
             (token, node, &(parser->tokeniser.loc));
+        node->value_type = IP_TYPE_INT;
         break;
 
     default:

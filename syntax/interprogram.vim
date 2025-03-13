@@ -93,7 +93,6 @@ syn match   ipOperator          "\<BITWISE XOR WITH\>"
 syn match   ipOperator          "\<BITWISE NOT\>"
 syn match   ipOperator          "\<SHIFT LEFT BY\>"
 syn match   ipOperator          "\<SHIFT RIGHT BY\>"
-syn match   ipOperator          "\<LENGTH OF\>"
 syn match   ipOperator          "\<TO\>"
 
 syn match   ipCondition         "\<IS\>"
@@ -113,6 +112,7 @@ syn match   ipCondition         "\<INFINITE\>"
 syn match   ipCondition         "\<A NUMBER\>"
 syn match   ipCondition         "\<EMPTY\>"
 syn match   ipCondition         "\<IN\>"
+syn match   ipCondition         "\<LENGTH OF\>"
 
 syn match   ipConstant          "\<THIS\>"
 syn match   ipConstant          /[0-9]*\.[0-9]*/

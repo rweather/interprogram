@@ -138,6 +138,15 @@ if this is not equal to ' HELLO, WORLD! 0123', go to FAIL
 string to lowercase
 if this is not equal to ' hello, world! 0123', go to FAIL
 
+if length of ARGV is not equal to 4, go to FAIL
+take ARGV(0)
+substring from length of ARGV(0) - 9
+string to lowercase
+if this is not equal to 'strings.ip', go to FAIL
+if ARGV(1) is not equal to 'First', go to FAIL
+if ARGV(2) is not equal to 'Second', go to FAIL
+if ARGV(3) is not equal to 'Third', go to FAIL
+
 # If we get here, then all tests have passed.
 end of interprogram
 
