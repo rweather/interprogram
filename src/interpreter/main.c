@@ -29,12 +29,13 @@
 #include <string.h>
 #include <getopt.h>
 
-#define short_options "o:i:ce"
+#define short_options "o:i:cev"
 static struct option long_options[] = {
     {"output",      required_argument,  0,  'o'},
     {"input",       required_argument,  0,  'i'},
     {"classic",     no_argument,        0,  'c'},
     {"extended",    no_argument,        0,  'e'},
+    {"verify-chars",no_argument,        0,  'v'},
     {0,             0,                  0,  0},
 };
 
@@ -53,6 +54,9 @@ static void usage(const char *progname)
 
     fprintf(stderr, "--extended, -e\n");
     fprintf(stderr, "    Force the use of the extended INTERPROGRAM syntax.\n\n");
+
+    fprintf(stderr, "--verify-chars, -v\n");
+    fprintf(stderr, "    Verify that only Flexowriter-compatible characters are in use.\n\n");
 }
 
 static void register_builtins(ip_parser_t *parser, unsigned options)
@@ -61,10 +65,41 @@ static void register_builtins(ip_parser_t *parser, unsigned options)
     ip_register_string_builtins(parser->program, options);
 }
 
+/* Verify that a file only contains characters compatible with the
+ * original Flexowriter teleprinter on the CSIRAC. */
+static int verify_characters(const char *filename)
+{
+    /* Note: ~ stands in for the original Flexowriter "blank", and
+     * $ stands in for the original Flexowriter pound sign. */
+    static char const allowed_chars[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 \t\r\n+-*/()#=&,.'x$~";
+    FILE *file;
+    int exitval = 0;
+    int ch;
+    unsigned long line = 1;
+    if ((file = fopen(filename, "r")) == NULL) {
+        perror(filename);
+        return 1;
+    }
+    while ((ch = fgetc(file)) != EOF) {
+        if (ch == '\0' || strchr(allowed_chars, ch) == 0) {
+            fprintf(stderr, "%s:%lu: invalid character '%c'\n",
+                    filename, line, ch);
+            exitval = 1;
+        }
+        if (ch == '\n') {
+            ++line;
+        }
+    }
+    fclose(file);
+    return exitval;
+}
+
 int main(int argc, char **argv)
 {
     const char *progname = argv[0];
     unsigned options = 0;
+    int verify_chars = 0;
     const char *program_filename = 0;
     const char *input_filename = 0;
     const char *output_filename = 0;
@@ -97,6 +132,10 @@ int main(int argc, char **argv)
             options |= ITOK_TYPE_EXTENSION;
             break;
 
+        case 'v':
+            verify_chars = 1;
+            break;
+
         default:
             usage(progname);
             return 1;
@@ -109,6 +148,11 @@ int main(int argc, char **argv)
         return 1;
     }
     program_filename = argv[optind];
+
+    /* Are we verifying the characters? */
+    if (verify_chars) {
+        return verify_characters(program_filename);
+    }
 
     /* Create the program object and register built-in statements */
     program = ip_program_new(program_filename);

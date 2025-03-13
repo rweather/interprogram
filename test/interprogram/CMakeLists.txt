@@ -1,5 +1,19 @@
 enable_testing()
 
+set(EXAMPLE_DIR ${CMAKE_SOURCE_DIR}/examples)
+
+# Verify that the classic examples only use classic-compatible characters.
+add_test(NAME verify_3dplot COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/classic/3dplot.ip)
+add_test(NAME verify_hello_world COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/classic/hello_world.ip)
+add_test(NAME verify_matches COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/classic/matches.ip)
+add_test(NAME verify_pythagoras COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/classic/pythagoras.ip)
+add_test(NAME verify_example1 COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/manual/example1.ip)
+add_test(NAME verify_example2 COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/manual/example2.ip)
+add_test(NAME verify_example2a COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/manual/example2a.ip)
+add_test(NAME verify_example3 COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/manual/example3.ip)
+add_test(NAME verify_example4 COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/manual/example4.ip)
+
+# Run some programs to test the interpreter's functionality.
 add_test(NAME arrays COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/arrays.ip)
 add_test(NAME conditions COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/conditions.ip)
 add_test(NAME control_flow1 COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/control_flow1.ip)
