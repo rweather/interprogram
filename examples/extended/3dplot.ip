@@ -46,11 +46,11 @@ end of interprogram
 
 # Definition of the function A(Z) = 30 * exp(-Z*Z/100)
 *'FN A'
-    multiply by this
-    divide by -100
-    form exponential
-    multiply by 30
-    return
+multiply by this
+divide by -100
+form exponential
+multiply by 30
+return
 
 # Here is the original BASIC code for comparison:
 #

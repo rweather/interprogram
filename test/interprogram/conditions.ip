@@ -1,29 +1,32 @@
 TITLE Conditional statement testing
 
-    # Numeric comparisons.
-*1  if 23 is greater than 23, go to FAIL
-    if 23 is smaller than 23, go to FAIL
-    if 23 is not equal to 23, go to FAIL
-    if 23 is zero, go to FAIL
-    if 23 is negative, go to FAIL
-    if 23 is positive, go to *2
-    go to FAIL
+# Numeric comparisons.
+*1
+if 23 is greater than 23, go to FAIL
+if 23 is smaller than 23, go to FAIL
+if 23 is not equal to 23, go to FAIL
+if 23 is zero, go to FAIL
+if 23 is negative, go to FAIL
+if 23 is positive, go to *2
+go to FAIL
 
-*2  if 23 is greater than 23.001, go to FAIL
-    if 23 is not smaller than 23.001, go to FAIL
-    if 23 is greater than or equal to 23.001, go to FAIL
-    if 23.001 is smaller than 23, go to FAIL
-    if 23.001 is smaller than or equal to 23, go to FAIL
-    if 23.001 is equal to 23, go to FAIL
-    if 23.001 is not equal to 23, go to *3
-    go to FAIL
+*2
+if 23 is greater than 23.001, go to FAIL
+if 23 is not smaller than 23.001, go to FAIL
+if 23 is greater than or equal to 23.001, go to FAIL
+if 23.001 is smaller than 23, go to FAIL
+if 23.001 is smaller than or equal to 23, go to FAIL
+if 23.001 is equal to 23, go to FAIL
+if 23.001 is not equal to 23, go to *3
+go to FAIL
 
-*3  if -23 is greater than -22, go to FAIL
-    if -23 is smaller than -23, go to FAIL
+*3
+if -23 is greater than -22, go to FAIL
+if -23 is smaller than -23, go to FAIL
 
-    # If we get here, then all tests have passed.
-    end of interprogram
+# If we get here, then all tests have passed.
+end of interprogram
 
-    # One of the tests failed.  Exit the program with a status of 1.
+# One of the tests failed.  Exit the program with a status of 1.
 *FAIL
-    take 1, exit interprogram
+take 1, exit interprogram

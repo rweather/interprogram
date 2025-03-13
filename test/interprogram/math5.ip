@@ -1,33 +1,33 @@
 TITLE Math test 5 - Rounding functions.
 
-    # Ignore the headings in the embedded data.
-    ignore tape
+# Ignore the headings in the embedded data.
+ignore tape
 
-    # Process the lines from the embedded data.
+# Process the lines from the embedded data.
 *NEXT
-    input value, go to *1, go to END
+input value, go to *1, go to END
 *1
-    input nearest, & up, & down
+input nearest, & up, & down
 
-    # Test the rounding operations.
-    take value
-    round nearest
-    if this is not equal to nearest, go to FAIL
-    take value
-    round up
-    if this is not equal to up, go to FAIL
-    take value
-    round down
-    if this is not equal to down, go to FAIL
-    go to NEXT
+# Test the rounding operations.
+take value
+round nearest
+if this is not equal to nearest, go to FAIL
+take value
+round up
+if this is not equal to up, go to FAIL
+take value
+round down
+if this is not equal to down, go to FAIL
+go to NEXT
 
-    # If we get here, then all tests have passed.
+# If we get here, then all tests have passed.
 *END
-    end of interprogram
+end of interprogram
 
-    # One of the tests failed.  Exit the program with a status of 1.
+# One of the tests failed.  Exit the program with a status of 1.
 *FAIL
-    take 1, exit interprogram
+take 1, exit interprogram
 ~~~~~
 value       nearest     up          down
 ~~~~~

@@ -1,14 +1,15 @@
 TITLE Calculate the hypotenuse of a right-angled triangle
 
-    output '              A                B            HYPOT'
-    output '--------------------------------------------------------'
-*1  input A, if A is zero, end of interprogram
-    input B
-    take A*A + B*B
-    form square root
-    replace H
-    take A, output, take B, output, take H, output
-    go to *1
+output '              A                B            HYPOT'
+output '--------------------------------------------------------'
+*1
+input A, if A is zero, end of interprogram
+input B
+take A*A + B*B
+form square root
+replace H
+take A, output, take B, output, take H, output
+go to *1
 
 ~~~~~
 20.0 36.5

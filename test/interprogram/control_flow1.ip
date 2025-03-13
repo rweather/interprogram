@@ -1,40 +1,40 @@
 TITLE Control flow statements test
 symbols for integers J
 
-    # "IF" and "GO TO" are pretty heavily tested by other tests.
-    # This file focuses on the remaining control flow statements
-    # from the classic language.
+# "IF" and "GO TO" are pretty heavily tested by other tests.
+# This file focuses on the remaining control flow statements
+# from the classic language.
 
-    # Loop that calculates the Fibonacci sequence for 21 (20 + 1) iterations.
-    set X = 1, & Y = 1, & J = 20
+# Loop that calculates the Fibonacci sequence for 21 (20 + 1) iterations.
+set X = 1, & Y = 1, & J = 20
 *1
-    take X + Y
-    set X = Y
-    replace Y
-    repeat from *1 J times
-    if Y is not equal to 28657, go to FAIL
+take X + Y
+set X = Y
+replace Y
+repeat from *1 J times
+if Y is not equal to 28657, go to FAIL
 
-    # Do it again with an alphabetic label this time.  Also use a
-    # negative loop control variable which should increase towards zero.
-    set X = 1
-    set Y = 1
-    set J = -20
+# Do it again with an alphabetic label this time.  Also use a
+# negative loop control variable which should increase towards zero.
+set X = 1
+set Y = 1
+set J = -20
 *FIB
-    take X + Y
-    set X = Y
-    replace Y
-    repeat from FIB J times
-    if Y is not equal to 28657, go to FAIL
+take X + Y
+set X = Y
+replace Y
+repeat from FIB J times
+if Y is not equal to 28657, go to FAIL
 
-    # Computed GO TO statement.
-    set J = 50
-    go to *J+3
-    go to FAIL
+# Computed GO TO statement.
+set J = 50
+go to *J+3
+go to FAIL
 *53
 
-    # If we get here, then all tests have passed.
-    end of interprogram
+# If we get here, then all tests have passed.
+end of interprogram
 
-    # One of the tests failed.  Exit the program with a status of 1.
+# One of the tests failed.  Exit the program with a status of 1.
 *FAIL
-    take 1, exit interprogram
+take 1, exit interprogram

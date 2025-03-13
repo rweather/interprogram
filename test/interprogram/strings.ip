@@ -2,145 +2,145 @@ TITLE String testing
 symbols for integers J
 symbols for strings S, T
 
-    take 'Hello, World!'
-    replace S
-    if length of S is not equal to 13, go to FAIL
+take 'Hello, World!'
+replace S
+if length of S is not equal to 13, go to FAIL
 
-    take S
-    substring from 1 to 5
-    if this is not equal to 'Hello', go to FAIL
+take S
+substring from 1 to 5
+if this is not equal to 'Hello', go to FAIL
 
-    take S
-    substring from 7
-    if this is not equal to ' World!', go to FAIL
+take S
+substring from 7
+if this is not equal to ' World!', go to FAIL
 
-    take S
-    substring from 9 to 200
-    if this is not equal to 'orld!', go to FAIL
+take S
+substring from 9 to 200
+if this is not equal to 'orld!', go to FAIL
 
-    take S
-    substring from 4 to 1
-    if this is not empty, go to FAIL
+take S
+substring from 4 to 1
+if this is not empty, go to FAIL
 
-    take 'Green Eggs'
-    add ' and Ham'
-    replace T
-    if T is not equal to 'Green Eggs and Ham', go to FAIL
+take 'Green Eggs'
+add ' and Ham'
+replace T
+if T is not equal to 'Green Eggs and Ham', go to FAIL
 
-    set S = S + T
-    if S is not equal to 'Hello, World!Green Eggs and Ham', go to FAIL
+set S = S + T
+if S is not equal to 'Hello, World!Green Eggs and Ham', go to FAIL
 
-    if T(1) is not equal to 'G', go to FAIL
-    if T(6) is not equal to ' ', go to FAIL
-    if T(18) is not equal to 'm', go to FAIL
+if T(1) is not equal to 'G', go to FAIL
+if T(6) is not equal to ' ', go to FAIL
+if T(18) is not equal to 'm', go to FAIL
 
-    if T(1) + T(6) + T(17) is not equal to 'G a', go to FAIL
+if T(1) + T(6) + T(17) is not equal to 'G a', go to FAIL
 
-    set S = 'abc''def'
-    set T = "xyz""pqr"
-    if S is not equal to "abc'def", go to FAIL
-    if T is not equal to 'xyz"pqr', go to FAIL
+set S = 'abc''def'
+set T = "xyz""pqr"
+if S is not equal to "abc'def", go to FAIL
+if T is not equal to 'xyz"pqr', go to FAIL
 
-    take '  \tHello,   World!\n  '
-    trim string
-    if this is not equal to 'Hello,   World!', go to FAIL
+take '  \tHello,   World!\n  '
+trim string
+if this is not equal to 'Hello,   World!', go to FAIL
 
-    take ''
-    pad string on left 8
-    if this is not equal to '        ', go to FAIL
-    take 'abc '
-    pad string on left 8
-    if this is not equal to '    abc ', go to FAIL
-    take '12345678'
-    pad string on left 8
-    if this is not equal to '12345678', go to FAIL
-    take '123456789'
-    pad string on left 8
-    if this is not equal to '123456789', go to FAIL
-    take 'abc'
-    pad string on right -1
-    if this is not equal to 'abc', go to FAIL
+take ''
+pad string on left 8
+if this is not equal to '        ', go to FAIL
+take 'abc '
+pad string on left 8
+if this is not equal to '    abc ', go to FAIL
+take '12345678'
+pad string on left 8
+if this is not equal to '12345678', go to FAIL
+take '123456789'
+pad string on left 8
+if this is not equal to '123456789', go to FAIL
+take 'abc'
+pad string on right -1
+if this is not equal to 'abc', go to FAIL
 
-    take ''
-    pad string on right 8
-    if this is not equal to '        ', go to FAIL
-    take 'abc '
-    pad string on right 8
-    if this is not equal to 'abc     ', go to FAIL
-    take '12345678'
-    pad string on right 8
-    if this is not equal to '12345678', go to FAIL
-    take '123456789'
-    pad string on right 8
-    if this is not equal to '123456789', go to FAIL
-    take 'abc'
-    pad string on right -1
-    if this is not equal to 'abc', go to FAIL
+take ''
+pad string on right 8
+if this is not equal to '        ', go to FAIL
+take 'abc '
+pad string on right 8
+if this is not equal to 'abc     ', go to FAIL
+take '12345678'
+pad string on right 8
+if this is not equal to '12345678', go to FAIL
+take '123456789'
+pad string on right 8
+if this is not equal to '123456789', go to FAIL
+take 'abc'
+pad string on right -1
+if this is not equal to 'abc', go to FAIL
 
-    take 1024
-    number to string
-    if this is not equal to '1024', go to FAIL
-    take -42.75
-    number to string
-    if this is not equal to '-42.75', go to FAIL
-    take 42.75e20
-    number to string
-    if this is not equal to '4.275e+21', go to FAIL
+take 1024
+number to string
+if this is not equal to '1024', go to FAIL
+take -42.75
+number to string
+if this is not equal to '-42.75', go to FAIL
+take 42.75e20
+number to string
+if this is not equal to '4.275e+21', go to FAIL
 
-    take '-42.75'
-    string to number
-    if this is not equal to -42.75, go to FAIL
-    take '  \r1024  \n\t '
-    string to number
-    if this is not equal to 1024, go to FAIL
-    take '42'
-    string to integer
-    if this is not equal to 42, go to FAIL
-    take '42'
-    string to integer 16
-    if this is not equal to 66, go to FAIL
-    take '10101010'
-    string to integer 2
-    if this is not equal to 170, go to FAIL
-    take '-ZA0'
-    string to integer 36
-    if this is not equal to -45720, go to FAIL
-    take '42'
-    string to integer 0
-    if this is not equal to 42, go to FAIL
-    take '042'
-    string to integer 0
-    if this is not equal to 34, go to FAIL
-    take '0x42'
-    string to integer 0
-    if this is not equal to 66, go to FAIL
+take '-42.75'
+string to number
+if this is not equal to -42.75, go to FAIL
+take '  \r1024  \n\t '
+string to number
+if this is not equal to 1024, go to FAIL
+take '42'
+string to integer
+if this is not equal to 42, go to FAIL
+take '42'
+string to integer 16
+if this is not equal to 66, go to FAIL
+take '10101010'
+string to integer 2
+if this is not equal to 170, go to FAIL
+take '-ZA0'
+string to integer 36
+if this is not equal to -45720, go to FAIL
+take '42'
+string to integer 0
+if this is not equal to 42, go to FAIL
+take '042'
+string to integer 0
+if this is not equal to 34, go to FAIL
+take '0x42'
+string to integer 0
+if this is not equal to 66, go to FAIL
 
-    take 65
-    character code to string
-    if this is not equal to 'A', go to FAIL
-    take 0
-    character code to string
-    if this is not equal to '', go to FAIL
+take 65
+character code to string
+if this is not equal to 'A', go to FAIL
+take 0
+character code to string
+if this is not equal to '', go to FAIL
 
-    take 'Hello'
-    string to character code
-    if this is not equal to 72, go to FAIL
-    take '0'
-    string to character code
-    if this is not equal to 48, go to FAIL
-    take ''
-    string to character code
-    if this is not zero, go to FAIL
+take 'Hello'
+string to character code
+if this is not equal to 72, go to FAIL
+take '0'
+string to character code
+if this is not equal to 48, go to FAIL
+take ''
+string to character code
+if this is not zero, go to FAIL
 
-    take ' Hello, World! 0123'
-    string to uppercase
-    if this is not equal to ' HELLO, WORLD! 0123', go to FAIL
-    string to lowercase
-    if this is not equal to ' hello, world! 0123', go to FAIL
+take ' Hello, World! 0123'
+string to uppercase
+if this is not equal to ' HELLO, WORLD! 0123', go to FAIL
+string to lowercase
+if this is not equal to ' hello, world! 0123', go to FAIL
 
-    # If we get here, then all tests have passed.
-    end of interprogram
+# If we get here, then all tests have passed.
+end of interprogram
 
-    # One of the tests failed.  Exit the program with a status of 1.
+# One of the tests failed.  Exit the program with a status of 1.
 *FAIL
-    take 1, exit interprogram
+take 1, exit interprogram

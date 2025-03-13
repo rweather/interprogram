@@ -1,51 +1,51 @@
 TITLE Math test 4 - Bitwise logical and shift operations
 
-    # While we write hexadecimal numbers below, the language doesn't
-    # support them.  We have to convert into decimal.
+# While we write hexadecimal numbers below, the language doesn't
+# support them.  We have to convert into decimal.
 
-    # 0xAAAA and 0x5A5A = 0x0A0A
-    take 43690
-    bitwise and with 23130
-    if this is not equal to 2570, go to FAIL
+# 0xAAAA and 0x5A5A = 0x0A0A
+take 43690
+bitwise and with 23130
+if this is not equal to 2570, go to FAIL
 
-    # 0xAAAA and ~0x5A5A = 0xA0A0
-    take 43690
-    bitwise and with not 23130
-    if this is not equal to 41120, go to FAIL
+# 0xAAAA and ~0x5A5A = 0xA0A0
+take 43690
+bitwise and with not 23130
+if this is not equal to 41120, go to FAIL
 
-    # 0xAAAA or 0x5A5A = 0xFAFA
-    take 43690
-    bitwise or with 23130
-    if this is not equal to 64250, go to FAIL
+# 0xAAAA or 0x5A5A = 0xFAFA
+take 43690
+bitwise or with 23130
+if this is not equal to 64250, go to FAIL
 
-    # not 0x1234 = 0xFFFF....EDCB
-    take 4660
-    bitwise not
-    if this is not equal to -4661, go to FAIL
+# not 0x1234 = 0xFFFF....EDCB
+take 4660
+bitwise not
+if this is not equal to -4661, go to FAIL
 
-    # 0x1234 << 3 = 0x91A0
-    take 4660
-    shift left by 3
-    if this is not equal to 37280, go to FAIL
+# 0x1234 << 3 = 0x91A0
+take 4660
+shift left by 3
+if this is not equal to 37280, go to FAIL
 
-    # 0xFFFF....EDCB << 3 = 0xFFFF....6E58
-    take -4661
-    shift left by 3
-    if this is not equal to -37288, go to FAIL
+# 0xFFFF....EDCB << 3 = 0xFFFF....6E58
+take -4661
+shift left by 3
+if this is not equal to -37288, go to FAIL
 
-    # 0x1234 >> 3 = 0x0246
-    take 4660
-    shift right by 3
-    if this is not equal to 582, go to FAIL
+# 0x1234 >> 3 = 0x0246
+take 4660
+shift right by 3
+if this is not equal to 582, go to FAIL
 
-    # 0xFFFF....EDCB >> 3 = 0xFFFF....FDB9
-    take -4661
-    shift right by 3
-    if this is not equal to -583, go to FAIL
+# 0xFFFF....EDCB >> 3 = 0xFFFF....FDB9
+take -4661
+shift right by 3
+if this is not equal to -583, go to FAIL
 
-    # If we get here, then all tests have passed.
-    end of interprogram
+# If we get here, then all tests have passed.
+end of interprogram
 
-    # One of the tests failed.  Exit the program with a status of 1.
+# One of the tests failed.  Exit the program with a status of 1.
 *FAIL
-    take 1, exit interprogram
+take 1, exit interprogram

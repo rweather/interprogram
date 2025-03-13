@@ -2,73 +2,73 @@ TITLE Tests for subroutines
 symbols for integers J
 symbols for routines FACTORIAL, 'FORM ARCCOS'
 
-    # Call a subroutine; or "routine process" as Classic INTERPROGRAM called it.
-    take 0.5
-    execute process *100
-    form cosine
-    subtract 0.5
-    form absolute
-    if this is greater than 0.000001, go to FAIL
+# Call a subroutine; or "routine process" as Classic INTERPROGRAM called it.
+take 0.5
+execute process *100
+form cosine
+subtract 0.5
+form absolute
+if this is greater than 0.000001, go to FAIL
 
-    # Call a similar subroutine using the extended CALL/RETURN syntax.
-    take 0.5
-    call ACOS
-    form cosine degrees
-    subtract 0.5
-    form absolute
-    if this is greater than 0.000001, go to FAIL
+# Call a similar subroutine using the extended CALL/RETURN syntax.
+take 0.5
+call ACOS
+form cosine degrees
+subtract 0.5
+form absolute
+if this is greater than 0.000001, go to FAIL
 
-    # Call a subroutine with arguments and local variables.
-    call 'FORM ARCCOS' 0.5
-    form cosine degrees
-    subtract 0.5
-    form absolute
-    if this is greater than 0.000001, go to FAIL
+# Call a subroutine with arguments and local variables.
+call 'FORM ARCCOS' 0.5
+form cosine degrees
+subtract 0.5
+form absolute
+if this is greater than 0.000001, go to FAIL
 
-    # Call a subroutine using a multi-word name without the "CALL" keyword.
-    FORM ARCCOS 0.5
-    form cosine degrees
-    subtract 0.5
-    form absolute
-    if this is greater than 0.000001, go to FAIL
+# Call a subroutine using a multi-word name without the "CALL" keyword.
+FORM ARCCOS 0.5
+form cosine degrees
+subtract 0.5
+form absolute
+if this is greater than 0.000001, go to FAIL
 
-    # Test recursion and calling a subroutine without the "CALL" keyword.
-    FACTORIAL 5
-    if this is not equal to 120, go to FAIL
+# Test recursion and calling a subroutine without the "CALL" keyword.
+FACTORIAL 5
+if this is not equal to 120, go to FAIL
 
-    # If we get here, then all tests have passed.
-    end of interprogram
+# If we get here, then all tests have passed.
+end of interprogram
 
-    # ARC-COSINE(THIS) from the original INTERPROGRAM manual:
-    #       acos(x) = atan(sqrt(1 - x^2) / x)
+# ARC-COSINE(THIS) from the original INTERPROGRAM manual:
+#       acos(x) = atan(sqrt(1 - x^2) / x)
 *100
-    replace argument, multiply by this, & -1, add 1
-    form square root, divide by argument, form arctan
-    end of process definition
+replace argument, multiply by this, & -1, add 1
+form square root, divide by argument, form arctan
+end of process definition
 
-    # Same thing, with CALL/RETURN and angles in degrees.
+# Same thing, with CALL/RETURN and angles in degrees.
 *ACOS
-    replace argument, multiply by this, & -1, add 1
-    form square root, divide by argument, form arctan degrees
-    return
+replace argument, multiply by this, & -1, add 1
+form square root, divide by argument, form arctan degrees
+return
 
-    # Same thing, but using arguments and local variables.
+# Same thing, but using arguments and local variables.
 *FORM ARCCOS
-    set @9 = @1, take @1, multiply by @1, & -1, add 1
-    form square root, divide by @9, form arctan degrees
-    return
+set @9 = @1, take @1, multiply by @1, & -1, add 1
+form square root, divide by @9, form arctan degrees
+return
 
-    # Recursive factorial function to check that @1 gets a
-    # new memory slot for every level of the recursion.
+# Recursive factorial function to check that @1 gets a
+# new memory slot for every level of the recursion.
 *FACTORIAL
-    if @1 is greater than 1 then
-        FACTORIAL @1 - 1
-        multiply by @1
-    else
-        take 1
-    end if
-    return
+if @1 is greater than 1 then
+    FACTORIAL @1 - 1
+    multiply by @1
+else
+    take 1
+end if
+return
 
-    # One of the tests failed.  Exit the program with a status of 1.
+# One of the tests failed.  Exit the program with a status of 1.
 *FAIL
-    take 1, exit interprogram
+take 1, exit interprogram
