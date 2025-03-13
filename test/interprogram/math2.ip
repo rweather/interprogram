@@ -2,25 +2,11 @@ TITLE Math test 2 - Trigonometric functions
 
 # Classic INTERPROGRAM expresses angles to sin, cos, etc, in units of pi.
 # For example, 0.25 is 45 degrees, 1.0 is 180 degrees, etc.
-# Extended INTERPROGRAM has extra statements for degrees and radians.
-
-# sin(-0.25 pi) = -0.707106781...
-take -0.25
-form sine
-subtract -0.707106781
-form absolute
-if this is greater than 0.000001, go to FAIL
-
-# sin(45 degrees) = 0.707106781...
-take 45
-form sine degrees
-subtract 0.707106781
-form absolute
-if this is greater than 0.000001, go to FAIL
+# Extended INTERPROGRAM uses radians instead.
 
 # sin(2 radians) = 0.9092974268...
 take 2
-form sine radians
+form sine
 subtract 0.9092974268
 form absolute
 if this is greater than 0.000001, go to FAIL
@@ -28,69 +14,28 @@ if this is greater than 0.000001, go to FAIL
 # sin(sin(2 radians) = 0.78907234357...
 # Tests repetition of a built-in library function using "&".
 take 2
-form sine radians, &
+form sine, &
 subtract 0.78907234357
-form absolute
-if this is greater than 0.000001, go to FAIL
-
-# cos(-0.5 pi) = 0
-take -0.5
-form cosine
-form absolute
-if this is greater than 0.000001, go to FAIL
-
-# cos(130 degrees) = -0.64278760...
-take 130
-form cosine degrees
-subtract -0.64278760
 form absolute
 if this is greater than 0.000001, go to FAIL
 
 # cos(5 radians) = 0.283662185...
 take 5
-form cosine radians
+form cosine
 subtract 0.283662185
-form absolute
-if this is greater than 0.000001, go to FAIL
-
-# tan(-0.25 pi) = -1
-take -0.25
-form tangent
-subtract -1
-form absolute
-if this is greater than 0.000001, go to FAIL
-
-# tan(60 degrees) = 1.7320508...
-take 60
-form tangent degrees
-subtract 1.7320508
 form absolute
 if this is greater than 0.000001, go to FAIL
 
 # tan(0.5 radians) = 0.5463024898...
 take 0.5
-form tangent radians
+form tangent
 subtract 0.5463024898
-form absolute
-if this is greater than 0.000001, go to FAIL
-
-# atan(-1) in pi's = -0.25
-take -1
-form arctan
-subtract -0.25
-form absolute
-if this is greater than 0.000001, go to FAIL
-
-# atan(1.7320508) in degrees = 60
-take 1.7320508
-form arctan degrees
-subtract 60
 form absolute
 if this is greater than 0.000001, go to FAIL
 
 # atan(0.5463024898) = 0.5
 take 0.5463024898
-form arctan radians
+form arctan
 subtract 0.5
 form absolute
 if this is greater than 0.000001, go to FAIL

@@ -135,7 +135,7 @@ hi def link ipBoundary          Type
 hi def link ipType              Type
 hi def link ipStatement         Statement
 hi def link ipOperator          Operator
-hi def link ipCondition         Conditional
+hi def link ipCondition         Type
 hi def link ipConstant          Number
 hi def link ipString            String
 

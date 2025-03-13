@@ -13,21 +13,21 @@ if this is greater than 0.000001, go to FAIL
 # Call a similar subroutine using the extended CALL/RETURN syntax.
 take 0.5
 call ACOS
-form cosine degrees
+form cosine
 subtract 0.5
 form absolute
 if this is greater than 0.000001, go to FAIL
 
 # Call a subroutine with arguments and local variables.
 call 'FORM ARCCOS' 0.5
-form cosine degrees
+form cosine
 subtract 0.5
 form absolute
 if this is greater than 0.000001, go to FAIL
 
 # Call a subroutine using a multi-word name without the "CALL" keyword.
 FORM ARCCOS 0.5
-form cosine degrees
+form cosine
 subtract 0.5
 form absolute
 if this is greater than 0.000001, go to FAIL
@@ -49,13 +49,13 @@ end of process definition
 # Same thing, with CALL/RETURN and angles in degrees.
 *ACOS
 replace argument, multiply by this, & -1, add 1
-form square root, divide by argument, form arctan degrees
+form square root, divide by argument, form arctan
 return
 
 # Same thing, but using arguments and local variables.
 *FORM ARCCOS
 set @9 = @1, take @1, multiply by @1, & -1, add 1
-form square root, divide by @9, form arctan degrees
+form square root, divide by @9, form arctan
 return
 
 # Recursive factorial function to check that @1 gets a

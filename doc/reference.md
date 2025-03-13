@@ -403,9 +403,8 @@ or a reference to an array element.  Some examples:
     FORM SINE
 
 Angles in the classic implementation for `FORM SINE`, `FORM COSINE`,
-`FORM TANGENT`, and `FORM ARCTAN` were in units of π.  For example,
-0.5 is π/2 radians or 90 degrees.  The extended implementation
-provides alternative statements for angles in radians and degrees.
+`FORM TANGENT`, and `FORM ARCTAN` are in units of π.  For example,
+0.5 is π/2 radians or 90 degrees.  The extended implementation uses radians.
 
 <table border="1">
 <tr><td><b>Statement</b></td><td><b>Description</b></td><td><b>Extension?</b></td></tr>
@@ -415,18 +414,10 @@ provides alternative statements for angles in radians and degrees.
 <tr><td><tt>DIVIDE BY</tt> <i>value</i></td><td>Divides <tt>THIS</tt> by <i>value</i>, leaving the quotient in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>MODULO</tt> <i>value</i></td><td>Divides <tt>THIS</tt> by <i>value</i>, leaving the remainder in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>FORM SQUARE ROOT</tt></td><td>Forms the square root of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
-<tr><td><tt>FORM SINE</tt></td><td>Forms the sine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in units of π.</td><td> </td></tr>
-<tr><td><tt>FORM COSINE</tt></td><td>Forms the cosine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in units of π.</td><td> </td></tr>
-<tr><td><tt>FORM TANGENT</tt></td><td>Forms the tangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in units of π.</td><td> </td></tr>
-<tr><td><tt>FORM ARCTAN</tt></td><td>Forms the arctangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in units of π.</td><td> </td></tr>
-<tr><td><tt>FORM SINE RADIANS</tt></td><td>Forms the sine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td>Yes</td></tr>
-<tr><td><tt>FORM COSINE RADIANS</tt></td><td>Forms the cosine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td>Yes</td></tr>
-<tr><td><tt>FORM TANGENT RADIANS</tt></td><td>Forms the tangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td>Yes</td></tr>
-<tr><td><tt>FORM ARCTAN RADIANS</tt></td><td>Forms the arctangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td>Yes</td></tr>
-<tr><td><tt>FORM SINE DEGREES</tt></td><td>Forms the sine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in degrees.</td><td>Yes</td></tr>
-<tr><td><tt>FORM COSINE DEGREES</tt></td><td>Forms the cosine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in degrees.</td><td>Yes</td></tr>
-<tr><td><tt>FORM TANGENT DEGREES</tt></td><td>Forms the tangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in degrees.</td><td>Yes</td></tr>
-<tr><td><tt>FORM ARCTAN DEGREES</tt></td><td>Forms the arctangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in degrees.</td><td>Yes</td></tr>
+<tr><td><tt>FORM SINE</tt></td><td>Forms the sine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td> </td></tr>
+<tr><td><tt>FORM COSINE</tt></td><td>Forms the cosine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td> </td></tr>
+<tr><td><tt>FORM TANGENT</tt></td><td>Forms the tangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td> </td></tr>
+<tr><td><tt>FORM ARCTAN</tt></td><td>Forms the arctangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td> </td></tr>
 <tr><td><tt>FORM NATURAL LOG</tt></td><td>Forms the natural logorithm of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>FORM EXPONENTIAL</tt></td><td>Raises <tt>THIS</tt> to the power of <i>e</i>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>FORM ABSOLUTE</tt></td><td>Forms the absolute value of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>

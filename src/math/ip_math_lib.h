@@ -64,17 +64,6 @@ int ip_sin_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 int ip_sin_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
- * @brief Forms the sine of "THIS", where the input value is in degrees.
- *
- * @param[in,out] exec The execution context.
- * @param[in] args Points to the arguments and local variable space.
- * @param[in] num_args Number of arguments.
- *
- * @return IP_EXEC_OK or an error code.
- */
-int ip_sin_degrees(ip_exec_t *exec, ip_value_t *args, size_t num_args);
-
-/**
  * @brief Forms the cosine of "THIS", where the input value is in
  * multiples of pi.
  *
@@ -96,17 +85,6 @@ int ip_cos_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args);
  * @return IP_EXEC_OK or an error code.
  */
 int ip_cos_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args);
-
-/**
- * @brief Forms the cosine of "THIS", where the input value is in degrees.
- *
- * @param[in,out] exec The execution context.
- * @param[in] args Points to the arguments and local variable space.
- * @param[in] num_args Number of arguments.
- *
- * @return IP_EXEC_OK or an error code.
- */
-int ip_cos_degrees(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
  * @brief Forms the tangent of "THIS", where the input value is in
@@ -132,17 +110,6 @@ int ip_tan_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 int ip_tan_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
- * @brief Forms the tangent of "THIS", where the input value is in degrees.
- *
- * @param[in,out] exec The execution context.
- * @param[in] args Points to the arguments and local variable space.
- * @param[in] num_args Number of arguments.
- *
- * @return IP_EXEC_OK or an error code.
- */
-int ip_tan_degrees(ip_exec_t *exec, ip_value_t *args, size_t num_args);
-
-/**
  * @brief Forms the arctangent of "THIS", where the result is in
  * multiples of pi.
  *
@@ -164,17 +131,6 @@ int ip_atan_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args);
  * @return IP_EXEC_OK or an error code.
  */
 int ip_atan_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args);
-
-/**
- * @brief Forms the arctangent of "THIS", where the result is in degrees.
- *
- * @param[in,out] exec The execution context.
- * @param[in] args Points to the arguments and local variable space.
- * @param[in] num_args Number of arguments.
- *
- * @return IP_EXEC_OK or an error code.
- */
-int ip_atan_degrees(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
  * @brief Forms the square root of "THIS".
