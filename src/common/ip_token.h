@@ -130,12 +130,10 @@ extern "C" {
 #define ITOK_INDEX_FLOAT        0xED    /**< Index into an array of floats */
 #define ITOK_INDEX_STRING       0xEE    /**< Index into an array of strings */
 #define ITOK_OUTPUT_NO_EOL      0xEF    /**< Output with no end of line */
-#define ITOK_PUNCH_NO_BLANKS    0xF0    /**< PUNCH without "~~~~~" */
-#define ITOK_COPY_NO_BLANKS     0xF1    /**< COPY TAPE without "~~~~~" */
-#define ITOK_INPUT_DATA         0xF2    /**< Input data embedded in program */
-#define ITOK_ARG_NUMBER         0xF3    /**< Argument number @1 to @9 */
-#define ITOK_ARG_LIST           0xF4    /**< Call argument list */
-#define ITOK_ROUTINE_NAME       0xF5    /**< Name of a routine as a keyword */
+#define ITOK_INPUT_DATA         0xF0    /**< Input data embedded in program */
+#define ITOK_ARG_NUMBER         0xF1    /**< Argument number @1 to @9 */
+#define ITOK_ARG_LIST           0xF2    /**< Call argument list */
+#define ITOK_ROUTINE_NAME       0xF3    /**< Name of a routine as a keyword */
 
 /* Token type flags */
 /** Token can start a section of the preliminary statements */

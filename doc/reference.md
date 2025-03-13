@@ -931,21 +931,6 @@ which must be alphabetic.  Digits cannot be used in variable names
 in either the classic or extended syntax; it is necessary to use
 array subscripts like `A(3)`.
 
-When using `PUNCH THE FOLLOWING CHARACTERS` or `COPY TAPE`, the
-terminating `~~~~~` will be printed to the output when using the
-classic syntax.  This replicates the original behaviour on punch tape,
-which allowed the output of one program to be easily fed into another program.
-The terminator can be suppressed by putting a comma after the statement:
-
-    PUNCH THE FOLLOWING CHARACTERS,
-    THIS IS A MESSAGE
-    ~~~~~
-
-    COPY TAPE,
-
-The blanks are always omitted when using the extended syntax.  No need
-for a comma.
-
 The original implementation terminated input data with `END` or `#`.
 This implementation uses the end of file (EOF) condition instead.
 Existing input data tapes will need to be converted to remove `END`/`#`,

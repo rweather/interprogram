@@ -2109,30 +2109,10 @@ int ip_exec_step(ip_exec_t *exec)
         if (node->text) {
             fputs(node->text->data, exec->output);
         }
-
-        /* Classic INTERPROGRAM terminates punched data with a
-         * series of blank characters, so output those as well. */
-        fputs("~~~~~\n", exec->output);
-        break;
-
-    case ITOK_PUNCH_NO_BLANKS:
-        /* "PUNCH THE FOLLOWING CHARACTERS" with no following blanks */
-        if (node->text) {
-            fputs(node->text->data, exec->output);
-        }
         break;
 
     case ITOK_COPY_TAPE:
         /* Copy the input to the output until the next "~~~~~" or EOF */
-        ip_exec_copy_tape(exec, exec->output, exec->input);
-
-        /* Classic INTERPROGRAM terminates copied data with a
-         * series of blank characters, so output those as well. */
-        fputs("~~~~~\n", exec->output);
-        break;
-
-    case ITOK_COPY_NO_BLANKS:
-        /* "COPY TAPE" with no following blanks in the output */
         ip_exec_copy_tape(exec, exec->output, exec->input);
         break;
 
