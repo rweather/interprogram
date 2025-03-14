@@ -340,10 +340,7 @@ static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
             }
         }
         node = ip_parse_unary_expression(parser);
-        if (node && node->value_type != IP_TYPE_STRING) {
-            ip_error_at(parser, &(node->loc),
-                        "string value expected for 'LENGTH OF'");
-        }
+        node = ip_ast_make_cast(IP_TYPE_STRING, node);
         node = ip_ast_make_unary
             (token, node, &(parser->tokeniser.loc));
         node->value_type = IP_TYPE_INT;
@@ -782,7 +779,7 @@ static ip_ast_node_t *ip_parse_while_statement(ip_parser_t *parser)
 {
     ip_ast_node_t *node = ip_parse_condition(parser);
     node = ip_ast_make_unary_statement
-        (ITOK_REPEAT_WHILE, IP_TYPE_UNKNOWN, node, &(parser->tokeniser.loc));
+        (ITOK_REPEAT_WHILE, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
     ip_parse_create_block(parser, ITOK_REPEAT_WHILE, node);
     return node;
 }
@@ -885,7 +882,7 @@ static ip_ast_node_t *ip_parse_for_statement(ip_parser_t *parser)
     node = ip_ast_make_binary_no_cast(ITOK_COLON, node, end, &loc);
     node = ip_ast_make_binary_no_cast(ITOK_COLON, node, step, &loc);
     node = ip_ast_make_unary_statement
-        (ITOK_REPEAT_FOR, IP_TYPE_UNKNOWN, node, &loc);
+        (ITOK_REPEAT_FOR, IP_TYPE_DYNAMIC, node, &loc);
     ip_parse_create_block(parser, ITOK_REPEAT_FOR, node);
     return node;
 }
@@ -898,6 +895,7 @@ static ip_ast_node_t *ip_parse_end_repeat_statement(ip_parser_t *parser)
     ip_ast_node_t *node;
     ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
     node = ip_ast_make_standalone(ITOK_END_REPEAT, &(parser->tokeniser.loc));
+    node->this_type = IP_TYPE_DYNAMIC;
     if (!parser->blocks ||
             (parser->blocks->type != ITOK_REPEAT_WHILE &&
              parser->blocks->type != ITOK_REPEAT_FOR)) {
