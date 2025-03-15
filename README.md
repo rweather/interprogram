@@ -10,9 +10,22 @@ INTERPROGRAM is an interpreted high-level programming language, advertised as
 "English Language for Automatic Programming".  The syntax is very easy
 for beginners to programming to learn.
 
+Here is the original cover for the manual (click for a larger version):
+
+<a href="doc/interprogram-manual-cover.jpg"><img src="doc/interprogram-manual-cover-small.jpg"/></a>
+
+By the way, the paper tape down the left-hand side reads as follows in
+Flexowriter teleprinter codes:
+
+    WAFFLE FOR THE COVER OF THE INTERPROGRAM MANUAL 1/10/60.
+
+This message is followed by some carriage returns and then the
+message repeats.  Easter eggs go way back!
+
 ## Historical context
 
-A lot of innovation in programming languages was happening around 1960:
+A lot of innovation in programming languages was happening around 1960.
+Here are a few of the languages from that era (not an exhaustive list):
 
 * 1957: Fortran
 * 1958: ALGOL-58
@@ -59,8 +72,9 @@ Here is what it looks like in INTERPROGRAM:
     FORM SQUARE ROOT
     REPLACE Z
 
-That's almost the same!  Here is another example of replacing X with the
-absolute value of X:
+That's almost the same as the pencil and paper version!
+
+Here is another example of replacing X with the absolute value of X:
 
         TAKE X
         IF THIS IS POSITIVE, GO TO *1
@@ -112,11 +126,6 @@ I have made some editorial improvements to the manual, formating program
 statements in a monospaced font, adding some cover page images
 from the Museums Victoria website, and adding a table of contents.
 
-By the way, the paper tape down the left-hand side of the first cover
-page reads:
-
-    WAFFLE FOR THE COVER OF THE INTERPROGRAM MANUAL 1/10/60.
-
 The syntax for my implementation of "Extended INTERPROGRAM" is described
 in the [Extended Language Reference](doc/reference.md).
 
@@ -164,4 +173,4 @@ For more information on this project, to report bugs, or to suggest
 improvements, please contact the author Rhys Weatherley via
 [email](mailto:rhys.weatherley@gmail.com).
 
-## <tt>END OF INTERPROGRAM</tt> README
+## <tt>END OF INTERPROGRAM README</tt>
