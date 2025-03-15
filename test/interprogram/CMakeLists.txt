@@ -13,6 +13,22 @@ add_test(NAME verify_example2a COMMAND interprogram --verify-chars ${EXAMPLE_DIR
 add_test(NAME verify_example3 COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/manual/example3.ip)
 add_test(NAME verify_example4 COMMAND interprogram --verify-chars ${EXAMPLE_DIR}/manual/example4.ip)
 
+# Verify that all examples can be parsed.  Catches regressions in parser
+# behaviour as new features are added to the language.
+add_test(NAME parse_classic_3dplot COMMAND interprogram --parse-only ${EXAMPLE_DIR}/classic/3dplot.ip)
+add_test(NAME parse_classic_hello_world COMMAND interprogram --parse-only ${EXAMPLE_DIR}/classic/hello_world.ip)
+add_test(NAME parse_classic_matches COMMAND interprogram --parse-only ${EXAMPLE_DIR}/classic/matches.ip)
+add_test(NAME parse_classic_pythagoras COMMAND interprogram --parse-only ${EXAMPLE_DIR}/classic/pythagoras.ip)
+add_test(NAME parse_extended_3dplot COMMAND interprogram --parse-only ${EXAMPLE_DIR}/extended/3dplot.ip)
+add_test(NAME parse_extended_hello_world COMMAND interprogram --parse-only ${EXAMPLE_DIR}/extended/hello_world.ip)
+add_test(NAME parse_extended_matches COMMAND interprogram --parse-only ${EXAMPLE_DIR}/extended/matches.ip)
+add_test(NAME parse_extended_pythagoras COMMAND interprogram --parse-only ${EXAMPLE_DIR}/extended/pythagoras.ip)
+add_test(NAME parse_manual_example1 COMMAND interprogram --parse-only ${EXAMPLE_DIR}/manual/example1.ip)
+add_test(NAME parse_manual_example2 COMMAND interprogram --parse-only ${EXAMPLE_DIR}/manual/example2.ip)
+add_test(NAME parse_manual_example2a COMMAND interprogram --parse-only ${EXAMPLE_DIR}/manual/example2a.ip)
+add_test(NAME parse_manual_example3 COMMAND interprogram --parse-only ${EXAMPLE_DIR}/manual/example3.ip)
+add_test(NAME parse_manual_example4 COMMAND interprogram --parse-only ${EXAMPLE_DIR}/manual/example4.ip)
+
 # Run some programs to test the interpreter's functionality.
 add_test(NAME arrays COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/arrays.ip)
 add_test(NAME conditions COMMAND interprogram ${CMAKE_CURRENT_LIST_DIR}/conditions.ip)

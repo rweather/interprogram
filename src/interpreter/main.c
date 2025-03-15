@@ -29,12 +29,13 @@
 #include <string.h>
 #include <getopt.h>
 
-#define short_options "o:i:cev"
+#define short_options "o:i:cepv"
 static struct option long_options[] = {
     {"output",      required_argument,  0,  'o'},
     {"input",       required_argument,  0,  'i'},
     {"classic",     no_argument,        0,  'c'},
     {"extended",    no_argument,        0,  'e'},
+    {"parse-only",  no_argument,        0,  'p'},
     {"verify-chars",no_argument,        0,  'v'},
     {0,             0,                  0,  0},
 };
@@ -54,6 +55,9 @@ static void usage(const char *progname)
 
     fprintf(stderr, "--extended, -e\n");
     fprintf(stderr, "    Force the use of the extended INTERPROGRAM syntax.\n\n");
+
+    fprintf(stderr, "--parse-only, -v\n");
+    fprintf(stderr, "    Parse the program but do not run it.\n\n");
 
     fprintf(stderr, "--verify-chars, -v\n");
     fprintf(stderr, "    Verify that only Flexowriter-compatible characters are in use.\n\n");
@@ -99,6 +103,7 @@ int main(int argc, char **argv)
 {
     const char *progname = argv[0];
     unsigned options = 0;
+    int parse_only = 0;
     int verify_chars = 0;
     const char *program_filename = 0;
     const char *input_filename = 0;
@@ -132,6 +137,10 @@ int main(int argc, char **argv)
             options |= ITOK_TYPE_EXTENSION;
             break;
 
+        case 'p':
+            parse_only = 1;
+            break;
+
         case 'v':
             verify_chars = 1;
             break;
@@ -163,6 +172,12 @@ int main(int argc, char **argv)
              argc - optind, argv + optind, register_builtins) != 0) {
         ip_program_free(program);
         return 1;
+    }
+
+    /* If we just want to parse, then we are done */
+    if (parse_only) {
+        ip_program_free(program);
+        return 0;
     }
 
     /* Open the input and output sources */
