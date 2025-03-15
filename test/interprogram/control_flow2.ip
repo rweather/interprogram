@@ -114,6 +114,18 @@ if Y is not equal to 277750, go to FAIL
 if X is not equal to 101, go to FAIL
 if J is not equal to 11, go to FAIL
 
+# Test an "infinite" loop.
+set Y = 0
+set X = 1
+repeat forever
+    set Y = Y + X
+    set X = X + 1
+    if X is greater than 100, go to stop
+end repeat
+*stop
+if Y is not equal to 5050, go to FAIL
+if X is not equal to 101, go to FAIL
+
 # If we get here, then all tests have passed.
 end of interprogram
 

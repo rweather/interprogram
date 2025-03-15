@@ -795,11 +795,19 @@ static ip_ast_node_t *ip_parse_end_if(ip_parser_t *parser)
 }
 
 /*
- * WhileStatement ::= "REPEAT WHILE" Condition
+ * WhileStatement ::=
+ *      "REPEAT WHILE" Condition
+ *    | "REPEAT FOREVER"
  */
 static ip_ast_node_t *ip_parse_while_statement(ip_parser_t *parser)
 {
-    ip_ast_node_t *node = ip_parse_condition(parser);
+    ip_ast_node_t *node;
+    if (parser->tokeniser.token == ITOK_REPEAT_FOREVER) {
+        node = ip_ast_make_int_constant(1, &(parser->tokeniser.loc));
+        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
+    } else {
+        node = ip_parse_condition(parser);
+    }
     node = ip_ast_make_unary_statement
         (ITOK_REPEAT_WHILE, IP_TYPE_DYNAMIC, node, &(parser->tokeniser.loc));
     ip_parse_create_block(parser, ITOK_REPEAT_WHILE, node);
@@ -1422,7 +1430,8 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
         break;
 
     case ITOK_REPEAT_WHILE:
-        /* REPEAT WHILE Condition */
+    case ITOK_REPEAT_FOREVER:
+        /* "REPEAT WHILE Condition" or "REPEAT FOREVER" */
         node = ip_parse_while_statement(parser);
         break;
 

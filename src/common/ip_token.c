@@ -97,6 +97,7 @@ static ip_token_info_t const tokens[] = {
     {"END IF",                              ITOK_END_IF,            ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"REPEAT WHILE",                        ITOK_REPEAT_WHILE,      ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"REPEAT FOR",                          ITOK_REPEAT_FOR,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
+    {"REPEAT FOREVER",                      ITOK_REPEAT_FOREVER,    ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"END REPEAT",                          ITOK_END_REPEAT,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"BY",                                  ITOK_BY,                ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"SYMBOLS FOR ROUTINES",                ITOK_SYMBOLS_ROUTINES,  ITOK_TYPE_PRELIM_2 | ITOK_TYPE_PRELIM_START | ITOK_TYPE_EXTENSION},

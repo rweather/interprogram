@@ -780,6 +780,17 @@ While loops are accomplished with the <tt>REPEAT WHILE</tt> construct:
 In English, this can be read as "REPEAT the loop body WHILE the
 condition is true".
 
+If you want an infinite loop that repeats forever, you can do one of
+the following (the second is preferable):
+
+    REPEAT WHILE X IS EQUAL TO X
+        ...
+    END REPEAT
+
+    REPEAT FOREVER
+        ...
+    END REPEAT
+
 For loops are also possible:
 
     REPEAT FOR X = 0 TO 100 BY 5

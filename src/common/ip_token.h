@@ -103,10 +103,11 @@ extern "C" {
 #define ITOK_END_IF             0xC4    /**< END IF */
 #define ITOK_REPEAT_WHILE       0xC5    /**< REPEAT WHILE */
 #define ITOK_REPEAT_FOR         0xC6    /**< REPEAT FOR */
-#define ITOK_END_REPEAT         0xC7    /**< END REPEAT */
-#define ITOK_BY                 0xC8    /**< BY */
-#define ITOK_SYMBOLS_ROUTINES   0xC9    /**< SYMBOLS FOR ROUTINES */
-#define ITOK_AT_END_OF_INPUT    0xCA    /**< AT END OF INPUT */
+#define ITOK_REPEAT_FOREVER     0xC7    /**< REPEAT FOREVER */
+#define ITOK_END_REPEAT         0xC8    /**< END REPEAT */
+#define ITOK_BY                 0xC9    /**< BY */
+#define ITOK_SYMBOLS_ROUTINES   0xCA    /**< SYMBOLS FOR ROUTINES */
+#define ITOK_AT_END_OF_INPUT    0xCB    /**< AT END OF INPUT */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA
