@@ -140,40 +140,22 @@ extern "C" {
 #define ITOK_FUNCTION_INVOKE    0xF5    /**< Invocation of a function */
 
 /* Token type flags */
-/** Token can start a section of the preliminary statements */
-#define ITOK_TYPE_PRELIM_START  0x0001
-/** Token can appear in the "(1)" section of the preliminary statements */
-#define ITOK_TYPE_PRELIM_1      0x0002
-/** Token can appear in the "(2)" section of the preliminary statements */
-#define ITOK_TYPE_PRELIM_2      0x0004
-/** Token can appear in the "(3)" section of the preliminary statements */
-#define ITOK_TYPE_PRELIM_3      0x0008
-/** Token can appear in the "(4)" section of the preliminary statements */
-#define ITOK_TYPE_PRELIM_4      0x0010
+/** Token can appear in the preliminary statements */
+#define ITOK_TYPE_PRELIMINARY   0x01
 /** Token can introduce a statement */
-#define ITOK_TYPE_STATEMENT     0x0020
-/** Token can appear as a symbol name in a variable declaration */
-#define ITOK_TYPE_SYMBOL_NAME   0x0040
+#define ITOK_TYPE_STATEMENT     0x02
 /** Token can appear as a condition in an "IF" statement */
-#define ITOK_TYPE_CONDITION     0x0080
-/** Token can appear in a "REPEAT" statement */
-#define ITOK_TYPE_REPEAT        0x0100
-/** Token can appear in a "SET" statement, usually "=" */
-#define ITOK_TYPE_SET           0x0200
+#define ITOK_TYPE_CONDITION     0x04
 /** Token can appear in an expression */
-#define ITOK_TYPE_EXPRESSION    0x0400
-/** Token can appear in a "PUNCH THE FOLLOWING CHARACTERS" context */
-#define ITOK_TYPE_PUNCH         0x0800
+#define ITOK_TYPE_EXPRESSION    0x08
 /** Token follows a minus sign, for recognising negative integer constants */
-#define ITOK_TYPE_NEGATIVE      0x1000
-/** Token is part of a constant expression (no variables) */
-#define ITOK_TYPE_CONSTANT      0x2000
+#define ITOK_TYPE_NEGATIVE      0x10
 /** Token can appear in any context */
-#define ITOK_TYPE_ANY           0x3FFF
+#define ITOK_TYPE_ANY           0x3F
 /** Force the use of the original / classic INTERPROGRAM language */
-#define ITOK_TYPE_CLASSIC       0x4000
+#define ITOK_TYPE_CLASSIC       0x40
 /** Token is an extension, not in the original INTERPROGRAM language */
-#define ITOK_TYPE_EXTENSION     0x8000
+#define ITOK_TYPE_EXTENSION     0x80
 
 /**
  * @brief Reads a character from an input stream for parsing purposes.

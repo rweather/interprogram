@@ -1724,9 +1724,9 @@ static void ip_parse_symbols(ip_parser_t *parser)
     }
 
     /* Skip the prefix and check for "NONE" */
-    ip_parse_get_next(parser, ITOK_TYPE_PRELIM_2);
+    ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
     if (parser->tokeniser.token == ITOK_NONE) {
-        ip_parse_get_next(parser, ITOK_TYPE_PRELIM_2);
+        ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
         if (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
             ip_error(parser, "end of line expected");
         }
@@ -1737,7 +1737,7 @@ static void ip_parse_symbols(ip_parser_t *parser)
     while (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
         if (parser->tokeniser.token == ITOK_COMMA) {
             /* Skip the comma */
-            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_2);
+            ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
         } else if (parser->tokeniser.token == ITOK_VAR_NAME ||
                    (parser->tokeniser.token == ITOK_STR_VALUE &&
                     type == IP_TYPE_ROUTINE &&
@@ -1761,7 +1761,7 @@ static void ip_parse_symbols(ip_parser_t *parser)
                 label->base.type = IP_TYPE_ROUTINE;
                 ip_tokeniser_register_routine_name(&(parser->tokeniser), name);
             }
-            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_2);
+            ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
         } else {
             ip_error_near(parser, "symbol name expected");
             break;
@@ -1795,7 +1795,7 @@ static int ip_parse_array_size
         }
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
         if (parser->tokeniser.token == ITOK_RPAREN) {
-            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);
+            ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
             return 1;
         } else if (min_subscript && parser->tokeniser.token == ITOK_COLON) {
             return 2;
@@ -1831,13 +1831,13 @@ static void ip_parse_arrays(ip_parser_t *parser)
     }
 
     /* Skip the prefix */
-    ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);
+    ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
 
     /* Parse a comma-separated list of array definitions */
     while (!ip_parse_token_is_terminator(parser->tokeniser.token)) {
         if (parser->tokeniser.token == ITOK_COMMA) {
             /* Skip the comma */
-            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_3);
+            ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
         } else if (parser->tokeniser.token == ITOK_VAR_NAME) {
             /* Look up the name and create a new variable if necessary */
             name = parser->tokeniser.token_info->name;
@@ -1966,12 +1966,12 @@ void ip_parse_preliminary_statements
     int sections = 0;
 
     /* Parse the numbered preliminary statements */
-    ip_parse_get_next(parser, ITOK_TYPE_PRELIM_START);
+    ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
     token = parser->tokeniser.token;
     while (ip_parse_token_is_prelim(token) || token == ITOK_EOL) {
         /* Handle end of line in the preliminary statements */
         if (token == ITOK_EOL) {
-            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_START);
+            ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
             token = parser->tokeniser.token;
             continue;
         }
@@ -1981,7 +1981,7 @@ void ip_parse_preliminary_statements
          * that does not have a (n) prefix.  If that happens, then we
          * assume that we are parsing an extended INTERPROGRAM. */
         if (token >= ITOK_PRELIM_1 && token <= ITOK_PRELIM_4) {
-            ip_parse_get_next(parser, ITOK_TYPE_PRELIM_START);
+            ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
         } else if ((parser->flags & ITOK_TYPE_CLASSIC) == 0) {
             parser->flags |= ITOK_TYPE_EXTENSION;
         }
@@ -2067,7 +2067,7 @@ void ip_parse_preliminary_statements
         }
 
         /* Read the start of the preliminary statement on the next line */
-        ip_parse_get_next(parser, ITOK_TYPE_PRELIM_START);
+        ip_parse_get_next(parser, ITOK_TYPE_PRELIMINARY);
         token = parser->tokeniser.token;
     }
 

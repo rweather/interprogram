@@ -29,20 +29,20 @@ static ip_token_info_t const tokens[] = {
     {",",                                   ITOK_COMMA,             ITOK_TYPE_ANY},
     {"(",                                   ITOK_LPAREN,            ITOK_TYPE_ANY},
     {")",                                   ITOK_RPAREN,            ITOK_TYPE_ANY},
-    {"=",                                   ITOK_EQUAL,             ITOK_TYPE_SET},
-    {"*",                                   ITOK_LABEL,             ITOK_TYPE_STATEMENT | ITOK_TYPE_REPEAT},
+    {"=",                                   ITOK_EQUAL,             ITOK_TYPE_EXPRESSION},
+    {"*",                                   ITOK_LABEL,             ITOK_TYPE_STATEMENT},
     {"&",                                   ITOK_AMPERSAND,         ITOK_TYPE_STATEMENT},
     {"+",                                   ITOK_PLUS,              ITOK_TYPE_EXPRESSION},
     {"-",                                   ITOK_MINUS,             ITOK_TYPE_EXPRESSION},
-    {"(1)",                                 ITOK_PRELIM_1,          ITOK_TYPE_PRELIM_START},
-    {"(2)",                                 ITOK_PRELIM_2,          ITOK_TYPE_PRELIM_START},
-    {"(3)",                                 ITOK_PRELIM_3,          ITOK_TYPE_PRELIM_START},
-    {"(4)",                                 ITOK_PRELIM_4,          ITOK_TYPE_PRELIM_START},
-    {"TITLE",                               ITOK_TITLE,             ITOK_TYPE_PRELIM_1 | ITOK_TYPE_PRELIM_START},
-    {"SYMBOLS FOR INTEGERS",                ITOK_SYMBOLS_INT,       ITOK_TYPE_PRELIM_2 | ITOK_TYPE_PRELIM_START},
-    {"MAXIMUM SUBSCRIPTS",                  ITOK_MAX_SUBSCRIPTS,    ITOK_TYPE_PRELIM_3 | ITOK_TYPE_PRELIM_START},
-    {"COMPILE THE FOLLOWING INTERPROGRAM",  ITOK_COMPILE_PROGRAM,   ITOK_TYPE_PRELIM_4 | ITOK_TYPE_PRELIM_START},
-    {"NONE",                                ITOK_NONE,              ITOK_TYPE_SYMBOL_NAME},
+    {"(1)",                                 ITOK_PRELIM_1,          ITOK_TYPE_PRELIMINARY},
+    {"(2)",                                 ITOK_PRELIM_2,          ITOK_TYPE_PRELIMINARY},
+    {"(3)",                                 ITOK_PRELIM_3,          ITOK_TYPE_PRELIMINARY},
+    {"(4)",                                 ITOK_PRELIM_4,          ITOK_TYPE_PRELIMINARY},
+    {"TITLE",                               ITOK_TITLE,             ITOK_TYPE_PRELIMINARY},
+    {"SYMBOLS FOR INTEGERS",                ITOK_SYMBOLS_INT,       ITOK_TYPE_PRELIMINARY},
+    {"MAXIMUM SUBSCRIPTS",                  ITOK_MAX_SUBSCRIPTS,    ITOK_TYPE_PRELIMINARY},
+    {"COMPILE THE FOLLOWING INTERPROGRAM",  ITOK_COMPILE_PROGRAM,   ITOK_TYPE_PRELIMINARY},
+    {"NONE",                                ITOK_NONE,              ITOK_TYPE_EXPRESSION},
     {"END OF INTERPROGRAM",                 ITOK_END_PROGRAM,       ITOK_TYPE_STATEMENT},
     {"END OF PROCESS DEFINITION",           ITOK_END_PROCESS,       ITOK_TYPE_STATEMENT},
     {"THIS",                                ITOK_THIS,              ITOK_TYPE_EXPRESSION},
@@ -67,7 +67,7 @@ static ip_token_info_t const tokens[] = {
     {"GO TO",                               ITOK_GO_TO,             ITOK_TYPE_STATEMENT},
     {"EXECUTE PROCESS",                     ITOK_EXECUTE_PROCESS,   ITOK_TYPE_STATEMENT},
     {"REPEAT FROM",                         ITOK_REPEAT_FROM,       ITOK_TYPE_STATEMENT},
-    {"TIMES",                               ITOK_TIMES,             ITOK_TYPE_REPEAT},
+    {"TIMES",                               ITOK_TIMES,             ITOK_TYPE_STATEMENT},
     {"PAUSE",                               ITOK_PAUSE,             ITOK_TYPE_STATEMENT},
     {"PUNCH THE FOLLOWING CHARACTERS",      ITOK_PUNCH,             ITOK_TYPE_STATEMENT},
     {"COPY TAPE",                           ITOK_COPY_TAPE,         ITOK_TYPE_STATEMENT},
@@ -89,7 +89,7 @@ static ip_token_info_t const tokens[] = {
     {"LENGTH OF",                           ITOK_LENGTH_OF,         ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"SUBSTRING FROM",                      ITOK_SUBSTRING,         ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"TO",                                  ITOK_TO,                ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
-    {"SYMBOLS FOR STRINGS",                 ITOK_SYMBOLS_STR,       ITOK_TYPE_PRELIM_2 | ITOK_TYPE_PRELIM_START | ITOK_TYPE_EXTENSION},
+    {"SYMBOLS FOR STRINGS",                 ITOK_SYMBOLS_STR,       ITOK_TYPE_PRELIMINARY | ITOK_TYPE_EXTENSION},
     {"EXIT INTERPROGRAM",                   ITOK_EXIT_PROGRAM,      ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"THEN",                                ITOK_THEN,              ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"ELSE",                                ITOK_ELSE,              ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
@@ -100,7 +100,7 @@ static ip_token_info_t const tokens[] = {
     {"REPEAT FOREVER",                      ITOK_REPEAT_FOREVER,    ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"END REPEAT",                          ITOK_END_REPEAT,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"BY",                                  ITOK_BY,                ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
-    {"SYMBOLS FOR ROUTINES",                ITOK_SYMBOLS_ROUTINES,  ITOK_TYPE_PRELIM_2 | ITOK_TYPE_PRELIM_START | ITOK_TYPE_EXTENSION},
+    {"SYMBOLS FOR ROUTINES",                ITOK_SYMBOLS_ROUTINES,  ITOK_TYPE_PRELIMINARY | ITOK_TYPE_EXTENSION},
     {"AT END OF INPUT",                     ITOK_AT_END_OF_INPUT,   ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
@@ -767,7 +767,7 @@ int ip_tokeniser_get_next(ip_tokeniser_t *tokeniser, unsigned context)
     case '(':
         /* Special handling for '(' in preliminary sections, for the
          * cases of the "(1)", "(2)", "(3)", and "(4)" prefixes */
-        if ((context & ITOK_TYPE_PRELIM_START) != 0) {
+        if ((context & ITOK_TYPE_PRELIMINARY) != 0) {
             if ((tokeniser->buffer_posn + 2) <= tokeniser->buffer_len &&
                     tokeniser->buffer[tokeniser->buffer_posn + 1] == ')') {
                 ch = tokeniser->buffer[tokeniser->buffer_posn];
