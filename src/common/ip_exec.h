@@ -118,6 +118,9 @@ struct ip_exec_s
     /** Next node in the program to be executed */
     ip_ast_node_t *pc;
 
+    /** Node to jump to when the end of the input is encountered, or NULL */
+    ip_ast_node_t *at_end_of_input;
+
     /** Location of the last node that was executed in the source file */
     ip_loc_t loc;
 

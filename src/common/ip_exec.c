@@ -1710,8 +1710,13 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
         return status;
     }
 
-    /* Skip the next statement on EOF, without doing the assignment */
-    if (eof && exec->pc && exec->pc->type != ITOK_EOL) {
+    /* End of file handling */
+    if (eof && exec->at_end_of_input) {
+        /* There is an action registered to perform at EOF */
+        exec->pc = exec->at_end_of_input;
+        ip_value_release(&value);
+        return IP_EXEC_OK;
+    } else if (eof && exec->pc && exec->pc->type != ITOK_EOL) {
         exec->pc = exec->pc->next;
         ip_value_release(&value);
         return IP_EXEC_OK;
@@ -2134,6 +2139,20 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_IGNORE_TAPE:
         /* Ignore the input up until the next "~~~~~" or EOF */
         ip_exec_copy_tape(exec, NULL, exec->input);
+        break;
+
+    case ITOK_AT_END_OF_INPUT:
+        /* Set the action to take at the end of the input */
+        if (!(exec->pc) || exec->pc->type == ITOK_EOL) {
+            /* Nothing after this statement, so cancel the EOF handling */
+            exec->at_end_of_input = 0;
+        } else {
+            exec->at_end_of_input = exec->pc;
+            while (exec->pc && exec->pc->type != ITOK_EOL) {
+                /* Skip the rest of this line */
+                exec->pc = exec->pc->next;
+            }
+        }
         break;
 
     case ITOK_SUBSTRING:

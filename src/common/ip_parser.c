@@ -1217,6 +1217,7 @@ static ip_ast_node_t *ip_parse_extract_substring(ip_parser_t *parser)
  *    | "PUNCH THE FOLLOWING CHARACTERS" EOL TEXT BLANKS
  *    | "COPY TAPE"
  *    | "IGNORE TAPE"
+ *    | "AT END OF INPUT"               # Extension
  *
  * StringStatement ::=
  *      "SUBSTRING FROM" Expression [ "TO" Expression ]
@@ -1502,11 +1503,8 @@ static ip_ast_node_t *ip_parse_statement(ip_parser_t *parser)
         break;
 
     case ITOK_COPY_TAPE:
-        node = ip_ast_make_standalone(token, &(parser->tokeniser.loc));
-        ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
-        break;
-
     case ITOK_IGNORE_TAPE:
+    case ITOK_AT_END_OF_INPUT:
         node = ip_ast_make_standalone(token, &(parser->tokeniser.loc));
         ip_parse_get_next(parser, ITOK_TYPE_STATEMENT);
         break;

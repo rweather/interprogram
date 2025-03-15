@@ -106,12 +106,13 @@ extern "C" {
 #define ITOK_END_REPEAT         0xC7    /**< END REPEAT */
 #define ITOK_BY                 0xC8    /**< BY */
 #define ITOK_SYMBOLS_ROUTINES   0xC9    /**< SYMBOLS FOR ROUTINES */
+#define ITOK_AT_END_OF_INPUT    0xCA    /**< AT END OF INPUT */
 
 /** First keyword token */
 #define ITOK_FIRST_KEYWORD      ITOK_COMMA
 
 /** Last keyword token */
-#define ITOK_LAST_KEYWORD       ITOK_SYMBOLS_ROUTINES
+#define ITOK_LAST_KEYWORD       ITOK_AT_END_OF_INPUT
 
 /* Meta-tokens for non-keyword elements */
 #define ITOK_VAR_NAME           0xE0    /**< Variable name */

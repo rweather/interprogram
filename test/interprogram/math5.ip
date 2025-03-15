@@ -4,10 +4,9 @@ TITLE Math test 5 - Rounding functions.
 ignore tape
 
 # Process the lines from the embedded data.
+at end of input, go to END
 *NEXT
-input value, go to *1, go to END
-*1
-input nearest, & up, & down, & multiple
+input value, & nearest, & up, & down, & multiple
 
 # Test the rounding operations.
 take value

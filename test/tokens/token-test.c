@@ -148,6 +148,7 @@ static int check_identifiers(void)
     KEYWORD("END REPEAT",                           ITOK_END_REPEAT);
     KEYWORD("BY",                                   ITOK_BY);
     KEYWORD("SYMBOLS FOR ROUTINES",                 ITOK_SYMBOLS_ROUTINES);
+    KEYWORD("AT END OF INPUT",                      ITOK_AT_END_OF_INPUT);
 
     /* Check that we have tested all of the keywords */
     for (index = ITOK_FIRST_KEYWORD; index <= ITOK_LAST_KEYWORD; ++index) {

@@ -100,6 +100,7 @@ static ip_token_info_t const tokens[] = {
     {"END REPEAT",                          ITOK_END_REPEAT,        ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {"BY",                                  ITOK_BY,                ITOK_TYPE_STATEMENT | ITOK_TYPE_EXPRESSION | ITOK_TYPE_EXTENSION},
     {"SYMBOLS FOR ROUTINES",                ITOK_SYMBOLS_ROUTINES,  ITOK_TYPE_PRELIM_2 | ITOK_TYPE_PRELIM_START | ITOK_TYPE_EXTENSION},
+    {"AT END OF INPUT",                     ITOK_AT_END_OF_INPUT,   ITOK_TYPE_STATEMENT | ITOK_TYPE_EXTENSION},
     {0,                                     ITOK_ERROR,             0}
 };
 
