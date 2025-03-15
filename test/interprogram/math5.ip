@@ -7,7 +7,7 @@ ignore tape
 *NEXT
 input value, go to *1, go to END
 *1
-input nearest, & up, & down
+input nearest, & up, & down, & multiple
 
 # Test the rounding operations.
 take value
@@ -19,6 +19,11 @@ if this is not equal to up, go to FAIL
 take value
 round down
 if this is not equal to down, go to FAIL
+take value
+round to a multiple of 0.1
+subtract multiple
+form absolute value
+if this is greater than 0.000001, go to FAIL
 go to NEXT
 
 # If we get here, then all tests have passed.
@@ -29,12 +34,12 @@ end of interprogram
 *FAIL
 take 1, exit interprogram
 ~~~~~
-value       nearest     up          down
+value       nearest     up          down        multiple of 0.1
 ~~~~~
-12          12          12          12
-12.1        12          13          12
--12.1       -12         -12         -13
-12.5        13          13          12
--12.5       -13         -12         -13
-12.9        13          13          12
--12.9       -13         -12         -13
+12          12          12          12          12
+12.1        12          13          12          12.1
+-12.15      -12         -12         -13         -12.2
+12.5        13          13          12          12.5
+-12.5       -13         -12         -13         -12.5
+12.96       13          13          12          13
+-12.91      -13         -12         -13         -12.9

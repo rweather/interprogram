@@ -299,6 +299,18 @@ int ip_round_down(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 int ip_round_up(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
+ * @brief Rounds "THIS" to the nearest multiple of the first argument.
+ * Rounds half-way cases away from zero.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_round_multiple(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
  * @brief Performs a bitwise AND of "THIS" and the argument.
  *
  * @param[in,out] exec The execution context.

@@ -432,6 +432,7 @@ Angles in the classic implementation for `FORM SINE`, `FORM COSINE`,
 <tr><td><tt>ROUND NEAREST</tt></td><td>Rounds <tt>THIS</tt> to the nearest integer, rounding halfway cases away from zero.  Same as the round() function in C.</td><td>Yes</td></tr>
 <tr><td><tt>ROUND UP</tt></td><td>Rounds <tt>THIS</tt> to an integer, rounding up.  Same as the ceil() function in C.</td><td>Yes</td></tr>
 <tr><td><tt>ROUND DOWN</tt></td><td>Rounds <tt>THIS</tt> to an integer, rounding down.  Same as the floor() function in C.</td><td>Yes</td></tr>
+<tr><td><tt>ROUND NEAREST</tt> <i>value</i></td><td>Rounds <tt>THIS</tt> to a mutiple of <i>value</i>, rounding halfway cases away from zero.  Division by zero will occur if <i>value</i> is zero.</td><td>Yes</td></tr>
 </table>
 
 Algebraic expressions in the extension syntax can use the following operators:

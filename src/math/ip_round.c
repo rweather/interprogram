@@ -61,3 +61,25 @@ int ip_round_up(ip_exec_t *exec, ip_value_t *args, size_t num_args)
     }
     return status;
 }
+
+int ip_round_multiple(ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    ip_float_t divisor;
+    ip_float_t result;
+    int status;
+    (void)num_args;
+    status = ip_value_to_float(&(exec->this_value));
+    if (status == IP_EXEC_OK) {
+        status = ip_value_to_float(&(args[0]));
+    }
+    if (status == IP_EXEC_OK) {
+        divisor = args[0].fvalue;
+        if (fabs(divisor) < IP_FLOAT_EPSILON) {
+            return IP_EXEC_DIV_ZERO;
+        } else {
+            result = round(exec->this_value.fvalue / divisor) * divisor;
+            ip_value_set_float(&(exec->this_value), result);
+        }
+    }
+    return status;
+}

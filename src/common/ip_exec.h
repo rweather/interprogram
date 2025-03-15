@@ -46,6 +46,11 @@ extern "C" {
 #define IP_EXEC_FALSE           12  /**< Condition is false */
 
 /**
+ * @brief Value that is "very close to zero" for zero comparisons.
+ */
+#define IP_FLOAT_EPSILON 1e-20
+
+/**
  * @brief Item on the execution stack for subroutine calls and loops.
  */
 typedef struct ip_exec_stack_item_s ip_exec_stack_item_t;

@@ -50,6 +50,7 @@ static ip_builtin_info_t const extension_math_builtins[] = {
     {"ROUND NEAREST",               ip_round_nearest,       0,  0},
     {"ROUND DOWN",                  ip_round_down,          0,  0},
     {"ROUND UP",                    ip_round_up,            0,  0},
+    {"ROUND TO A MULTIPLE OF",      ip_round_multiple,      1,  1},
     {"BITWISE AND WITH",            ip_bitwise_and,         1,  1},
     {"BITWISE AND WITH NOT",        ip_bitwise_and_not,     1,  1},
     {"BITWISE OR WITH",             ip_bitwise_or,          1,  1},

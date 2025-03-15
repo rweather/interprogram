@@ -640,9 +640,6 @@ static int ip_eval_float_much_st(ip_float_t x, ip_float_t y)
     }
 }
 
-/** Value that is "very close to zero" for zero comparisons */
-#define IP_FLOAT_EPSILON 1e-20
-
 static int ip_eval_int_zero(ip_value_t *result, ip_int_t x)
 {
     ip_value_set_int(result, x == 0);
