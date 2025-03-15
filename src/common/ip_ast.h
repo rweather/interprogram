@@ -81,6 +81,9 @@ struct ip_ast_node_s
 
         /** Reference to a label when "type" is ITOK_LABEL */
         ip_label_t *label;
+
+        /** Builtin function handler */
+        void *builtin_handler;
     };
 
     /** Location of the node in the original source file */
@@ -322,6 +325,16 @@ ip_ast_node_t *ip_ast_make_text
 ip_ast_node_t *ip_ast_make_argument
     (unsigned char type, ip_int_t num, ip_ast_node_t *expr,
      const ip_loc_t *loc);
+
+/**
+ * @brief Makes a function invocation node.
+ *
+ * @param[in] handler The function's handler.
+ * @param[in] expr The expression to pass to the function.
+ * @param[in] loc Location of the invokcation in the original source file.
+ */
+ip_ast_node_t *ip_ast_make_function_invoke
+    (void *handler, ip_ast_node_t *expr, const ip_loc_t *loc);
 
 /**
  * @brief Initializes a list of nodes.

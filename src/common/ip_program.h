@@ -169,14 +169,25 @@ void ip_program_register_builtins
     (ip_program_t *program, const ip_builtin_info_t *builtins);
 
 /**
- * @brief Looks ip a built-in statement by name.
+ * @brief Looks up a built-in routine by name.
  *
  * @param[in] program The program state.
  * @param[in] name The name of the built-in statement.
  *
- * @return A pointer to the built-in statement or NULL if not found.
+ * @return A pointer to the built-in routine or NULL if not found.
  */
-ip_builtin_t *ip_program_lookup_builtin
+ip_builtin_t *ip_program_lookup_builtin_routine
+    (const ip_program_t *program, const char *name);
+
+/**
+ * @brief Looks up a built-in function by name.
+ *
+ * @param[in] program The program state.
+ * @param[in] name The name of the built-in statement.
+ *
+ * @return A pointer to the built-in function or NULL if not found.
+ */
+ip_builtin_t *ip_program_lookup_builtin_function
     (const ip_program_t *program, const char *name);
 
 /**

@@ -74,6 +74,9 @@ typedef struct
     /** In-progress structured programming blocks */
     ip_parse_block_context_t *blocks;
 
+    /** Pointer to a function handler when the token is ITOK_FUNCTION_NAME */
+    ip_builtin_handler_t function_builtin;
+
 } ip_parser_t;
 
 /**

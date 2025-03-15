@@ -84,7 +84,7 @@ syn match   ipOperator          "\<FORM TANGENT DEGREES\>"
 syn match   ipOperator          "\<FORM ARCTAN DEGREES\>"
 syn match   ipOperator          "\<FORM NATURAL LOG\>"
 syn match   ipOperator          "\<FORM EXPONENTIAL\>"
-syn match   ipOperator          "\<FORM ABSOLUTE\>"
+syn match   ipOperator          "\<FORM ABSOLUTE VALUE\>"
 syn match   ipOperator          "\<RAISE TO THE POWER OF\>"
 syn match   ipOperator          "\<BITWISE AND WITH\>"
 syn match   ipOperator          "\<BITWISE AND WITH NOT\>"
@@ -112,7 +112,16 @@ syn match   ipCondition         "\<INFINITE\>"
 syn match   ipCondition         "\<A NUMBER\>"
 syn match   ipCondition         "\<EMPTY\>"
 syn match   ipCondition         "\<IN\>"
-syn match   ipCondition         "\<LENGTH OF\>"
+
+syn match   ipFunction          "\<LENGTH OF\>"
+syn match   ipFunction          "\<SINE OF\>"
+syn match   ipFunction          "\<COSINE OF\>"
+syn match   ipFunction          "\<TANGENT OF\>"
+syn match   ipFunction          "\<ARCTAN OF\>"
+syn match   ipFunction          "\<SQUARE ROOT OF\>"
+syn match   ipFunction          "\<NATURAL LOG OF\>"
+syn match   ipFunction          "\<EXPONENTIAL OF\>"
+syn match   ipFunction          "\<ABSOLUTE VALUE OF\>"
 
 syn match   ipConstant          "\<THIS\>"
 syn match   ipConstant          /[0-9]*\.[0-9]*/
@@ -136,6 +145,7 @@ hi def link ipType              Type
 hi def link ipStatement         Statement
 hi def link ipOperator          Operator
 hi def link ipCondition         Type
+hi def link ipFunction          Type
 hi def link ipConstant          Number
 hi def link ipString            String
 

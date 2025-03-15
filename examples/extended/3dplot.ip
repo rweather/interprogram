@@ -13,9 +13,7 @@ repeat for x = -30 to 30 by 1.5
     set l = 0
 
     # Calculate the extent of the y range.
-    take 900 - x * x
-    form square root
-    divide by 5
+    take (square root of (900 - x * x)) / 5
     round down
     multiply by 5
     replace yextent
@@ -23,8 +21,7 @@ repeat for x = -30 to 30 by 1.5
     # Inner loop over y.
     repeat for y = yextent to -yextent by -5
         # Determine the column that should contain the next point.
-        take x * x + y * y
-        form square root
+        take square root of (x * x + y * y)
         FN A
         add 25 - 0.7 * y
         replace z
@@ -46,11 +43,7 @@ end of interprogram
 
 # Definition of the function A(Z) = 30 * exp(-Z*Z/100)
 *'FN A'
-multiply by this
-divide by -100
-form exponential
-multiply by 30
-return
+return 30 * exponential of (-this * this / 100)
 
 # Here is the original BASIC code for comparison:
 #

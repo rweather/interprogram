@@ -946,6 +946,16 @@ static int ip_exec_eval_expression
         EVAL_UNARY_STRING(length);
         break;
 
+    case ITOK_FUNCTION_INVOKE:
+        /* Invoke a built-in library function */
+        status = ip_exec_eval_expression(exec, expr->children.right, result);
+        if (status == IP_EXEC_OK) {
+            ip_builtin_handler_t handler =
+                (ip_builtin_handler_t)(expr->children.left->builtin_handler);
+            status = (*handler)(exec, result, 1);
+        }
+        break;
+
     case ITOK_ARG_NUMBER: {
         /* Reference to a local variable in the current subroutine */
         ip_exec_stack_call_t *frame = ip_exec_find_call(exec);
@@ -1954,6 +1964,14 @@ int ip_exec_step(ip_exec_t *exec)
         /* Return from a subroutine */
         frame = ip_exec_find_call(exec);
         if (frame) {
+            if (node->children.left) {
+                /* Evaluate the return expression and copy it into "THIS" */
+                status = ip_exec_eval_expression
+                    (exec, node->children.left, &(exec->this_value));
+                if (status != IP_EXEC_OK) {
+                    return status;
+                }
+            }
             exec->pc = frame->return_node;
             ip_exec_pop_stack_to(exec, frame->base.next);
         } else {

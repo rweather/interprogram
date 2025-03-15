@@ -28,7 +28,7 @@ if X is not equal to 1.9e1, go to FAIL
 take X
 divide by -7
 subtract -2.7142857
-form absolute
+form absolute value
 if this is greater than 0.000001, go to FAIL
 
 # 19.0 mod 7 = 5.0

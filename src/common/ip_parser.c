@@ -75,7 +75,19 @@ void ip_parse_free(ip_parser_t *parser)
  */
 static void ip_parse_get_next(ip_parser_t *parser, unsigned context)
 {
-    ip_tokeniser_get_next(&(parser->tokeniser), parser->flags | context);
+    int token = ip_tokeniser_get_next
+        (&(parser->tokeniser), parser->flags | context);
+    parser->function_builtin = 0;
+    if (token == ITOK_ROUTINE_NAME) {
+        /* This might actually be a function name, so check for that */
+        ip_builtin_t *builtin =
+            ip_program_lookup_builtin_function
+                (parser->program, parser->tokeniser.token_info->name);
+        if (builtin) {
+            parser->tokeniser.token = ITOK_FUNCTION_NAME;
+            parser->function_builtin = builtin->handler;
+        }
+    }
 }
 
 /**
@@ -222,6 +234,7 @@ static ip_ast_node_t *ip_parse_variable_expression
  * UnaryExpression ::=
  *      {"+" | "-"} BaseExpression
  *    | "LENGTH OF" BaseExpression
+ *    | FUNCTION-NAME BaseExpression
  * BaseExpression ::=
  *      "THIS"
  *    | NUMBER
@@ -345,6 +358,15 @@ static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
             (token, node, &(parser->tokeniser.loc));
         node->value_type = IP_TYPE_INT;
         break;
+
+    case ITOK_FUNCTION_NAME: {
+        /* Library function like "SQUARE ROOT OF", "SINE OF", etc */
+        void *builtin = parser->function_builtin;
+        ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+        node = ip_parse_unary_expression(parser);
+        node = ip_ast_make_function_invoke
+            (builtin, node, &(parser->tokeniser.loc));
+        break; }
 
     default:
         ip_error_near(parser, "variable name or constant expected");
@@ -1080,7 +1102,7 @@ static ip_ast_node_t *ip_parse_call_arguments
          * check the number of allowable arguments */
         ip_label_t *label = call->children.left->label;
         if (label->base.type == IP_TYPE_ROUTINE && label->builtin) {
-            ip_builtin_t *builtin = ip_program_lookup_builtin
+            ip_builtin_t *builtin = ip_program_lookup_builtin_routine
                 (parser->program, ip_label_get_name(label));
             if (!ip_builtin_validate_num_args(builtin, count)) {
                 ip_error_at

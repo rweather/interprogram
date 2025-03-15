@@ -52,6 +52,18 @@ int ip_sin_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args)
     return status;
 }
 
+int ip_sin_of(ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    int status;
+    (void)exec;
+    (void)num_args;
+    status = ip_value_to_float(&(args[0]));
+    if (status == IP_EXEC_OK) {
+        ip_value_set_float(&(args[0]), sin(args[0].fvalue));
+    }
+    return status;
+}
+
 int ip_cos_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     int status;
@@ -74,6 +86,18 @@ int ip_cos_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args)
     if (status == IP_EXEC_OK) {
         ip_value_set_float
             (&(exec->this_value), cos(exec->this_value.fvalue));
+    }
+    return status;
+}
+
+int ip_cos_of(ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    int status;
+    (void)exec;
+    (void)num_args;
+    status = ip_value_to_float(&(args[0]));
+    if (status == IP_EXEC_OK) {
+        ip_value_set_float(&(args[0]), cos(args[0].fvalue));
     }
     return status;
 }
@@ -104,6 +128,18 @@ int ip_tan_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args)
     return status;
 }
 
+int ip_tan_of(ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    int status;
+    (void)exec;
+    (void)num_args;
+    status = ip_value_to_float(&(args[0]));
+    if (status == IP_EXEC_OK) {
+        ip_value_set_float(&(args[0]), tan(args[0].fvalue));
+    }
+    return status;
+}
+
 int ip_atan_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     int status;
@@ -126,6 +162,18 @@ int ip_atan_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args)
     if (status == IP_EXEC_OK) {
         ip_value_set_float
             (&(exec->this_value), atan(exec->this_value.fvalue));
+    }
+    return status;
+}
+
+int ip_atan_of(ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    int status;
+    (void)exec;
+    (void)num_args;
+    status = ip_value_to_float(&(args[0]));
+    if (status == IP_EXEC_OK) {
+        ip_value_set_float(&(args[0]), atan(args[0].fvalue));
     }
     return status;
 }

@@ -43,6 +43,26 @@ int ip_abs(ip_exec_t *exec, ip_value_t *args, size_t num_args)
     return status;
 }
 
+int ip_abs_of(ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    int status;
+    (void)exec;
+    (void)num_args;
+    if (args[0].type == IP_TYPE_INT) {
+        if (args[0].ivalue < 0) {
+            args[0].ivalue = -(args[0].ivalue);
+        }
+    } else {
+        status = ip_value_to_float(&(args[0]));
+        if (status == IP_EXEC_OK) {
+            if (args[0].fvalue < 0) {
+                args[0].fvalue = -(args[0].fvalue);
+            }
+        }
+    }
+    return status;
+}
+
 int ip_rand(ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     ip_float_t value = ((ip_float_t)rand()) / (((ip_float_t)RAND_MAX) + 1);

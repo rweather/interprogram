@@ -41,6 +41,17 @@ extern "C" {
 int ip_abs(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
+ * @brief Forms the absolute value of the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_abs_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
  * @brief Forms the sine of "THIS", where the input value is in
  * multiples of pi.
  *
@@ -62,6 +73,17 @@ int ip_sin_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args);
  * @return IP_EXEC_OK or an error code.
  */
 int ip_sin_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
+ * @brief Forms the sine of the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_sin_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
  * @brief Forms the cosine of "THIS", where the input value is in
@@ -87,6 +109,17 @@ int ip_cos_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 int ip_cos_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
+ * @brief Forms the cosine of the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_cos_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
  * @brief Forms the tangent of "THIS", where the input value is in
  * multiples of pi.
  *
@@ -108,6 +141,17 @@ int ip_tan_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args);
  * @return IP_EXEC_OK or an error code.
  */
 int ip_tan_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
+ * @brief Forms the tangent of the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_tan_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
  * @brief Forms the arctangent of "THIS", where the result is in
@@ -133,6 +177,17 @@ int ip_atan_pis(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 int ip_atan_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
+ * @brief Forms the arctangent of the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_atan_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
  * @brief Forms the square root of "THIS".
  *
  * @param[in,out] exec The execution context.
@@ -142,6 +197,17 @@ int ip_atan_radians(ip_exec_t *exec, ip_value_t *args, size_t num_args);
  * @return IP_EXEC_OK or an error code.
  */
 int ip_sqrt(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
+ * @brief Forms the square root of the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_sqrt_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
  * @brief Forms the natural logarithm of "THIS".
@@ -155,6 +221,17 @@ int ip_sqrt(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 int ip_log(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
+ * @brief Forms the natural logarithm of the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_log_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
  * @brief Raises e to the power of "THIS".
  *
  * @param[in,out] exec The execution context.
@@ -164,6 +241,17 @@ int ip_log(ip_exec_t *exec, ip_value_t *args, size_t num_args);
  * @return IP_EXEC_OK or an error code.
  */
 int ip_exp(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
+ * @brief Raises e to the power of the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_exp_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
  * @brief Raises "THIS" to the power of the first argument.

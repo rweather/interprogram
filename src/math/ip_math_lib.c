@@ -45,7 +45,7 @@ static ip_builtin_info_t const extension_math_builtins[] = {
     {"FORM SQUARE ROOT",            ip_sqrt,                0,  0},
     {"FORM NATURAL LOG",            ip_log,                 0,  0},
     {"FORM EXPONENTIAL",            ip_exp,                 0,  0},
-    {"FORM ABSOLUTE",               ip_abs,                 0,  0},
+    {"FORM ABSOLUTE VALUE",         ip_abs,                 0,  0},
     {"RAISE TO THE POWER OF",       ip_pow,                 1,  1},
     {"ROUND NEAREST",               ip_round_nearest,       0,  0},
     {"ROUND DOWN",                  ip_round_down,          0,  0},
@@ -59,6 +59,19 @@ static ip_builtin_info_t const extension_math_builtins[] = {
     {"SHIFT RIGHT BY",              ip_shift_right,         1,  1},
     {"RANDOM NUMBER",               ip_rand,                0,  0},
     {"SEED RANDOM",                 ip_srand,               1,  1},
+
+    /* Functions that can be used in expressions.  The minimum number of
+     * arguments must be greater than the maximum to form a function. */
+    {"SINE OF",                     ip_sin_of,              1,  0},
+    {"COSINE OF",                   ip_cos_of,              1,  0},
+    {"TANGENT OF",                  ip_tan_of,              1,  0},
+    {"ARCTAN OF",                   ip_atan_of,             1,  0},
+    {"SQUARE ROOT OF",              ip_sqrt_of,             1,  0},
+    {"NATURAL LOG OF",              ip_log_of,              1,  0},
+    {"EXPONENTIAL OF",              ip_exp_of,              1,  0},
+    {"ABSOLUTE VALUE OF",           ip_abs_of,              1,  0},
+
+    /* End of the list */
     {0,                             0,                      0,  0}
 };
 

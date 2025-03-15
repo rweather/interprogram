@@ -114,11 +114,13 @@ void ip_program_register_builtin
 
     /* Create the corresponding routine label and variable so that the
      * parser will recognise this name for implicit "CALL"'s */
-    label = ip_label_create_by_name(&(program->labels), name);
-    label->base.type = IP_TYPE_ROUTINE;
-    label->builtin = (void *)handler;
-    ip_label_mark_as_defined(label);
-    ip_var_create(&(program->vars), name, IP_TYPE_ROUTINE);
+    if (min_args <= max_args) {
+        label = ip_label_create_by_name(&(program->labels), name);
+        label->base.type = IP_TYPE_ROUTINE;
+        label->builtin = (void *)handler;
+        ip_label_mark_as_defined(label);
+        ip_var_create(&(program->vars), name, IP_TYPE_ROUTINE);
+    }
 }
 
 void ip_program_register_builtins
@@ -132,10 +134,36 @@ void ip_program_register_builtins
     }
 }
 
-ip_builtin_t *ip_program_lookup_builtin
+ip_builtin_t *ip_program_lookup_builtin_routine
     (const ip_program_t *program, const char *name)
 {
-    return (ip_builtin_t *)ip_symbol_lookup_by_name(&(program->builtins), name);
+    ip_builtin_t *builtin =
+        (ip_builtin_t *)ip_symbol_lookup_by_name(&(program->builtins), name);
+    if (builtin) {
+        int min_args = builtin->base.type & 0x0F;
+        int max_args = (builtin->base.type >> 4) & 0x0F;
+        if (min_args > max_args) {
+            /* This is a built-in function, not a built-in routine */
+            return 0;
+        }
+    }
+    return builtin;
+}
+
+ip_builtin_t *ip_program_lookup_builtin_function
+    (const ip_program_t *program, const char *name)
+{
+    ip_builtin_t *builtin =
+        (ip_builtin_t *)ip_symbol_lookup_by_name(&(program->builtins), name);
+    if (builtin) {
+        int min_args = builtin->base.type & 0x0F;
+        int max_args = (builtin->base.type >> 4) & 0x0F;
+        if (min_args <= max_args) {
+            /* This is a built-in routine, not a built-in function */
+            return 0;
+        }
+    }
+    return builtin;
 }
 
 int ip_builtin_validate_num_args(ip_builtin_t *builtin, int num_args)

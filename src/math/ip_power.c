@@ -36,6 +36,18 @@ int ip_sqrt(ip_exec_t *exec, ip_value_t *args, size_t num_args)
     return status;
 }
 
+int ip_sqrt_of(ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    int status;
+    (void)exec;
+    (void)num_args;
+    status = ip_value_to_float(&(args[0]));
+    if (status == IP_EXEC_OK) {
+        ip_value_set_float(&(args[0]), sqrt(args[0].fvalue));
+    }
+    return status;
+}
+
 int ip_log(ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     int status;
@@ -49,6 +61,18 @@ int ip_log(ip_exec_t *exec, ip_value_t *args, size_t num_args)
     return status;
 }
 
+int ip_log_of(ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    int status;
+    (void)exec;
+    (void)num_args;
+    status = ip_value_to_float(&(args[0]));
+    if (status == IP_EXEC_OK) {
+        ip_value_set_float(&(args[0]), log(args[0].fvalue));
+    }
+    return status;
+}
+
 int ip_exp(ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     int status;
@@ -58,6 +82,18 @@ int ip_exp(ip_exec_t *exec, ip_value_t *args, size_t num_args)
     if (status == IP_EXEC_OK) {
         ip_value_set_float
             (&(exec->this_value), exp(exec->this_value.fvalue));
+    }
+    return status;
+}
+
+int ip_exp_of(ip_exec_t *exec, ip_value_t *args, size_t num_args)
+{
+    int status;
+    (void)exec;
+    (void)num_args;
+    status = ip_value_to_float(&(args[0]));
+    if (status == IP_EXEC_OK) {
+        ip_value_set_float(&(args[0]), exp(args[0].fvalue));
     }
     return status;
 }

@@ -420,7 +420,7 @@ Angles in the classic implementation for `FORM SINE`, `FORM COSINE`,
 <tr><td><tt>FORM ARCTAN</tt></td><td>Forms the arctangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td> </td></tr>
 <tr><td><tt>FORM NATURAL LOG</tt></td><td>Forms the natural logorithm of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>FORM EXPONENTIAL</tt></td><td>Raises <tt>THIS</tt> to the power of <i>e</i>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
-<tr><td><tt>FORM ABSOLUTE</tt></td><td>Forms the absolute value of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
+<tr><td><tt>FORM ABSOLUTE VALUE</tt></td><td>Forms the absolute value of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>RAISE TO THE POWER OF</tt> <i>value</i></td><td>Raises <tt>THIS</tt> to the power of <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>BITWISE AND WITH</tt> <i>value</i></td><td>Performs a bitwise AND of integers <tt>THIS</tt> and <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>BITWISE AND WITH NOT</tt> <i>value</i></td><td>Performs a bitwise AND of integers <tt>THIS</tt> and NOT <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
@@ -434,17 +434,36 @@ Angles in the classic implementation for `FORM SINE`, `FORM COSINE`,
 <tr><td><tt>ROUND DOWN</tt></td><td>Rounds <tt>THIS</tt> to an integer, rounding down.  Same as the floor() function in C.</td><td>Yes</td></tr>
 </table>
 
-Algebraic expressions in the extension syntax use the following operators
-with precedence from highest to lowest:
+Algebraic expressions in the extension syntax can use the following operators:
 
 <table border="1">
-<tr><td><b>Operator</b></td><td><b>Description</b></td></tr>
-<tr><td>(<i>value</i>)</td><td>Parenthesised expression</td></tr>
-<tr><td><tt>LENGTH OF</tt> <i>value</i></td><td>Length of a string or array</td></tr>
-<tr><td>-<i>value</i>, +<i>value</i></td><td>Unary negation or unary plus</td></tr>
-<tr><td><i>value1</i> \* <i>value2</i>, <i>value1</i> / <i>value2</i>, <i>value1</i> <tt>MODULO</tt> <i>value2</i></td><td>Multiplication, division, or remainder</td></tr>
-<tr><td><i>value1</i> + <i>value2</i>, <i>value1</i> - <i>value2</i></td><td>Addition or subtraction</td></tr>
+<tr><td><b>Priority</b></td><td><b>Operator</b></td><td><b>Description</b></td></tr>
+<tr><td>1</td><td>(<i>value</i>)</td><td>Parenthesised expression</td></tr>
+<tr><td>2</td><td>-<i>value</i>, +<i>value</i></td><td>Unary negation or unary plus</td></tr>
+<tr><td>2</td><td><tt>LENGTH OF</tt> <i>value</i></td><td>Length of a string or array</td></tr>
+<tr><td>2</td><td><tt>SINE OF</tt> <i>value</i></td><td>Sine of the angle <i>value</i></td></tr>
+<tr><td>2</td><td><tt>COSINE OF</tt> <i>value</i></td><td>Cosine of the angle <i>value</i></td></tr>
+<tr><td>2</td><td><tt>TANGENT OF</tt> <i>value</i></td><td>Tangent of the angle <i>value</i></td></tr>
+<tr><td>2</td><td><tt>ARCTAN OF</tt> <i>value</i></td><td>Arctangent of <i>value</i></td></tr>
+<tr><td>2</td><td><tt>SQUARE ROOT OF</tt> <i>value</i></td><td>Square root of <i>value</i></td></tr>
+<tr><td>2</td><td><tt>NATURAL LOG OF</tt> <i>value</i></td><td>Natural logarithm of <i>value</i></td></tr>
+<tr><td>2</td><td><tt>EXPONENTIAL OF</tt> <i>value</i></td><td>Raises <i>e</i> to the power of <i>value</i></td></tr>
+<tr><td>2</td><td><tt>ABSOLUTE VALUE OF</tt> <i>value</i></td><td>Absolute value of <i>value</i></td></tr>
+<tr><td>3</td><td><i>value1</i> * <i>value2</i>, <i>value1</i> / <i>value2</i>, <i>value1</i> <tt>MODULO</tt> <i>value2</i></td><td>Multiplication, division, or remainder</td></tr>
+<tr><td>4</td><td><i>value1</i> + <i>value2</i>, <i>value1</i> - <i>value2</i></td><td>Addition or subtraction</td></tr>
 </table>
+
+In the extended language, the following classic computation:
+
+    TAKE X
+    MULTIPLY BY THIS
+    ADD Y
+    FORM SQUARE ROOT
+    REPLACE Z
+
+Can be written as:
+
+    SET Z = SQUARE ROOT OF (X * X + Y)
 
 ## String operations
 

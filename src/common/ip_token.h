@@ -134,6 +134,8 @@ extern "C" {
 #define ITOK_ARG_NUMBER         0xF1    /**< Argument number @1 to @9 */
 #define ITOK_ARG_LIST           0xF2    /**< Call argument list */
 #define ITOK_ROUTINE_NAME       0xF3    /**< Name of a routine as a keyword */
+#define ITOK_FUNCTION_NAME      0xF4    /**< Name of a function as a keyword */
+#define ITOK_FUNCTION_INVOKE    0xF5    /**< Invocation of a function */
 
 /* Token type flags */
 /** Token can start a section of the preliminary statements */
