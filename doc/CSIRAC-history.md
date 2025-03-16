@@ -51,3 +51,9 @@ CSIRAC design and implementation from the start, working with Trevor
 Pearcey on the logical design and instruction set in the late 1940's.
 He was one of the primary programmers on the machine during its lifetime.
 Geoff passed away in 1982 at the age of 54.
+
+Here is one of my photos of the CSIRAC from when I did my pilgrimage to
+the machine in 2012.  It is currently located in the Scienceworks Museum
+in Melbourne, Australia.
+
+<img alt="CSIRAC In Person" src="csirac-in-person.jpg" width="860"/>

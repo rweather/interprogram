@@ -76,10 +76,9 @@ That's almost the same as the pencil and paper version!
 
 Here is another example of replacing X with the absolute value of X:
 
-        TAKE X
-        IF THIS IS POSITIVE, GO TO *1
-        MULTIPLY BY -1
-    *1  REPLACE X
+    TAKE X
+    IF THIS IS NEGATIVE, MULTIPLY BY -1
+    REPLACE X
 
 This is the key to INTERPROGRAM's syntactic style: let the plain English
 description of the algorithm inform how the code is written.  The
@@ -131,8 +130,10 @@ in the [Extended Language Reference](doc/reference.md).
 
 ## Building
 
-The source code is designed to be built using cmake.  To build and run the
-automated tests:
+The source code is designed to be built using cmake.  The "ncurses"
+library is required for the optional [Console operations](doc/ref-console.md).
+
+To build and run the automated tests:
 
     mkdir build
     cd build
