@@ -2011,6 +2011,7 @@ void ip_parse_preliminary_statements
              * Classic or Extended INTERPROGRAM syntax.  Register built-ins. */
             if (register_builtins) {
                 (*register_builtins)(parser, parser->flags);
+                ip_parse_register_builtins(parser);
             }
             break;
 
@@ -2193,7 +2194,6 @@ unsigned long ip_parse_program_file
 
     /* Parse the contents of the program file */
     ip_parse_preliminary_statements(&parser, register_builtins);
-    ip_parse_register_builtins(&parser);
     ip_parse_statements(&parser);
     ip_parse_check_undefined_labels(&parser);
     ip_parse_check_open_blocks(&parser);
