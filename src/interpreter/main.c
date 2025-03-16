@@ -24,6 +24,7 @@
 #include "ip_exec.h"
 #include "ip_math_lib.h"
 #include "ip_string_lib.h"
+#include "ip_console.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,6 +68,7 @@ static void register_builtins(ip_parser_t *parser, unsigned options)
 {
     ip_register_math_builtins(parser->program, options);
     ip_register_string_builtins(parser->program, options);
+    ip_register_console_builtins(parser->program, options);
 }
 
 /* Verify that a file only contains characters compatible with the

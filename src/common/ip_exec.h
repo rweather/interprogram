@@ -129,6 +129,18 @@ struct ip_exec_s
 
     /** Stream to write output to (default is stdout) */
     FILE *output;
+
+    /** Override to output a string (used in console mode) */
+    void (*output_string)(ip_exec_t *exec, const char *str);
+
+    /** Override to output a character (used in console mode) */
+    void (*output_char)(ip_exec_t *exec, int ch);
+
+    /** Override to input a line of text (used in console mode) */
+    void (*input_line)(ip_exec_t *exec, char *buf, size_t size);
+
+    /** Deactivate console mode */
+    void (*deactivate_console)(ip_exec_t *exec);
 };
 
 /**

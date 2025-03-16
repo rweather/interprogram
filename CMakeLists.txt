@@ -17,6 +17,15 @@ set(CMAKE_C_FLAGS_RELEASE "-O2")
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
+# Check for curses, for the console library.
+find_package(Curses)
+if(NCURSES_FOUND)
+    include_directories(${CURSES_INCLUDE_DIR})
+    set(INTERPROGRAM_EXTRA_LIBS ${CURSES_LIBRARY})
+else()
+    set(INTERPROGRAM_EXTRA_LIBS)
+endif()
+
 # Add the subdirectories.
 include_directories(src/common)
 add_subdirectory(src)

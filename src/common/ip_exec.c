@@ -1113,13 +1113,17 @@ static int ip_exec_assignment_statement(ip_exec_t *exec, ip_ast_node_t *node)
 /**
  * @brief Writes tilde characters that are not part of a separator.
  *
- * @param[in] output The output stream.
+ * @param[in] exec The execution context.
  * @param[in] count The number of tilde characters to write.
  */
-static void ip_exec_write_tildes(FILE *output, size_t count)
+static void ip_exec_write_tildes(ip_exec_t *exec, size_t count)
 {
     while (count > 0) {
-        fputc('~', output);
+        if (exec->output_char) {
+            (*(exec->output_char))(exec, '~');
+        } else {
+            fputc('~', exec->output);
+        }
         --count;
     }
 }
@@ -1129,10 +1133,10 @@ static void ip_exec_write_tildes(FILE *output, size_t count)
  * until "~~~~~" or EOF.
  *
  * @param[in,out] exec The execution context.
- * @param[in] output The output stream, or NULL to ignore the input.
  * @param[in] input The input stream.
+ * @param[in] ignore_output Non-zero to drop the data rather than output it.
  */
-static void ip_exec_copy_tape(ip_exec_t *exec, FILE *output, FILE *input)
+static void ip_exec_copy_tape(ip_exec_t *exec, FILE *input, int ignore_output)
 {
     size_t tilde_count = 0;
     int ch;
@@ -1166,17 +1170,21 @@ static void ip_exec_copy_tape(ip_exec_t *exec, FILE *output, FILE *input)
                 }
             } else {
                 /* Non-tilde character; output it directly */
-                if (output != NULL) {
+                if (!ignore_output) {
                     if (tilde_count > 0) {
-                        ip_exec_write_tildes(output, tilde_count);
+                        ip_exec_write_tildes(exec, tilde_count);
                     }
-                    fputc(ch, output);
+                    if (exec->output_char) {
+                        (*(exec->output_char))(exec, ch);
+                    } else {
+                        fputc(ch, exec->output);
+                    }
                 }
                 tilde_count = 0;
             }
         }
-        if (tilde_count > 0 && output != NULL) {
-            ip_exec_write_tildes(output, tilde_count);
+        if (tilde_count > 0 && !ignore_output) {
+            ip_exec_write_tildes(exec, tilde_count);
         }
         return;
     }
@@ -1204,17 +1212,21 @@ static void ip_exec_copy_tape(ip_exec_t *exec, FILE *output, FILE *input)
             }
         } else {
             /* Non-tilde character; output it directly */
-            if (output != NULL) {
+            if (!ignore_output) {
                 if (tilde_count > 0) {
-                    ip_exec_write_tildes(output, tilde_count);
+                    ip_exec_write_tildes(exec, tilde_count);
                 }
-                fputc(ch, output);
+                if (exec->output_char) {
+                    (*(exec->output_char))(exec, ch);
+                } else {
+                    fputc(ch, exec->output);
+                }
             }
             tilde_count = 0;
         }
     }
-    if (tilde_count > 0 && output != NULL) {
-        ip_exec_write_tildes(output, tilde_count);
+    if (tilde_count > 0 && !ignore_output) {
+        ip_exec_write_tildes(exec, tilde_count);
     }
 }
 
@@ -1503,23 +1515,93 @@ static int ip_exec_repeat_for_next(ip_exec_t *exec, ip_exec_stack_loop_t *loop)
 /**
  * @brief Reads a string from the input stream.
  *
- * @param[in] input The input stream to read from.
+ * @param[in] exec The execution context.
  *
  * @return The string that was read or NULL on EOF.
  */
-static ip_string_t *ip_exec_read_string(FILE *input)
+static ip_string_t *ip_exec_read_string(ip_exec_t *exec)
 {
     char buffer[BUFSIZ];
-    if (fgets(buffer, sizeof(buffer), input)) {
-        size_t len = strlen(buffer);
-        while (len > 0 &&
-               (buffer[len - 1] == '\n' || buffer[len - 1] == '\r')) {
-            /* Strip trailing end of line characters */
-            --len;
-        }
-        return ip_string_create_with_length(buffer, len);
+    size_t len;
+    if (exec->input_line) {
+        /* Input has been redirected to the console */
+        (*(exec->input_line))(exec, buffer, sizeof(buffer));
+    } else if (!fgets(buffer, sizeof(buffer), exec->input)) {
+        return 0;
     }
-    return 0;
+    len = strlen(buffer);
+    while (len > 0 &&
+           (buffer[len - 1] == '\n' || buffer[len - 1] == '\r')) {
+        /* Strip trailing end of line characters */
+        --len;
+    }
+    return ip_string_create_with_length(buffer, len);
+}
+
+/**
+ * @brief Reads an integer from the input stream.
+ *
+ * @param[in] exec The execution context.
+ * @param[out] value Returns the integer value.
+ *
+ * @return The result from scanf().
+ */
+static int ip_exec_read_integer(ip_exec_t *exec, ip_int_t *value)
+{
+    char buffer[100];
+    int scan_result;
+    *value = 0;
+    if (exec->input_line) {
+        /* Input has been redirected to the console */
+        (*(exec->input_line))(exec, buffer, sizeof(buffer));
+        if (sizeof(ip_int_t) == 2) {
+            int16_t i16value = 0;
+            scan_result = sscanf(buffer, "%" SCNd16, &i16value);
+            *value = i16value;
+        } else if (sizeof(ip_int_t) == 4) {
+            int32_t i32value = 0;
+            scan_result = sscanf(buffer, "%" SCNd32, &i32value);
+            *value = i32value;
+        } else {
+            scan_result = sscanf(buffer, "%" SCNd64, value);
+        }
+    } else {
+        if (sizeof(ip_int_t) == 2) {
+            int16_t i16value = 0;
+            scan_result = fscanf(exec->input, "%" SCNd16, &i16value);
+            *value = i16value;
+        } else if (sizeof(ip_int_t) == 4) {
+            int32_t i32value = 0;
+            scan_result = fscanf(exec->input, "%" SCNd32, &i32value);
+            *value = i32value;
+        } else {
+            scan_result = fscanf(exec->input, "%" SCNd64, value);
+        }
+    }
+    return scan_result;
+}
+
+/**
+ * @brief Reads a floating-point value from the input stream.
+ *
+ * @param[in] exec The execution context.
+ * @param[out] value Returns the floating-point value.
+ *
+ * @return The result from scanf().
+ */
+static int ip_exec_read_float(ip_exec_t *exec, ip_float_t *value)
+{
+    char buffer[100];
+    int scan_result;
+    *value = 0;
+    if (exec->input_line) {
+        /* Input has been redirected to the console */
+        (*(exec->input_line))(exec, buffer, sizeof(buffer));
+        scan_result = sscanf(buffer, "%lf", value) ;
+    } else {
+        scan_result = fscanf(exec->input, "%lf", value) ;
+    }
+    return scan_result;
 }
 
 static void ip_exec_input_skip_spaces(ip_exec_t *exec)
@@ -1585,17 +1667,7 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
             }
             break;
         }
-        if (sizeof(ip_int_t) == 2) {
-            int16_t i16value = 0;
-            scan_result = fscanf(exec->input, "%" SCNd16, &i16value);
-            ivalue = i16value;
-        } else if (sizeof(ip_int_t) == 4) {
-            int32_t i32value = 0;
-            scan_result = fscanf(exec->input, "%" SCNd32, &i32value);
-            ivalue = i32value;
-        } else {
-            scan_result = fscanf(exec->input, "%" SCNd64, &ivalue);
-        }
+        scan_result = ip_exec_read_integer(exec, &ivalue);
         if (scan_result < 0) {
             eof = 1;
         } else if (scan_result == 0) {
@@ -1631,7 +1703,7 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
             }
             break;
         }
-        scan_result = fscanf(exec->input, "%lf", &fvalue) ;
+        scan_result = ip_exec_read_float(exec, &fvalue);
         if (scan_result < 0) {
             eof = 1;
         } else if (scan_result == 0) {
@@ -1671,7 +1743,7 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
             }
             break;
         }
-        value.svalue = ip_exec_read_string(exec->input);
+        value.svalue = ip_exec_read_string(exec);
         if (!(value.svalue)) {
             eof = 1;
             value.svalue = ip_string_create_empty();
@@ -1691,7 +1763,7 @@ static int ip_exec_input(ip_exec_t *exec, ip_ast_node_t *node)
             if (exec->program->next_input[0] == '\n') {
                 ++(exec->program->next_input);
             }
-        } else {
+        } else if (exec->input_line == 0) {
             ch = fgetc(exec->input);
             if (ch == '\r') {
                 ch = fgetc(exec->input);
@@ -1749,6 +1821,7 @@ static int ip_exec_output(ip_exec_t *exec, ip_ast_node_t *node, int with_eol)
 {
     ip_value_t value;
     int status = IP_EXEC_OK;
+    char buf[64];
 
     /* Compute the value to be output */
     ip_value_init(&value);
@@ -1766,7 +1839,14 @@ static int ip_exec_output(ip_exec_t *exec, ip_ast_node_t *node, int with_eol)
      * an implicit "THIS", then use a right-aligned field. */
     switch (value.type) {
     case IP_TYPE_INT:
-        if (node) {
+        if (exec->output_string) {
+            if (node) {
+                snprintf(buf, sizeof(buf), "%" PRId64, (int64_t)(value.ivalue));
+            } else {
+                snprintf(buf, sizeof(buf), "%15" PRId64, (int64_t)(value.ivalue));
+            }
+            (*(exec->output_string))(exec, buf);
+        } else if (node) {
             fprintf(exec->output, "%" PRId64, (int64_t)(value.ivalue));
         } else {
             fprintf(exec->output, "%15" PRId64, (int64_t)(value.ivalue));
@@ -1774,7 +1854,14 @@ static int ip_exec_output(ip_exec_t *exec, ip_ast_node_t *node, int with_eol)
         break;
 
     case IP_TYPE_FLOAT:
-        if (node) {
+        if (exec->output_string) {
+            if (node) {
+                snprintf(buf, sizeof(buf), "%g", value.fvalue);
+            } else {
+                snprintf(buf, sizeof(buf), "%15.6f", value.fvalue);
+            }
+            (*(exec->output_string))(exec, buf);
+        } else if (node) {
             fprintf(exec->output, "%g", value.fvalue);
         } else {
             fprintf(exec->output, "%15.6f", value.fvalue);
@@ -1783,7 +1870,11 @@ static int ip_exec_output(ip_exec_t *exec, ip_ast_node_t *node, int with_eol)
 
     case IP_TYPE_STRING:
         if (value.svalue) {
-            fputs(value.svalue->data, exec->output);
+            if (exec->output_string) {
+                (*(exec->output_string))(exec, value.svalue->data);
+            } else {
+                fputs(value.svalue->data, exec->output);
+            }
         }
         break;
 
@@ -1794,7 +1885,11 @@ static int ip_exec_output(ip_exec_t *exec, ip_ast_node_t *node, int with_eol)
 
     /* Terminate the value with either a newline or two spaces */
     if (status == IP_EXEC_OK) {
-        if (with_eol) {
+        if (exec->output_char) {
+            if (with_eol) {
+                (*(exec->output_char))(exec, '\n');
+            }
+        } else if (with_eol) {
             fputc('\n', exec->output);
         } else if (value.type != IP_TYPE_STRING) {
             fputc(' ', exec->output);
@@ -2127,18 +2222,22 @@ int ip_exec_step(ip_exec_t *exec)
     case ITOK_PUNCH:
         /* "PUNCH THE FOLLOWING CHARACTERS" to standard output */
         if (node->text) {
-            fputs(node->text->data, exec->output);
+            if (exec->output_string) {
+                (*(exec->output_string))(exec, node->text->data);
+            } else {
+                fputs(node->text->data, exec->output);
+            }
         }
         break;
 
     case ITOK_COPY_TAPE:
         /* Copy the input to the output until the next "~~~~~" or EOF */
-        ip_exec_copy_tape(exec, exec->output, exec->input);
+        ip_exec_copy_tape(exec, exec->input, 0);
         break;
 
     case ITOK_IGNORE_TAPE:
         /* Ignore the input up until the next "~~~~~" or EOF */
-        ip_exec_copy_tape(exec, NULL, exec->input);
+        ip_exec_copy_tape(exec, exec->input, 1);
         break;
 
     case ITOK_AT_END_OF_INPUT:
@@ -2176,6 +2275,11 @@ int ip_exec_run(ip_exec_t *exec)
     /* Keep stepping through the code until finished or error */
     while ((status = ip_exec_step(exec)) == IP_EXEC_OK) {
         /* Do nothing */
+    }
+
+    /* If the console is active, deactivate it before printing any errors */
+    if (exec->deactivate_console) {
+        (*(exec->deactivate_console))(exec);
     }
 
     /* Determine what happened in the last statement */
