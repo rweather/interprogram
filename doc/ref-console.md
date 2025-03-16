@@ -16,26 +16,30 @@ Clears from the current cursor position to the end of the screen.
 
 Clears from the current cursor position to the end of the current line.
 
-<tt>SCREEN WIDTH</tt>
+<tt>SET W = SCREEN WIDTH</tt>
 
-Sets <tt>THIS</tt> to the width of the screen in characters.
+Sets <tt>W</tt> to the width of the screen in characters.  <tt>SCREEN WIDTH</tt>
+can be used in any expression context.
 
-<tt>SCREEN HEIGHT</tt>
+<tt>SET H = SCREEN HEIGHT</tt>
 
-Sets <tt>THIS</tt> to the height of the screen in lines.
+Sets <tt>H</tt> to the height of the screen in lines.  <tt>SCREEN HEIGHT</tt>
+can be used in any expression context.
 
 <tt>MOVE CURSOR TO</tt> <i>x</i> : <i>y</i>
 
 Moves the cursor to (<i>x</i>, <i>y</i>).  (0, 0) is the top-left
 of the screen.
 
-<tt>CURSOR X</tt>
+<tt>SET CX = CURSOR X</tt>
 
-Sets <tt>THIS</tt> to the X co-ordinate of the cursor.
+Sets <tt>CX</tt> to the X co-ordinate of the cursor.  <tt>CURSOR X</tt>
+can be used in any expression context.
 
-<tt>CURSOR Y</tt>
+<tt>SET CY = CURSOR Y</tt>
 
-Sets <tt>THIS</tt> to the Y co-ordinate of the cursor.
+Sets <tt>CY</tt> to the Y co-ordinate of the cursor.  <tt>CURSOR Y</tt>
+can be used in any expression context.
 
 <tt>HIDE CURSOR</tt>
 

@@ -84,7 +84,11 @@ static void ip_parse_get_next(ip_parser_t *parser, unsigned context)
             ip_program_lookup_builtin_function
                 (parser->program, parser->tokeniser.token_info->name);
         if (builtin) {
-            parser->tokeniser.token = ITOK_FUNCTION_NAME;
+            if (builtin->base.type != 0xFF) {
+                parser->tokeniser.token = ITOK_FUNCTION_NAME;
+            } else {
+                parser->tokeniser.token = ITOK_FUNCTION_NAME0;
+            }
             parser->function_builtin = builtin->handler;
         }
     }
@@ -247,6 +251,7 @@ static ip_ast_node_t *ip_parse_variable_expression
  */
 static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
 {
+    void *builtin;
     ip_ast_node_t *node;
     int is_neg = 0;
     int token;
@@ -359,14 +364,21 @@ static ip_ast_node_t *ip_parse_unary_expression(ip_parser_t *parser)
         node->value_type = IP_TYPE_INT;
         break;
 
-    case ITOK_FUNCTION_NAME: {
+    case ITOK_FUNCTION_NAME:
         /* Library function like "SQUARE ROOT OF", "SINE OF", etc */
-        void *builtin = parser->function_builtin;
+        builtin = parser->function_builtin;
         ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
         node = ip_parse_unary_expression(parser);
         node = ip_ast_make_function_invoke
             (builtin, node, &(parser->tokeniser.loc));
-        break; }
+        break;
+
+    case ITOK_FUNCTION_NAME0:
+        /* No-argument library function */
+        builtin = parser->function_builtin;
+        ip_parse_get_next(parser, ITOK_TYPE_EXPRESSION);
+        node = ip_ast_make_function_invoke0(builtin, &(parser->tokeniser.loc));
+        break;
 
     default:
         ip_error_near(parser, "variable name or constant expected");

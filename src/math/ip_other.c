@@ -66,9 +66,9 @@ int ip_abs_of(ip_exec_t *exec, ip_value_t *args, size_t num_args)
 int ip_rand(ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     ip_float_t value = ((ip_float_t)rand()) / (((ip_float_t)RAND_MAX) + 1);
-    (void)args;
+    (void)exec;
     (void)num_args;
-    ip_value_set_float(&(exec->this_value), value);
+    ip_value_set_float(&(args[0]), value);
     return IP_EXEC_OK;
 }
 

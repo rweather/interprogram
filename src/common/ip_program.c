@@ -83,8 +83,8 @@ void ip_program_set_input(ip_program_t *program, const char *input)
 
 void ip_program_register_builtin
     (ip_program_t *program, const char *name,
-     ip_builtin_handler_t handler, unsigned char min_args,
-     unsigned char max_args)
+     ip_builtin_handler_t handler, signed char min_args,
+     signed char max_args)
 {
     ip_builtin_t *builtin;
     ip_label_t *label;
@@ -108,7 +108,12 @@ void ip_program_register_builtin
         ip_out_of_memory();
     }
     builtin->base.num = -1;
-    builtin->base.type = (unsigned char)(min_args | (max_args << 4));
+    if (min_args == 0 && max_args == -1) {
+        /* Name of a built-in variable or constant */
+        builtin->base.type = 0xFF;
+    } else {
+        builtin->base.type = (unsigned char)(min_args | (max_args << 4));
+    }
     builtin->handler = handler;
     ip_symbol_insert(&(program->builtins), &(builtin->base));
 
@@ -142,7 +147,7 @@ ip_builtin_t *ip_program_lookup_builtin_routine
     if (builtin) {
         int min_args = builtin->base.type & 0x0F;
         int max_args = (builtin->base.type >> 4) & 0x0F;
-        if (min_args > max_args) {
+        if (builtin->base.type == 0xFF || min_args > max_args) {
             /* This is a built-in function, not a built-in routine */
             return 0;
         }
@@ -158,7 +163,7 @@ ip_builtin_t *ip_program_lookup_builtin_function
     if (builtin) {
         int min_args = builtin->base.type & 0x0F;
         int max_args = (builtin->base.type >> 4) & 0x0F;
-        if (min_args <= max_args) {
+        if (builtin->base.type != 0xFF && min_args <= max_args) {
             /* This is a built-in routine, not a built-in function */
             return 0;
         }

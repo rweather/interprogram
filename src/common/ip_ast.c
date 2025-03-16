@@ -389,6 +389,22 @@ ip_ast_node_t *ip_ast_make_function_invoke
     return node2;
 }
 
+ip_ast_node_t *ip_ast_make_function_invoke0(void *handler, const ip_loc_t *loc)
+{
+    ip_ast_node_t *node1;
+    ip_ast_node_t *node2;
+    if (!handler) {
+        /* An error occurred in the arguments */
+        return 0;
+    }
+    node1 = ip_ast_make_node(ITOK_FUNCTION_NAME, IP_TYPE_UNKNOWN, loc);
+    node1->builtin_handler = handler;
+    node2 = ip_ast_make_node(ITOK_FUNCTION_INVOKE, IP_TYPE_DYNAMIC, loc);
+    node2->has_children = 1;
+    node2->children.left = node1;
+    return node2;
+}
+
 void ip_ast_list_init(ip_ast_list_t *list)
 {
     list->first = 0;

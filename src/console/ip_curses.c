@@ -253,12 +253,11 @@ static int ip_cursor_x
     (ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     int x, y;
-    (void)args;
     (void)num_args;
     init_screen(exec);
     getyx(stdscr, y, x);
     (void)y;
-    ip_value_set_int(&(exec->this_value), x);
+    ip_value_set_int(&(args[0]), x);
     return IP_EXEC_OK;
 }
 
@@ -275,17 +274,16 @@ static int ip_cursor_y
     (ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     int x, y;
-    (void)args;
     (void)num_args;
     init_screen(exec);
     getyx(stdscr, y, x);
     (void)x;
-    ip_value_set_int(&(exec->this_value), y);
+    ip_value_set_int(&(args[0]), y);
     return IP_EXEC_OK;
 }
 
 /**
- * @brief Gets the width of the screen into "THIS".
+ * @brief Gets the width of the screen.
  *
  * @param[in,out] exec The execution context.
  * @param[in] args Points to the arguments and local variable space.
@@ -297,17 +295,16 @@ static int ip_screen_width
     (ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     int maxx, maxy;
-    (void)args;
     (void)num_args;
     init_screen(exec);
     getmaxyx(stdscr, maxy, maxx);
     (void)maxy;
-    ip_value_set_int(&(exec->this_value), maxx);
+    ip_value_set_int(&(args[0]), maxx);
     return IP_EXEC_OK;
 }
 
 /**
- * @brief Gets the height of the screen into "THIS".
+ * @brief Gets the height of the screen.
  *
  * @param[in,out] exec The execution context.
  * @param[in] args Points to the arguments and local variable space.
@@ -319,12 +316,11 @@ static int ip_screen_height
     (ip_exec_t *exec, ip_value_t *args, size_t num_args)
 {
     int maxx, maxy;
-    (void)args;
     (void)num_args;
     init_screen(exec);
     getmaxyx(stdscr, maxy, maxx);
     (void)maxx;
-    ip_value_set_int(&(exec->this_value), maxy);
+    ip_value_set_int(&(args[0]), maxy);
     return IP_EXEC_OK;
 }
 
@@ -677,10 +673,10 @@ static ip_builtin_info_t const curses_builtins[] = {
     {"CLEAR TO END OF SCREEN",      ip_clear_eos,           0,  0},
     {"CLEAR TO END OF LINE",        ip_clear_eol,           0,  0},
     {"MOVE CURSOR TO",              ip_move_cursor_to,      2,  2},
-    {"CURSOR X",                    ip_cursor_x,            0,  0},
-    {"CURSOR Y",                    ip_cursor_y,            0,  0},
-    {"SCREEN WIDTH",                ip_screen_width,        0,  0},
-    {"SCREEN HEIGHT",               ip_screen_height,       0,  0},
+    {"CURSOR X",                    ip_cursor_x,            0,  -1},
+    {"CURSOR Y",                    ip_cursor_y,            0,  -1},
+    {"SCREEN WIDTH",                ip_screen_width,        0,  -1},
+    {"SCREEN HEIGHT",               ip_screen_height,       0,  -1},
     {"NORMAL TEXT",                 ip_normal_text,         0,  0},
     {"BOLD TEXT",                   ip_bold_text,           0,  0},
     {"TEXT COLOR",                  ip_text_color,          1,  2},

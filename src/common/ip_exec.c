@@ -945,10 +945,18 @@ static int ip_exec_eval_expression
 
     case ITOK_FUNCTION_INVOKE:
         /* Invoke a built-in library function */
-        status = ip_exec_eval_expression(exec, expr->children.right, result);
-        if (status == IP_EXEC_OK) {
+        if (expr->children.right) {
+            status = ip_exec_eval_expression
+                (exec, expr->children.right, result);
+            if (status == IP_EXEC_OK) {
+                ip_builtin_handler_t handler =
+                    (ip_builtin_handler_t)(expr->children.left->builtin_handler);
+                status = (*handler)(exec, result, 1);
+            }
+        } else {
             ip_builtin_handler_t handler =
                 (ip_builtin_handler_t)(expr->children.left->builtin_handler);
+            ip_value_release(result); /* Set to unknown */
             status = (*handler)(exec, result, 1);
         }
         break;

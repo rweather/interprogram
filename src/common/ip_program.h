@@ -77,10 +77,10 @@ typedef struct
     ip_builtin_handler_t handler;
 
     /** Minimum number of allowable arguments (0 to 9) */
-    unsigned char min_args;
+    signed char min_args;
 
     /** Maximum number of allowable arguments (0 to 9) */
-    unsigned char max_args;
+    signed char max_args;
 
 } ip_builtin_info_t;
 
@@ -156,8 +156,8 @@ void ip_program_set_input(ip_program_t *program, const char *input);
  */
 void ip_program_register_builtin
     (ip_program_t *program, const char *name,
-     ip_builtin_handler_t handler, unsigned char min_args,
-     unsigned char max_args);
+     ip_builtin_handler_t handler, signed char min_args,
+     signed char max_args);
 
 /**
  * @brief Registers a list of built-in statements with the program.

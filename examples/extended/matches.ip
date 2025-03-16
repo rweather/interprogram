@@ -27,12 +27,11 @@ set matches = matches - count
 # player to take the last match.  Otherwise take a random number of
 # matches between 1 and 3.
 if matches is equal to 1, go to LOSE
-random number
 if matches is greater than 4, go to RAND
 set guess = matches - 1
 go to ITAKE
 *RAND
-set guess = this * 3 + 1
+set guess = random number * 3 + 1
 *ITAKE
 call REMAIN
 output 'I take ', output guess

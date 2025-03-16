@@ -327,14 +327,22 @@ ip_ast_node_t *ip_ast_make_argument
      const ip_loc_t *loc);
 
 /**
- * @brief Makes a function invocation node.
+ * @brief Makes a function invocation node with one argument.
  *
  * @param[in] handler The function's handler.
  * @param[in] expr The expression to pass to the function.
- * @param[in] loc Location of the invokcation in the original source file.
+ * @param[in] loc Location of the invocation in the original source file.
  */
 ip_ast_node_t *ip_ast_make_function_invoke
     (void *handler, ip_ast_node_t *expr, const ip_loc_t *loc);
+
+/**
+ * @brief Makes a function invocation node with no arguments.
+ *
+ * @param[in] handler The function's handler.
+ * @param[in] loc Location of the invocation in the original source file.
+ */
+ip_ast_node_t *ip_ast_make_function_invoke0(void *handler, const ip_loc_t *loc);
 
 /**
  * @brief Initializes a list of nodes.

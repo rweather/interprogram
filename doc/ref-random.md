@@ -2,18 +2,23 @@
 
 Extended INTERPROGRAM has two statements for working with random numbers.
 
-<tt>RANDOM NUMBER</tt>
+<tt>SET N = RANDOM NUMBER</tt>
 
-Sets <tt>THIS</tt> to a random floating-point value between 0 (inclusive)
+Sets <tt>N</tt> to a random floating-point value between 0 (inclusive)
 and 1 (exclusive).  For example, to generate a random integer between
 1 and 10:
 
     SYMBOLS FOR INTEGERS J
 
-    RANDOM NUMBER
+    TAKE RANDOM NUMBER
     MULTIPLY BY 10
     ADD 1
     REPLACE J
+
+or alternatively:
+
+    SYMBOLS FOR INTEGERS J
+    SET J = RANDOM NUMBER * 10 + 1
 
 <tt>SEED RANDOM</tt> <i>value</i>
 

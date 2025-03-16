@@ -58,7 +58,7 @@ static ip_builtin_info_t const extension_math_builtins[] = {
     {"BITWISE NOT",                 ip_bitwise_not,         0,  0},
     {"SHIFT LEFT BY",               ip_shift_left,          1,  1},
     {"SHIFT RIGHT BY",              ip_shift_right,         1,  1},
-    {"RANDOM NUMBER",               ip_rand,                0,  0},
+    {"RANDOM NUMBER",               ip_rand,                0,  -1},
     {"SEED RANDOM",                 ip_srand,               1,  1},
 
     /* Functions that can be used in expressions.  The minimum number of
