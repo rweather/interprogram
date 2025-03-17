@@ -24,6 +24,15 @@ raise to the power of 0.333333
 subtract 1.709975946
 form absolute value
 if this is greater than 0.000001, go to FAIL
+take 5
+form cube root
+subtract 1.709975946
+form absolute value
+if this is greater than 0.000001, go to FAIL
+take cube root of 5
+subtract 1.709975946
+form absolute value
+if this is greater than 0.000001, go to FAIL
 
 # log_e(27) = 3.29583686...
 take 27.0
@@ -54,6 +63,11 @@ replace logbase
 take 27.0
 form natural log
 divide by logbase
+subtract 1.431363764
+form absolute value
+if this is greater than 0.000001, go to FAIL
+take 27
+form logarithm in base 10
 subtract 1.431363764
 form absolute value
 if this is greater than 0.000001, go to FAIL

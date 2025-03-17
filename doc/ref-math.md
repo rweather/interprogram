@@ -13,6 +13,10 @@ Angles in the classic implementation for `FORM SINE`, `FORM COSINE`,
 `FORM TANGENT`, and `FORM ARCTAN` are in units of π.  For example,
 0.5 is π/2 radians or 90 degrees.  The extended implementation uses radians.
 
+At startup, the extended language initialises the variable <tt>PI</tt> to π.
+The value can be overwritten by the program if it needs the variable
+<tt>PI</tt> for some other purpose.
+
 <table border="1">
 <tr><td><b>Statement</b></td><td><b>Description</b></td><td><b>Extension?</b></td></tr>
 <tr><td><tt>ADD</tt> <i>value</i></td><td>Adds <i>value</i> to <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; performs string concatenation if used on string arguments.</td><td>String concatenation is an extension</td></tr>
@@ -21,11 +25,13 @@ Angles in the classic implementation for `FORM SINE`, `FORM COSINE`,
 <tr><td><tt>DIVIDE BY</tt> <i>value</i></td><td>Divides <tt>THIS</tt> by <i>value</i>, leaving the quotient in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>MODULO</tt> <i>value</i></td><td>Divides <tt>THIS</tt> by <i>value</i>, leaving the remainder in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>FORM SQUARE ROOT</tt></td><td>Forms the square root of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>FORM CUBE ROOT</tt></td><td>Forms the cube root of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>FORM SINE</tt></td><td>Forms the sine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td> </td></tr>
 <tr><td><tt>FORM COSINE</tt></td><td>Forms the cosine of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td> </td></tr>
 <tr><td><tt>FORM TANGENT</tt></td><td>Forms the tangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td> </td></tr>
 <tr><td><tt>FORM ARCTAN</tt></td><td>Forms the arctangent of <tt>THIS</tt>, leaving the result in <tt>THIS</tt>; angles are in radians.</td><td> </td></tr>
 <tr><td><tt>FORM NATURAL LOG</tt></td><td>Forms the natural logorithm of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
+<tr><td><tt>FORM LOGARITHM IN BASE</tt> <i>value</i></td><td>Forms the logorithm of <tt>THIS</tt> in base <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>FORM EXPONENTIAL</tt></td><td>Raises <tt>THIS</tt> to the power of <i>e</i>, leaving the result in <tt>THIS</tt></td><td> </td></tr>
 <tr><td><tt>FORM ABSOLUTE VALUE</tt></td><td>Forms the absolute value of <tt>THIS</tt>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
 <tr><td><tt>RAISE TO THE POWER OF</tt> <i>value</i></td><td>Raises <tt>THIS</tt> to the power of <i>value</i>, leaving the result in <tt>THIS</tt></td><td>Yes</td></tr>
@@ -54,6 +60,7 @@ Algebraic expressions in the extension syntax can use the following operators:
 <tr><td>2</td><td><tt>TANGENT OF</tt> <i>value</i></td><td>Tangent of the angle <i>value</i></td></tr>
 <tr><td>2</td><td><tt>ARCTAN OF</tt> <i>value</i></td><td>Arctangent of <i>value</i></td></tr>
 <tr><td>2</td><td><tt>SQUARE ROOT OF</tt> <i>value</i></td><td>Square root of <i>value</i></td></tr>
+<tr><td>2</td><td><tt>CUBE ROOT OF</tt> <i>value</i></td><td>Cube root of <i>value</i></td></tr>
 <tr><td>2</td><td><tt>NATURAL LOG OF</tt> <i>value</i></td><td>Natural logarithm of <i>value</i></td></tr>
 <tr><td>2</td><td><tt>EXPONENTIAL OF</tt> <i>value</i></td><td>Raises <i>e</i> to the power of <i>value</i></td></tr>
 <tr><td>2</td><td><tt>ABSOLUTE VALUE OF</tt> <i>value</i></td><td>Absolute value of <i>value</i></td></tr>

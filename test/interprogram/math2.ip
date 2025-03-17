@@ -56,6 +56,8 @@ if this is greater than 0.000001, go to FAIL
 take absolute value of (arctan of 14.101419947 - 1.5)
 if this is greater than 0.000001, go to FAIL
 
+if absolute value of (pi - 3.141592) is greater than 0.000001, go to FAIL
+
 # If we get here, then all tests have passed.
 end of interprogram
 

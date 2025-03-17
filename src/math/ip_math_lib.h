@@ -210,6 +210,28 @@ int ip_sqrt(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 int ip_sqrt_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
+ * @brief Forms the cube root of "THIS".
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_cube_root(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
+ * @brief Forms the cube root of the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_cube_root_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
  * @brief Forms the natural logarithm of "THIS".
  *
  * @param[in,out] exec The execution context.
@@ -219,6 +241,17 @@ int ip_sqrt_of(ip_exec_t *exec, ip_value_t *args, size_t num_args);
  * @return IP_EXEC_OK or an error code.
  */
 int ip_log(ip_exec_t *exec, ip_value_t *args, size_t num_args);
+
+/**
+ * @brief Forms the logarithm of "THIS" in the base from the first argument.
+ *
+ * @param[in,out] exec The execution context.
+ * @param[in] args Points to the arguments and local variable space.
+ * @param[in] num_args Number of arguments.
+ *
+ * @return IP_EXEC_OK or an error code.
+ */
+int ip_log_base(ip_exec_t *exec, ip_value_t *args, size_t num_args);
 
 /**
  * @brief Forms the natural logarithm of the first argument.
