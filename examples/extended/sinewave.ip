@@ -1,0 +1,37 @@
+# Ported from the "SINE WAVE" program from "BASIC Computer Games",
+# Creative Computing Press, 1978.  Original by David Ahl.
+
+title SINE WAVE
+symbols for integers A, B
+
+punch the following characters
+
+                             SINE WAVE
+              CREATIVE COMPUTING, MORRISTOWN, NEW JERSEY
+
+
+
+
+
+~~~~~
+
+set B = 0
+repeat for T = 0 to 40 by 0.25
+    set A = 26 + 25 * sine of T
+    call tabacross A
+    if B is zero then
+        output 'CREATIVE'
+    else
+        output 'COMPUTING'
+    end if
+    set B = 1 - B
+end repeat
+
+end of interprogram
+
+*tabacross
+repeat while @1 is greater than 0
+    output ' ',
+    set @1 = @1 - 1
+end repeat
+return

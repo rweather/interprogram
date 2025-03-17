@@ -1,0 +1,58 @@
+# Ported from the "DICE" program from "BASIC Computer Games",
+# Creative Computing Press, 1978.  Original by Danny Freidus.
+
+title DICE
+symbols for integers a, b, f, q, r, s, v, x
+symbols for strings z
+maximum subscripts f(12)
+
+# Print the instructions.
+punch the following characters
+
+                         DICE
+
+This program simulates the rolling of a pair of dice.
+
+You enter the number of times you want the computer to 'roll' the dice.
+Watch out, very large numbers take a long time.
+~~~~~
+
+*1
+# Clear all totals to 0.
+repeat for q = 2 to 12
+    set f(q) = 0
+end repeat
+
+# Ask for the number of rolls.
+output ''
+output 'How many rolls? ',
+input x
+
+# Roll the dice.
+repeat for s = 1 to x
+    set a = random number * 6 + 1
+    set b = random number * 6 + 1
+    set r = a + b
+    set f(r) = f(r) + 1
+end repeat
+
+# Print the results.
+punch the following characters
+
+    Total Spots  Number of Times
+~~~~~
+repeat for v = 2 to 12
+    take v
+    output,
+    take f(v)
+    output
+end repeat
+
+# Does the user want to try again?
+output '\n\nTry again? (Y or N) ',
+input z
+if z is equal to 'Y', go to *1
+if z is equal to 'y', go to *1
+
+output ''
+end of interprogram
