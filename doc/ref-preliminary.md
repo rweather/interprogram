@@ -9,7 +9,7 @@ preliminary statement is prefixed with a number in parentheses:
      (3)  MAXIMUM SUBSCRIPTS   A(3)
      (4)  COMPILE THE FOLLOWING INTERPROGRAM
 
-Extended INTERPROGRAM should drop the numbers:
+Extended INTERPROGRAM drops the numbers:
 
      TITLE  ALPHA = BETA - 27.394 + A(3).(X/Y)
      SYMBOLS FOR INTEGERS   J
@@ -47,8 +47,11 @@ will be used by the program:
     MAXIMUM SUBSCRIPTS A(3), X(37), J(-5)
 
 Array A has indexes 0, 1, 2, and 3; X has indexes 0 to 37; and J has
-indexes 0, -1, -2, -3, -4, and -5.  The original manual implied that
-subscript ranges were possible; e.g. -5 to +3; using "dummy symbols".
+indexes 0, -1, -2, -3, -4, and -5.  The original manual indicates that
+subscript ranges were possible; e.g. -5 to +3; using "dummy symbols":
+
+    (3) MAXIMUM SUBSCRIPTS ZZ(5), A(3)
+
 My implementation lists the range explicitly, with the end-points
 separated by a colon:
 
@@ -60,12 +63,17 @@ individually:
     (2) SYMBOLS FOR INTEGERS K(0) K(1) K(2) K(3)
 
 My implementation takes a two-step approach.  The symbol is declared
-as an integer first, and then promoted to be an array of integers:
+as an integer or string first, and then promoted to be an array:
 
-    SYMBOLS FOR INTEGERS K
-    MAXIMUM SUBSCRIPTS K(3)
+    SYMBOLS FOR INTEGERS J, K
+    SYMBOLS FOR STRINGS S
+    MAXIMUM SUBSCRIPTS K(3), S(9)
 
 The last preliminary statement must be `COMPILE THE FOLLOWING INTERPROGRAM`.
+
+Classic INTERPROGRAM requires (1), (2), and (4) to be present and allows
+multiple (3) preliminary statements.  Extended INTERPROGRAM requires
+<tt>TITLE</tt> but the other preliminary statements are optional.
 
 [Previous: Character set](ref-character-set.md),
 [Next: Variables and types](ref-vars-and-types.md)

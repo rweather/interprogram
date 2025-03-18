@@ -11,9 +11,9 @@ or a reference to an array element.  Some examples:
 
 Angles in the classic implementation for `FORM SINE`, `FORM COSINE`,
 `FORM TANGENT`, and `FORM ARCTAN` are in units of π.  For example,
-0.5 is π/2 radians or 90 degrees.  The extended implementation uses radians.
+0.5 is π/2 radians or 90 degrees.  Extended INTERPROGRAM uses radians.
 
-At startup, the extended language initialises the variable <tt>PI</tt> to π.
+At startup, Extended INTERPROGRAM initialises the variable <tt>PI</tt> to π.
 The value can be overwritten by the program if it needs the variable
 <tt>PI</tt> for some other purpose.
 
@@ -45,7 +45,7 @@ The value can be overwritten by the program if it needs the variable
 <tr><td><tt>ROUND NEAREST</tt></td><td>Rounds <tt>THIS</tt> to the nearest integer, rounding halfway cases away from zero.  Same as the round() function in C.</td><td>Yes</td></tr>
 <tr><td><tt>ROUND UP</tt></td><td>Rounds <tt>THIS</tt> to an integer, rounding up.  Same as the ceil() function in C.</td><td>Yes</td></tr>
 <tr><td><tt>ROUND DOWN</tt></td><td>Rounds <tt>THIS</tt> to an integer, rounding down.  Same as the floor() function in C.</td><td>Yes</td></tr>
-<tr><td><tt>ROUND NEAREST</tt> <i>value</i></td><td>Rounds <tt>THIS</tt> to a mutiple of <i>value</i>, rounding halfway cases away from zero.  Division by zero will occur if <i>value</i> is zero.</td><td>Yes</td></tr>
+<tr><td><tt>ROUND TO A MULTIPLE OF</tt> <i>value</i></td><td>Rounds <tt>THIS</tt> to a mutiple of <i>value</i>, rounding halfway cases away from zero.  A division by zero error will occur if <i>value</i> is zero.</td><td>Yes</td></tr>
 </table>
 
 Algebraic expressions in the extension syntax can use the following operators:

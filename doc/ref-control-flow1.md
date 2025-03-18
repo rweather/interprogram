@@ -9,8 +9,8 @@ The most basic kind of control flow is `IF ... GO TO`:
 The next section lists the allowable conditions for `IF`.
 
 Classic INTERPROGRAM supported numeric labels between 1 and 150.
-This implementation supports numeric labels between 1 and 9999, and also
-supports any number of named labels:
+Extended INTERPROGRAM supports numeric labels between 1 and 9999,
+and also supports any number of named labels:
 
         IF X IS POSITIVE, GO TO NAME
         SET X = -X
@@ -92,6 +92,9 @@ towards zero:
 In the previous example, the array was traversed from the last element to
 the first.  In this example, the array is traversed from the first element to
 the last.
+
+See [Structured programming](ref-control-flow2.md) for more control
+flow statements.
 
 ## Conditions
 

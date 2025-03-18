@@ -1,6 +1,6 @@
 # Random numbers
 
-Extended INTERPROGRAM has two statements for working with random numbers.
+Extended INTERPROGRAM has two constructs for working with random numbers.
 
 <tt>SET N = RANDOM NUMBER</tt>
 
@@ -28,8 +28,7 @@ random number generator is seeded from the system time at startup.
 
 This implementation uses the standard C rand() and srand() functions to
 generate random numbers.  The quality of the random numbers will depend
-upon the underlying system's C library.  The application can expect to
-see no more than 2^31 distinct random values.
+upon the underlying system's C library.
 
 [Previous: Defining new statements](ref-define-stmt.md),
 [Next: Console operations](ref-console.md)

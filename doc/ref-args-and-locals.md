@@ -1,10 +1,10 @@
 # Subroutine arguments and local variables
 
-Subroutines in the classic syntax can take a single argument in the
+Subroutines in Classic INTERPROGRAM can take a single argument in the
 <tt>THIS</tt> variable, but everything else must be passed in
 global variables.
 
-The extension syntax supports up to 9 subroutine arguments with the special
+Extended INTERPROGRAM supports up to 9 subroutine arguments with the special
 variable names <tt>@1</tt>, <tt>@2</tt>, ..., <tt>@9</tt>.
 
 The following example defines a function that computes the reciprocal

@@ -101,7 +101,7 @@ But that is long-winded.  English to the rescue with the ampersand:
     TAKE X, MULTIPLY BY A, & B, & C, & D
 
 "&" means "repeat the last statement with a new operand".  In English,
-the above code reads natually as "take X, multiply by A and B and C and D".
+the above code reads naturally as "take X, multiply by A and B and C and D".
 Also note the use of comma as a statement separator, which is more
 natural in English than a semi-colon.
 
@@ -161,9 +161,11 @@ Classic INTERPROGRAM language:
     ~~~~~
     END OF INTERPROGRAM
 
-As stated above, blank symbols are replaced with "~" in ASCII.  At least
-five blanks are needed to indicate the end of the text after
-`PUNCH THE FOLLOWING CHARACTERS`.
+The "~" was originally the blank symbol on CSIRAC's 5-hole punch tape,
+which is similar to the ASCII "NUL".  Because entering NUL's into a
+modern text editor can be difficult, I have replaced blanks with  the
+ASCII "~".  At least five blanks are needed to indicate the end of the
+text after `PUNCH THE FOLLOWING CHARACTERS`.
 
 In Extended INTERPROGRAM, "Hello World" is simpler:
 
