@@ -1,5 +1,5 @@
-INTERPROGRAM - Australia's First High-Level Programming Language
-================================================================
+INTERPROGRAM - High-Level Programming on Australia's First Computer
+===================================================================
 
 INTERPROGRAM was developed by Geoff Hill in 1960 for the
 [CSIRAC](https://en.wikipedia.org/wiki/CSIRAC), Australia's first
