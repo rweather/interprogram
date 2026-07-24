@@ -1,0 +1,64 @@
+TITLE 1D Life
+symbols for integers genx, geny, size, i, g, n
+maximum subscripts genx(-2:69), geny(67)
+
+set size = 67
+
+# Create the first generation randomly.
+repeat for i = 0 to size
+    take random number
+    if this is smaller than 0.5 then
+        set geny(i) = 0
+    else
+        set geny(i) = 1
+    end if
+end repeat
+
+# Set the extra cells to the left and right to permanently dead.
+set genx(-1) = 0
+set genx(-2) = 0
+set genx(size + 1) = 0
+set genx(size + 2) = 0
+
+# Output 25 generations and then stop.
+repeat for g = 1 to 25
+
+    # Copy Y to X and print the current state of the board.
+    repeat for i = 0 to size
+        take geny(i)
+        replace genx(i)
+        if genx(i) is zero then
+            output ' ',
+        else
+            output '*',
+        end if
+    end repeat
+    output ''
+
+    # Compute the next generation.
+    repeat for i = 0 to size
+        take genx(i-2)
+        add genx(i-1)
+        add genx(i+1)
+        add genx(i+2)
+        replace n
+        if genx(i) is not zero then
+            if n is equal to 2 then
+                set geny(i) = 1
+            else if n is equal to 4 then
+                set geny(i) = 1
+            else
+                set geny(i) = 0
+            end if
+        else
+            if n is equal to 2 then
+                set geny(i) = 1
+            else if n is equal to 3 then
+                set geny(i) = 1
+            else
+                set geny(i) = 0
+            end if
+        end if
+    end repeat
+
+end repeat
