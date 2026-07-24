@@ -2150,7 +2150,7 @@ int ip_exec_step(ip_exec_t *exec)
         /* If we encounter an "ELSE" or "ELSE IF", then we have just
          * been executing a previous "THEN" clause.  Skip to "END IF". */
         do {
-            exec->pc = node->children.right;
+            exec->pc = node = node->children.right;
         } while (exec->pc && exec->pc->type != ITOK_END_IF);
         break;
 
