@@ -26,7 +26,7 @@ tape and punch "erase" over the top.
 
 My implementation of INTERPROGRAM uses ASCII instead of Flexowriter codes.
 We do need a mapping for "blank" however, as INTERPROGRAM uses it as
-part of its syntax to separate sections.  We use "~" as that character
+part of its syntax to separate sections.  We use `~` as that character
 didn't exist on the Flexowriter.  It won't appear in normal programs
 except in comments or strings.
 

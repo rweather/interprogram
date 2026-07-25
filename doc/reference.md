@@ -161,10 +161,10 @@ Classic INTERPROGRAM language:
     ~~~~~
     END OF INTERPROGRAM
 
-The "~" was originally the blank symbol on CSIRAC's 5-hole punch tape,
+The `~` was originally the blank symbol on CSIRAC's 5-hole punch tape,
 which is similar to the ASCII "NUL".  Because entering NUL's into a
 modern text editor can be difficult, I have replaced blanks with  the
-ASCII "~".  At least five blanks are needed to indicate the end of the
+ASCII `~`.  At least five blanks are needed to indicate the end of the
 text after `PUNCH THE FOLLOWING CHARACTERS`.
 
 In Extended INTERPROGRAM, "Hello World" is simpler:
@@ -252,7 +252,7 @@ The original or "classic" syntax is documented in the
 between my implementation and the original.
 
 The "blank" symbol from the original 5-hole punch tape is replaced by the
-ASCII tilde "~".
+ASCII tilde `~`.
 
 `TITLE` is a single-line statement in this version, terminated by a newline.
 In the original version, the title had to be terminated with at least
@@ -288,7 +288,7 @@ array subscripts like `A(3)`.
 The original implementation terminated input data with `END` or `#`.
 This implementation uses the end of file (EOF) condition instead.
 Existing input data tapes will need to be converted to remove `END`/`#`,
-to replace blank symbols with "~", and to remove any "erase" or "stop"
+to replace blank symbols with `~`, and to remove any "erase" or "stop"
 symbols that were originally present.
 
 The original floating-point library on the CSIRAC had some accuracy issues.

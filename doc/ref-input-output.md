@@ -32,7 +32,7 @@ newline, then the newline will be skipped.
 Reading string values will read all characters until the next newline.
 The newline character will not be included in the returned string.
 
-Input data can be embedded at the end of the program after "~~~~~":
+Input data can be embedded at the end of the program after `~~~~~`:
 
     ...
     END OF INTERPROGRAM
@@ -59,11 +59,11 @@ Use <tt>OUTPUT THIS</tt> if you don't want the special formatting.
 
 <tt>COPY TAPE</tt>
 
-Copies characters from the input stream until "~~~~~" is seen.
+Copies characters from the input stream until `~~~~~` is seen.
 
 <tt>IGNORE TAPE</tt>
 
-Ignores characters from the input stream until "~~~~~" is seen.
+Ignores characters from the input stream until `~~~~~` is seen.
 
 [Previous: Control flow statements](ref-control-flow1.md),
 [Next: Subroutine arguments and local variables](ref-args-and-locals.md)
